@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""
+Builds "Fischvogel's End Boss.zip" from the folder of the same name.
+
+    python3 tools/build.py [--sounds] [--sim N]
+
+  1. converts the original .bbmodel files (Source Files) for ModelEngine and
+     verifies the result (convert_models.py / verify_models.py):
+       plugins/ModelEngine/blueprints/fv_endboss*.bbmodel  (legacy 4.10)
+       Source Files/fv_endboss* (Blockbench 5).bbmodel     (editable)
+  2. --sounds: re-synthesises the custom sounds (make_sounds.py, deterministic)
+  3. runs the static checker against the vanilla data in tools/vanilla_data
+  4. --sim N: plays N simulated fights per scenario (simulate_fight.py)
+  5. writes the zip: one top folder, directory entries, CRLF guide, fixed
+     timestamps - so the same sources always give the same zip.
+"""
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import zipfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+NAME = "Fischvogel's End Boss"
+PACK = os.path.join(ROOT, NAME)
+PLUGINS = os.path.join(PACK, 'plugins')
+STAMP = (2026, 10, 1, 12, 0, 0)
+
+
+def run(*args):
+    print('>', ' '.join(os.path.basename(a) if i == 1 else a for i, a in enumerate(args)))
+    subprocess.run([sys.executable] + list(args), check=True)
+
+
+def main():
+    argv = sys.argv[1:]
+    # 1. models
+    with tempfile.TemporaryDirectory() as tmp:
+        run(os.path.join(HERE, 'convert_models.py'), tmp)
+        run(os.path.join(HERE, 'verify_models.py'), tmp)
+        bp = os.path.join(PLUGINS, 'ModelEngine', 'blueprints')
+        os.makedirs(bp, exist_ok=True)
+        for f in ('fv_endboss.bbmodel', 'fv_endboss_projectile.bbmodel'):
+            shutil.copyfile(os.path.join(tmp, f), os.path.join(bp, f))
+        for f in ('fv_endboss (Blockbench 5).bbmodel', 'fv_endboss_projectile (Blockbench 5).bbmodel'):
+            shutil.copyfile(os.path.join(tmp, f), os.path.join(PACK, 'Source Files', f))
+    # 2. sounds
+    if '--sounds' in argv:
+        run(os.path.join(HERE, 'make_sounds.py'), os.path.join(PLUGINS, 'Nexo', 'pack'))
+    # 3. checks
+    run(os.path.join(HERE, 'check_pack.py'), PLUGINS, os.path.join(HERE, 'vanilla_data'))
+    # 4. simulation
+    if '--sim' in argv:
+        n = argv[argv.index('--sim') + 1]
+        run(os.path.join(HERE, 'simulate_fight.py'), PLUGINS, n)
+    # 5. guide with CRLF line endings (Windows Notepad friendly)
+    guide = os.path.join(PACK, 'Installation Guide.txt')
+    with open(guide, 'rb') as f:
+        txt = f.read().replace(b'\r\n', b'\n')
+    with open(guide, 'wb') as f:
+        f.write(txt.replace(b'\n', b'\r\n'))
+    # 6. zip
+    out = os.path.join(ROOT, NAME + '.zip')
+    entries = []
+    for dp, dns, fns in os.walk(PACK):
+        dns.sort()
+        rel = os.path.relpath(dp, ROOT)
+        entries.append((rel.replace(os.sep, '/') + '/', None))
+        for fn in sorted(fns):
+            entries.append((os.path.join(rel, fn).replace(os.sep, '/'), os.path.join(dp, fn)))
+    entries.sort(key=lambda e: e[0])
+    with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+        for arc, src in entries:
+            zi = zipfile.ZipInfo(arc, STAMP)
+            if src is None:
+                zi.external_attr = (0o40755 << 16) | 0x10
+                z.writestr(zi, b'')
+            else:
+                zi.external_attr = 0o644 << 16
+                zi.compress_type = zipfile.ZIP_DEFLATED
+                with open(src, 'rb') as f:
+                    z.writestr(zi, f.read())
+    print(f'wrote {out} ({os.path.getsize(out) / 1024:.0f} KB, {len(entries)} entries)')
+
+
+if __name__ == '__main__':
+    main()

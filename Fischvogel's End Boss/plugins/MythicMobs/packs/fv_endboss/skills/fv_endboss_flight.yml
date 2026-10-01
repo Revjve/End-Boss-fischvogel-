@@ -1,0 +1,480 @@
+# ============================================================================
+#  FischVogel's End Boss - Attack 2: FLIGHT  (animation "attack2")
+# ============================================================================
+#  What the animation does (100% speed, ticks):
+#     0 - 15   the cube rises 64 px (4 blocks) and flips its eye to the ground
+#    47 - 52   the frame bursts open, the laser ignites pointing BACKWARDS -
+#              it is a thruster - and a glowing impact ring appears on the
+#              ground under the boss
+#    50 - 147  FLIGHT: thruster on; the ring's walls pulse at 67, 87 and 107
+#   147        thruster and ring off
+#   180 - 201  the cube comes back down and lands
+#  The model stays on the boss, so the boss itself travels ALONG THE FLOOR
+#  while the cube is drawn 4 blocks above it: the impact ring is always
+#  right under the cube, and the thruster always trails behind because the
+#  boss flies in the direction it faces.
+#
+#  While it is up there it cannot be hit (IMMUNE). After landing it is dazed
+#  ("damage" animation) on the floor for a few seconds and takes x1.35
+#  damage - that is the moment to go in.
+#
+#  DANGER ZONES (all can be jumped over)
+#     under the cube  ....... radius 1.4, 10 damage + knock back
+#     shockwave pulses ...... radius 3.5 at ignition and the 3 wall pulses, 8 damage
+#     burning trail ......... radius 0.85 per piece, 4 damage, lasts 3.2 s
+#     dash wake ............. radius 1.6 while dashing, 12 damage + big knock back
+#     landing ............... radius 2.5, 6 damage
+#
+#  PATTERNS
+#   CHASE    homes in on you - faster than you can run, but it turns slowly:
+#            side-step at the last moment.
+#   DASH     red line on the ground = where it is about to dash. It locks,
+#            dashes ~16 blocks straight through, brakes, aims again.
+#  It never flies further than fv_eb_arena_r (fv_eb_boss_settings, 18 blocks)
+#  from its block - past that it curves back in.
+#   X-CROSS  (phase 2+) marks your spot, then cuts an X through it: dash
+#            through, swing round, cut back across at 90 degrees. Then chases.
+#   ORBIT    (phase 2+) circles you while spiralling in; the burning trail
+#            closes around you - jump over it to get out.
+# ============================================================================
+
+
+# ---- one entry per pattern -------------------------------------------------
+fv_eb_flight_chase:
+  Skills:
+  - setvariable{var=caster.fv_eb_fly_pattern;type=STRING;value=CHASE}
+  - skill{s=fv_eb_flight_sequence} @self
+
+fv_eb_flight_dash:
+  Skills:
+  - setvariable{var=caster.fv_eb_fly_pattern;type=STRING;value=DASH}
+  - skill{s=fv_eb_flight_sequence} @self
+
+fv_eb_flight_xcross:
+  Skills:
+  - setvariable{var=caster.fv_eb_fly_pattern;type=STRING;value=XCROSS}
+  - skill{s=fv_eb_flight_sequence} @self
+
+fv_eb_flight_orbit:
+  Skills:
+  - setvariable{var=caster.fv_eb_fly_pattern;type=STRING;value=ORBIT}
+  - skill{s=fv_eb_flight_sequence} @self
+
+
+# ---- the shared timeline ---------------------------------------------------
+fv_eb_flight_sequence:
+  Skills:
+  - setvariable{var=caster.fv_eb_lasttype;type=STRING;value=FLIGHT}
+  - setvariable{var=caster.fv_eb_mode;type=STRING;value=OPEN}
+  - setvariable{var=caster.fv_eb_alive;type=INTEGER;value=1;duration=440}
+  - setvariable{var=caster.fv_eb_fly_n;type=INTEGER;value=0}
+  - skill{s=fv_eb_anim_attack2} @self
+  - skill{s=fv_eb_sfx_flight_liftoff} @self
+  # the animation lifts the cube 4 blocks; at the same time the boss sinks to
+  # the floor (16 px in 8 ticks), so the cube keeps rising on screen and the
+  # ground ring later appears exactly on the floor
+  - skill{s=fv_eb_height_to_floor} @self
+  # ignition comes t_a2_ign ticks after the animation started; 8 of them are
+  # spent here, the rest is waited out below
+  - setvariable{var=skill.wait;type=INTEGER;value="max(1,(<caster.var.fv_eb_t_a2_ign>)-8)"}
+  - delay 8
+  - setvariable{var=caster.fv_eb_mode;type=STRING;value=IMMUNE}
+  - skill{s=fv_eb_flight_telegraph} @self
+  - delay{ticks=<skill.var.wait>}
+  # ---- IGNITION ----
+  - skill{s=fv_eb_flight_pulse} @self
+  - skill{s=fv_eb_sfx_flight_ignite} @self
+  - setvariable{var=caster.fv_eb_fly_n;type=INTEGER;value=<caster.var.fv_eb_t_a2_fly>}
+  - skill{s=fv_eb_flight_setup} @self
+  - skill{s=fv_eb_flight_tick} @self
+  - skill{s=fv_eb_flight_pulses} @self
+  - delay{ticks=<caster.var.fv_eb_t_a2_fly>}
+  # ---- THRUSTER OFF ----
+  - setvariable{var=caster.fv_eb_fly_n;type=INTEGER;value=0}
+  - skill{s=fv_eb_sfx_flight_cutoff} @self
+  - delay{ticks=<caster.var.fv_eb_t_a2_hover>}
+  # ---- COMING DOWN ----
+  - skill{s=fv_eb_sfx_flight_descend} @self
+  - delay{ticks=<caster.var.fv_eb_t_a2_desc>}
+  # ---- LANDED ---- (dazed takes over 2 ticks before attack2 ends)
+  - skill{s=fv_eb_flight_land} @self
+  - skill{s=fv_eb_flight_dazed} @self
+
+# Hovering up high while the thruster spools up: show what is coming.
+fv_eb_flight_telegraph:
+  Skills:
+  - skill{s=fv_eb_sfx_flight_spool} @self
+  - skill{s=fv_eb_vfx_x_mark} @NearestPlayer{r=48} ?variableequals{var=caster.fv_eb_fly_pattern;value=XCROSS}
+  - skill{s=fv_eb_vfx_orbit_mark} @NearestPlayer{r=48} ?variableequals{var=caster.fv_eb_fly_pattern;value=ORBIT}
+
+fv_eb_flight_setup:
+  Skills:
+  - setvariable{var=skill.pat;type=STRING;value=<caster.var.fv_eb_fly_pattern>}
+  - skill{s=fv_eb_f_dash_setup} @self ?variableequals{var=skill.pat;value=DASH}
+  - skill{s=fv_eb_f_x_setup} @self ?variableequals{var=skill.pat;value=XCROSS}
+  - skill{s=fv_eb_f_orbit_setup} @self ?variableequals{var=skill.pat;value=ORBIT}
+
+# Every tick of the flight: 1. steer, 2. move, 3. danger zones.
+# Outside the arena radius (fv_eb_boss_settings) the pattern does not get to
+# steer - the boss turns back towards its block instead.
+fv_eb_flight_tick:
+  Skills:
+  - variableadd{var=caster.fv_eb_fly_n;amount=-1}
+  - setvariable{var=skill.out;type=FLOAT;value="sqrt(((<caster.l.x.double>)-(<caster.var.fv_eb_home_x>))^2+((<caster.l.z.double>)-(<caster.var.fv_eb_home_z>))^2)>(<caster.var.fv_eb_arena_r>)"}
+  - setvariable{var=skill.pat;type=STRING;value=<caster.var.fv_eb_fly_pattern>}
+  - skill{s=fv_eb_f_chase_turn} @self ?variableequals{var=skill.pat;value=CHASE} ?variableinrange{var=skill.out;value=-1to0.5}
+  - skill{s=fv_eb_f_orbit_turn} @self ?variableequals{var=skill.pat;value=ORBIT} ?variableinrange{var=skill.out;value=-1to0.5}
+  - skill{s=fv_eb_flight_leash} @self ?variableinrange{var=skill.out;value=0.5to2}
+  - skill{s=fv_eb_f_chase_move} @self ?variableequals{var=skill.pat;value=CHASE}
+  - skill{s=fv_eb_f_dash_step} @self ?variableequals{var=skill.pat;value=DASH}
+  - skill{s=fv_eb_f_x_step} @self ?variableequals{var=skill.pat;value=XCROSS}
+  - skill{s=fv_eb_f_orbit_move} @self ?variableequals{var=skill.pat;value=ORBIT}
+  - skill{s=fv_eb_flight_hazard} @self
+  - skill{s=fv_eb_flight_tick;delay=1} @self ?variableinrange{var=caster.fv_eb_fly_n;value=1to99999} ?variableequals{var=caster.fv_eb_state;value=FIGHT}
+
+# Turns 20 degrees per tick towards home (worked out from the stored home
+# coordinates, so it needs nothing else).
+fv_eb_flight_leash:
+  Skills:
+  - setvariable{var=skill.home;type=FLOAT;value="todegree(atan2(0-((<caster.var.fv_eb_home_x>)-(<caster.l.x.double>)),(<caster.var.fv_eb_home_z>)-(<caster.l.z.double>)))"}
+  - setvariable{var=skill.turn;type=FLOAT;value="(((<skill.var.home>)-(<caster.l.yaw>))%360+540)%360-180"}
+  - setrotation{relative=true;yaw=20} @self ?variableinrange{var=skill.turn;value=10to180}
+  - setrotation{relative=true;yaw=-20} @self ?variableinrange{var=skill.turn;value=-180to-10}
+
+# The three wall pulses of the impact ring (67 / 87 / 107 at 100% speed).
+fv_eb_flight_pulses:
+  Skills:
+  - delay{ticks=<caster.var.fv_eb_t_a2_p1>}
+  - skill{s=fv_eb_flight_pulse} @self
+  - delay{ticks=<caster.var.fv_eb_t_a2_p2>}
+  - skill{s=fv_eb_flight_pulse} @self
+  - delay{ticks=<caster.var.fv_eb_t_a2_p3>}
+  - skill{s=fv_eb_flight_pulse} @self
+
+fv_eb_flight_land:
+  Skills:
+  - skill{s=fv_eb_sfx_flight_land} @self
+  - skill{s=fv_eb_vfx_land} @self
+  - skill{s=fv_eb_land_check} @PlayersInRadius{r=3.2}
+
+# Crashed on the floor, dazed. Hit it now.
+fv_eb_flight_dazed:
+  Skills:
+  - setvariable{var=caster.fv_eb_mode;type=STRING;value=STAGGER}
+  - skill{s=fv_eb_anim_dazed} @self
+  - skill{s=fv_eb_sfx_dazed} @self
+  - delay{ticks=<caster.var.fv_eb_t_stagger>}
+  - setvariable{var=caster.fv_eb_mode;type=STRING;value=OPEN}
+  - skill{s=fv_eb_play_idle} @self
+  - skill{s=fv_eb_height_to_idle} @self
+  - skill{s=fv_eb_after_attack} @self
+
+
+# ============================================================================
+#  MOVEMENT - the boss flies the way it faces. These move it forward by a
+#  fixed distance (blocks per tick) along the floor.
+# ============================================================================
+fv_eb_fwd_030:
+  Skills:
+  - teleport @Forward{f=0.3;lockpitch=true;uel=false}
+fv_eb_fwd_036:
+  Skills:
+  - teleport @Forward{f=0.36;lockpitch=true;uel=false}
+fv_eb_fwd_042:
+  Skills:
+  - teleport @Forward{f=0.42;lockpitch=true;uel=false}
+fv_eb_fwd_045:
+  Skills:
+  - teleport @Forward{f=0.45;lockpitch=true;uel=false}
+fv_eb_fwd_048:
+  Skills:
+  - teleport @Forward{f=0.48;lockpitch=true;uel=false}
+fv_eb_fwd_052:
+  Skills:
+  - teleport @Forward{f=0.52;lockpitch=true;uel=false}
+fv_eb_fwd_090:
+  Skills:
+  - teleport @Forward{f=0.9;lockpitch=true;uel=false}
+fv_eb_fwd_100:
+  Skills:
+  - teleport @Forward{f=1.0;lockpitch=true;uel=false}
+fv_eb_fwd_105:
+  Skills:
+  - teleport @Forward{f=1.05;lockpitch=true;uel=false}
+fv_eb_fwd_115:
+  Skills:
+  - teleport @Forward{f=1.15;lockpitch=true;uel=false}
+fv_eb_fwd_130:
+  Skills:
+  - teleport @Forward{f=1.3;lockpitch=true;uel=false}
+
+
+# ============================================================================
+#  CHASE   turn speed / flight speed by phase:  5 / 0.36   6 / 0.42   7 / 0.48
+# ============================================================================
+fv_eb_f_chase_turn:
+  Skills:
+  - rotatetowards{maxyaw=5} @NearestPlayer{r=48} ?variableequals{var=caster.fv_eb_phase;value=1}
+  - rotatetowards{maxyaw=6} @NearestPlayer{r=48} ?variableequals{var=caster.fv_eb_phase;value=2}
+  - rotatetowards{maxyaw=7} @NearestPlayer{r=48} ?variableequals{var=caster.fv_eb_phase;value=3}
+
+fv_eb_f_chase_move:
+  Skills:
+  - skill{s=fv_eb_fwd_036} @self ?variableequals{var=caster.fv_eb_phase;value=1}
+  - skill{s=fv_eb_fwd_042} @self ?variableequals{var=caster.fv_eb_phase;value=2}
+  - skill{s=fv_eb_fwd_048} @self ?variableequals{var=caster.fv_eb_phase;value=3}
+
+
+# ============================================================================
+#  DASH    aim (red line) -> dash -> brake -> aim ...
+#          dash speed by phase: 1.0 / 1.15 / 1.3 blocks per tick
+# ============================================================================
+fv_eb_f_dash_setup:
+  Skills:
+  - setvariable{var=caster.fv_eb_dash_stage;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_eb_dash_t;type=INTEGER;value=<caster.var.fv_eb_n_dash_aim>}
+
+fv_eb_f_dash_step:
+  Skills:
+  - variableadd{var=caster.fv_eb_dash_t;amount=-1}
+  - setvariable{var=skill.st;type=INTEGER;value=<caster.var.fv_eb_dash_stage>}
+  - setvariable{var=skill.t;type=INTEGER;value=<caster.var.fv_eb_dash_t>}
+  - skill{s=fv_eb_f_dash_aim} @self ?variableequals{var=skill.st;value=0}
+  - skill{s=fv_eb_f_dash_go} @self ?variableequals{var=skill.st;value=1}
+  - skill{s=fv_eb_fwd_030} @self ?variableequals{var=skill.st;value=2}
+  - skill{s=fv_eb_f_dash_to_go} @self ?variableequals{var=skill.st;value=0} ?variableinrange{var=skill.t;value=-99to0}
+  - skill{s=fv_eb_f_dash_to_brake} @self ?variableequals{var=skill.st;value=1} ?variableinrange{var=skill.t;value=-99to0}
+  - skill{s=fv_eb_f_dash_to_aim} @self ?variableequals{var=skill.st;value=2} ?variableinrange{var=skill.t;value=-99to0}
+
+fv_eb_f_dash_aim:
+  Skills:
+  - rotatetowards{maxyaw=15} @NearestPlayer{r=48}
+  - skill{s=fv_eb_vfx_dash_line} @self
+
+fv_eb_f_dash_go:
+  Skills:
+  - skill{s=fv_eb_dash_check} @PlayersInRadius{r=2.6}
+  - skill{s=fv_eb_fwd_100} @self ?variableequals{var=caster.fv_eb_phase;value=1}
+  - skill{s=fv_eb_fwd_115} @self ?variableequals{var=caster.fv_eb_phase;value=2}
+  - skill{s=fv_eb_fwd_130} @self ?variableequals{var=caster.fv_eb_phase;value=3}
+
+fv_eb_f_dash_to_go:
+  Skills:
+  - setvariable{var=caster.fv_eb_dash_stage;type=INTEGER;value=1}
+  - setvariable{var=caster.fv_eb_dash_t;type=INTEGER;value=<caster.var.fv_eb_n_dash_go>}
+  - skill{s=fv_eb_sfx_dash} @self
+
+fv_eb_f_dash_to_brake:
+  Skills:
+  - setvariable{var=caster.fv_eb_dash_stage;type=INTEGER;value=2}
+  - setvariable{var=caster.fv_eb_dash_t;type=INTEGER;value=<caster.var.fv_eb_n_dash_brake>}
+
+fv_eb_f_dash_to_aim:
+  Skills:
+  - setvariable{var=caster.fv_eb_dash_stage;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_eb_dash_t;type=INTEGER;value=<caster.var.fv_eb_n_dash_aim>}
+
+
+# ============================================================================
+#  X-CROSS   leg 1: through your spot and 6 blocks past it
+#            turn 135, leg 2: ~8.5 blocks (lines up the second cut)
+#            turn 135, leg 3: 12 blocks back across your spot at 90 degrees
+#            then it chases for the rest of the flight
+#            speed 0.9 (phase 2) / 1.05 (phase 3) blocks per tick
+# ============================================================================
+fv_eb_f_x_setup:
+  Skills:
+  - setvariable{var=caster.fv_eb_x_speed;type=FLOAT;value=0.9}
+  - setvariable{var=caster.fv_eb_x_speed;type=FLOAT;value=1.05} ?variableequals{var=caster.fv_eb_phase;value=3}
+  - setvariable{var=caster.fv_eb_x_stage;type=INTEGER;value=1}
+  - setvariable{var=caster.fv_eb_x_t;type=INTEGER;value=16}
+  - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
+  - setvariable{var=caster.fv_eb_x_t;type=INTEGER;value="ceil((sqrt(((<target.l.x.double>)-(<caster.l.x.double>))^2+((<target.l.z.double>)-(<caster.l.z.double>))^2)+6)/(<caster.var.fv_eb_x_speed>))"} @NearestPlayer{r=48}
+  - randomskill{skills=fv_eb_x_turn_left,fv_eb_x_turn_right} @self
+  - skill{s=fv_eb_sfx_dash} @self
+
+fv_eb_x_turn_left:
+  Skills:
+  - setvariable{var=caster.fv_eb_x_turn;type=INTEGER;value=1}
+fv_eb_x_turn_right:
+  Skills:
+  - setvariable{var=caster.fv_eb_x_turn;type=INTEGER;value=-1}
+
+fv_eb_f_x_step:
+  Skills:
+  - variableadd{var=caster.fv_eb_x_t;amount=-1}
+  - setvariable{var=skill.st;type=INTEGER;value=<caster.var.fv_eb_x_stage>}
+  - setvariable{var=skill.t;type=INTEGER;value=<caster.var.fv_eb_x_t>}
+  - skill{s=fv_eb_dash_check} @PlayersInRadius{r=2.6}
+  - skill{s=fv_eb_fwd_090} @self ?variableinrange{var=caster.fv_eb_phase;value=1to2}
+  - skill{s=fv_eb_fwd_105} @self ?variableequals{var=caster.fv_eb_phase;value=3}
+  - skill{s=fv_eb_f_x_turn} @self ?variableinrange{var=skill.st;value=1to2} ?variableinrange{var=skill.t;value=-99to0}
+  - skill{s=fv_eb_f_x_done} @self ?variableequals{var=skill.st;value=3} ?variableinrange{var=skill.t;value=-99to0}
+
+fv_eb_f_x_turn:
+  Skills:
+  - setrotation{relative=true;yaw=135} @self ?variableequals{var=caster.fv_eb_x_turn;value=1}
+  - setrotation{relative=true;yaw=-135} @self ?variableequals{var=caster.fv_eb_x_turn;value=-1}
+  - setvariable{var=skill.st;type=INTEGER;value=<caster.var.fv_eb_x_stage>}
+  # leg 2 = 8.5 blocks, leg 3 = 12 blocks
+  - setvariable{var=caster.fv_eb_x_t;type=INTEGER;value="ceil(8.49/(<caster.var.fv_eb_x_speed>))"} ?variableequals{var=skill.st;value=1}
+  - setvariable{var=caster.fv_eb_x_t;type=INTEGER;value="ceil(12/(<caster.var.fv_eb_x_speed>))"} ?variableequals{var=skill.st;value=2}
+  - variableadd{var=caster.fv_eb_x_stage;amount=1}
+  - skill{s=fv_eb_sfx_dash} @self
+
+fv_eb_f_x_done:
+  Skills:
+  - setvariable{var=caster.fv_eb_fly_pattern;type=STRING;value=CHASE}
+
+
+# ============================================================================
+#  ORBIT     faces you, then turns 82 degrees away from you and flies on:
+#            a circle that slowly spirals in. 0.45 / 0.52 blocks per tick.
+# ============================================================================
+fv_eb_f_orbit_setup:
+  Skills:
+  - randomskill{skills=fv_eb_orbit_left,fv_eb_orbit_right} @self
+
+fv_eb_orbit_left:
+  Skills:
+  - setvariable{var=caster.fv_eb_orbit_dir;type=INTEGER;value=1}
+fv_eb_orbit_right:
+  Skills:
+  - setvariable{var=caster.fv_eb_orbit_dir;type=INTEGER;value=-1}
+
+fv_eb_f_orbit_turn:
+  Skills:
+  - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
+  - setrotation{relative=true;yaw=82} @self ?variableequals{var=caster.fv_eb_orbit_dir;value=1}
+  - setrotation{relative=true;yaw=-82} @self ?variableequals{var=caster.fv_eb_orbit_dir;value=-1}
+
+fv_eb_f_orbit_move:
+  Skills:
+  - skill{s=fv_eb_fwd_045} @self ?variableinrange{var=caster.fv_eb_phase;value=1to2}
+  - skill{s=fv_eb_fwd_052} @self ?variableequals{var=caster.fv_eb_phase;value=3}
+
+
+# ============================================================================
+#  DANGER ZONES
+# ============================================================================
+# Every tick of the flight: the zone under the cube, the trail, the visuals.
+fv_eb_flight_hazard:
+  Skills:
+  - skill{s=fv_eb_under_check} @PlayersInRadius{r=2.2}
+  - skill{s=fv_eb_trail_drop} @self
+  - skill{s=fv_eb_vfx_flight} @self
+  - skill{s=fv_eb_sfx_flight_thrust} @self
+
+# A new trail piece every 3 ticks, right under the boss.
+fv_eb_trail_drop:
+  Cooldown: 0.15
+  Skills:
+  - summon{type=fv_endboss_scorch;amount=1;radius=0} @SelfLocation{y=0.05}
+
+# hd = horizontal distance to the boss, dy = feet height above the floor
+# the boss is gliding along. Jumping (dy above 0.6) clears it.
+# The values are stored on each player (target scope) and the _hit skill
+# checks them with TargetConditions, so every player is judged on their own
+# position. (An inline ?condition would test the boss, not the player.)
+fv_eb_under_check:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  - hasaura{auraName=fv_eb_if_body} false
+  Skills:
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value=99}
+  - setvariable{var=target.fv_eb_dy;type=FLOAT;value="(<target.l.y.double>)-(<caster.l.y.double>)"}
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value="sqrt(((<target.l.x.double>)-(<caster.l.x.double>))^2+((<target.l.z.double>)-(<caster.l.z.double>))^2)"}
+  - skill{s=fv_eb_under_hit}
+
+fv_eb_under_hit:
+  TargetConditions:
+  - variableinrange{var=target.fv_eb_hd;value=0to1.4} true
+  - variableinrange{var=target.fv_eb_dy;value=-1.5to0.6} true
+  Skills:
+  - damage{amount=10;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - throw{velocity=8;velocityY=4}
+  - aura{auraName=fv_eb_if_body;duration=12;maxStacks=1;refreshDuration=true}
+  - skill{s=fv_eb_sfx_body_hit}
+
+# Dashing: a wider wake and a much bigger shove.
+fv_eb_dash_check:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  - hasaura{auraName=fv_eb_if_body} false
+  Skills:
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value=99}
+  - setvariable{var=target.fv_eb_dy;type=FLOAT;value="(<target.l.y.double>)-(<caster.l.y.double>)"}
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value="sqrt(((<target.l.x.double>)-(<caster.l.x.double>))^2+((<target.l.z.double>)-(<caster.l.z.double>))^2)"}
+  - skill{s=fv_eb_dash_hit}
+
+fv_eb_dash_hit:
+  TargetConditions:
+  - variableinrange{var=target.fv_eb_hd;value=0to1.6} true
+  - variableinrange{var=target.fv_eb_dy;value=-1.5to0.6} true
+  Skills:
+  - damage{amount=12;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - throw{velocity=14;velocityY=6}
+  - aura{auraName=fv_eb_if_body;duration=15;maxStacks=1;refreshDuration=true}
+  - skill{s=fv_eb_sfx_body_hit}
+
+# Ignition and the three ring pulses: a shockwave around the boss.
+fv_eb_flight_pulse:
+  Conditions:
+  - variableequals{var=caster.fv_eb_state;value=FIGHT} true
+  Skills:
+  - skill{s=fv_eb_sfx_pulse} @self
+  - skill{s=fv_eb_vfx_pulse} @self
+  - skill{s=fv_eb_pulse_check} @PlayersInRadius{r=4}
+
+fv_eb_pulse_check:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  - hasaura{auraName=fv_eb_if_pulse} false
+  Skills:
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value=99}
+  - setvariable{var=target.fv_eb_dy;type=FLOAT;value="(<target.l.y.double>)-(<caster.l.y.double>)"}
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value="sqrt(((<target.l.x.double>)-(<caster.l.x.double>))^2+((<target.l.z.double>)-(<caster.l.z.double>))^2)"}
+  - skill{s=fv_eb_pulse_hit}
+
+fv_eb_pulse_hit:
+  TargetConditions:
+  - variableinrange{var=target.fv_eb_hd;value=0to3.5} true
+  - variableinrange{var=target.fv_eb_dy;value=-1.5to0.6} true
+  Skills:
+  - damage{amount=8;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - throw{velocity=9;velocityY=3}
+  - aura{auraName=fv_eb_if_pulse;duration=10;maxStacks=1;refreshDuration=true}
+  - skill{s=fv_eb_sfx_body_hit}
+
+fv_eb_land_check:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  Skills:
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value=99}
+  - setvariable{var=target.fv_eb_dy;type=FLOAT;value="(<target.l.y.double>)-(<caster.l.y.double>)"}
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value="sqrt(((<target.l.x.double>)-(<caster.l.x.double>))^2+((<target.l.z.double>)-(<caster.l.z.double>))^2)"}
+  - skill{s=fv_eb_land_hit}
+
+fv_eb_land_hit:
+  TargetConditions:
+  - variableinrange{var=target.fv_eb_hd;value=0to2.5} true
+  - variableinrange{var=target.fv_eb_dy;value=-1.5to0.8} true
+  Skills:
+  - damage{amount=6;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - throw{velocity=7;velocityY=3}
+
+# Runs on each trail piece (fv_endboss_scorch) every 4 ticks.
+fv_eb_scorch_tick:
+  Skills:
+  - particles{particle=soul_fire_flame;amount=2;hs=0.3;vs=0.02;speed=0.01;y=0.1} @self
+  - particles{particle=dust;color=#6FF3FF;size=0.9;amount=2;hs=0.3;vs=0.02;speed=0;y=0.06} @self
+  - skill{s=fv_eb_scorch_hit} @PlayersInRadius{r=0.85}
+
+fv_eb_scorch_hit:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  - hasaura{auraName=fv_eb_if_trail} false
+  Skills:
+  - damage{amount=4;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - aura{auraName=fv_eb_if_trail;duration=10;maxStacks=1;refreshDuration=true}
+  - skill{s=fv_eb_sfx_scorch}

@@ -1,0 +1,144 @@
+{
+  "soul.whisper": {
+    "subtitle": "subtitles.fv_endboss.soul.whisper",
+    "sounds": [
+      {
+        "name": "fv_endboss:soul/whisper1",
+        "attenuation_distance": 16
+      },
+      {
+        "name": "fv_endboss:soul/whisper1",
+        "pitch": 0.9,
+        "attenuation_distance": 16
+      },
+      {
+        "name": "fv_endboss:soul/whisper2",
+        "attenuation_distance": 16
+      },
+      {
+        "name": "fv_endboss:soul/whisper2",
+        "pitch": 0.9,
+        "attenuation_distance": 16
+      },
+      {
+        "name": "fv_endboss:soul/whisper3",
+        "attenuation_distance": 16
+      },
+      {
+        "name": "fv_endboss:soul/whisper3",
+        "pitch": 0.9,
+        "attenuation_distance": 16
+      },
+      {
+        "name": "fv_endboss:soul/whisper4",
+        "attenuation_distance": 16
+      },
+      {
+        "name": "fv_endboss:soul/whisper4",
+        "pitch": 0.9,
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "soul.wail": {
+    "subtitle": "subtitles.fv_endboss.soul.wail",
+    "sounds": [
+      {
+        "name": "fv_endboss:soul/wail1",
+        "attenuation_distance": 32
+      },
+      {
+        "name": "fv_endboss:soul/wail2",
+        "attenuation_distance": 32
+      },
+      {
+        "name": "fv_endboss:soul/wail3",
+        "attenuation_distance": 32
+      }
+    ]
+  },
+  "soul.shriek": {
+    "subtitle": "subtitles.fv_endboss.soul.shriek",
+    "sounds": [
+      {
+        "name": "fv_endboss:soul/shriek1",
+        "attenuation_distance": 32
+      },
+      {
+        "name": "fv_endboss:soul/shriek2",
+        "attenuation_distance": 32
+      }
+    ]
+  },
+  "soul.gasp": {
+    "subtitle": "subtitles.fv_endboss.soul.gasp",
+    "sounds": [
+      {
+        "name": "fv_endboss:soul/gasp1",
+        "attenuation_distance": 16
+      },
+      {
+        "name": "fv_endboss:soul/gasp2",
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "soul.chant": {
+    "subtitle": "subtitles.fv_endboss.soul.chant",
+    "sounds": [
+      {
+        "name": "fv_endboss:soul/chant1",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "fv_endboss:soul/chant2",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "soul.heartbeat": {
+    "subtitle": "subtitles.fv_endboss.soul.heartbeat",
+    "sounds": [
+      {
+        "name": "fv_endboss:soul/heartbeat",
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "laser.charge": {
+    "subtitle": "subtitles.fv_endboss.laser.charge",
+    "sounds": [
+      {
+        "name": "fv_endboss:laser/charge",
+        "attenuation_distance": 32
+      }
+    ]
+  },
+  "laser.hum": {
+    "subtitle": "subtitles.fv_endboss.laser.hum",
+    "sounds": [
+      {
+        "name": "fv_endboss:laser/hum",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "death.chorus": {
+    "subtitle": "subtitles.fv_endboss.death.chorus",
+    "sounds": [
+      {
+        "name": "fv_endboss:death/chorus",
+        "attenuation_distance": 48
+      }
+    ]
+  },
+  "death.souls": {
+    "subtitle": "subtitles.fv_endboss.death.souls",
+    "sounds": [
+      {
+        "name": "fv_endboss:death/souls",
+        "attenuation_distance": 32
+      }
+    ]
+  }
+}

@@ -1,0 +1,257 @@
+Hey, thank you very much for purchasing.
+
+To use this pack install "MythicMobs", "ModelEngine" (R4) and "Nexo".
+Minecraft 1.21.1 or newer (Paper / Purpur), MythicMobs 5.x.
+
+Drop the contents of the "plugins" folder into your server's plugins folder,
+keeping the exact structure it comes in. Then restart the server and run:
+
+    /meg reload
+    /mm reload
+    /nexo reload all
+
+Nexo builds the resource pack for you and merges ModelEngine's pack into it
+automatically, so there is no separate resource pack to install - just make
+sure your players accept the pack Nexo sends them. The boss's voice (its
+custom sounds) is part of that pack too.
+
+Nothing in the pack touches your existing configs: the sounds live in their
+own namespace (plugins/Nexo/pack/assets/fv_endboss), the MythicMobs files in
+their own pack (plugins/MythicMobs/packs/fv_endboss).
+
+
+--------------------------------------------------------------------------
+PLACING THE BOSS
+--------------------------------------------------------------------------
+
+Stand in the middle of your arena and spawn THE BLOCK - once:
+
+    /mm mobs spawn fv_endboss_dormant
+
+For a perfect fit on the block grid, spawn it from the console with the
+centre of a block (X and Z of the block + 0.5, Y = the top of the floor):
+
+    mm mobs spawn fv_endboss_dormant 1 world,100.5,64,200.5
+
+That is all. The block is persistent: it survives restarts and remembers
+whether a fight is running or it is on cooldown. Never spawn "fv_endboss"
+(the boss itself) by hand - the block summons it.
+
+The arena: give it an open, flat floor with at least 20 blocks of room
+around the block. The flying attack never goes further than 18 blocks from
+the block (change it in fv_eb_boss_settings), but it moves by teleporting,
+so pillars or walls inside that radius are flown straight through.
+
+To remove it again:  /mm mobs kill fv_endboss_dormant  (and fv_endboss, if
+a fight is running).
+
+
+--------------------------------------------------------------------------
+THE FIGHT
+--------------------------------------------------------------------------
+
+THE BLOCK
+  It sits on the ground like a normal block and cannot be hurt. Up close you
+  hear a heartbeat inside it, sometimes a whisper, and now and then it opens
+  its eye and looks at you. Left OR right click it to wake it up.
+
+WAKING UP (on_spawn, 7 seconds)
+  The block turns into the boss in the same spot: light bursts out, it
+  trembles, lifts off, speaks, the frame strains and bursts open and shoves
+  everybody back. It cannot be damaged during the whole animation.
+
+THE LOOP
+  It floats in place and turns to face the closest player - this is when to
+  hit it. Then it picks an attack - never the same KIND (laser / flight /
+  shooting) twice in a row - and a random pattern of that kind.
+
+  When it takes damage depends on what it is doing:
+    idle, winding up, shooting ......... full damage
+    laser beam live .................... half damage (its shell hardens)
+    flying 4 blocks up ................. no damage (out of reach)
+    crash-landed and dazed ............. x1.35 damage - the big opening
+
+  PHASE 2 at 66% health, PHASE 3 at 33%. When the current attack is done it
+  screams and a shockwave throws everyone back. Every phase makes it faster:
+  shorter idle, faster animations (110% / 120%), more and faster shots,
+  quicker turns, shorter openings, and new patterns unlock. In phase 3 a
+  shooting attack can chain straight into the next attack.
+
+ATTACK 1 - LASER (attack1)
+  It always pings ~0.4 s before the beam ignites. The beam reaches 10 blocks
+  and hits hard (14).
+  STRAIGHT   tracks you while charging, then the beam creeps after you at
+             chest height - step sideways. Phase 2+: it pings again and
+             FLICKS onto where you stand.
+  JUMP ROPE  sinks to the floor and sweeps 360 degrees at shin height - JUMP.
+             A red ring on the floor shows the beam's reach. Phase 3: it
+             reverses once halfway (high double click warns you).
+  HUNTER     (phase 2+) follows you, turning faster every quarter of the
+             beam. Circle it tightly or get out of its reach.
+  CHAOS      (phase 2+) shin-height sweep that randomly reverses (high double
+             click) or changes speed (rising chime). Both are announced.
+
+ATTACK 2 - FLIGHT (attack2)
+  The cube rises 4 blocks; the thruster fires and the glowing ring under it
+  marks where it is. Danger: under the cube, the shockwave pulses of the
+  ring, a burning trail on the floor, and its landing. It finishes with a
+  crash-landing: dazed on the floor = the big damage window.
+  CHASE      homes in on you - faster than you, but it turns slowly.
+  DASH       a red line on the floor shows the next dash. Get off the line.
+  X-CROSS    (phase 2+) marks your spot, cuts an X through it, then chases.
+  ORBIT      (phase 2+) circles you while spiralling in - the burning trail
+             closes around you, jump over it to get out.
+
+ATTACK 3 - SHOOTING (shooting + the projectile model)
+  Shots fly straight and level and burst where they end (direct hit 9,
+  burst splash 4).
+  AIMED      (phase 1-2) tracks you, PING + a thin red sight line, then a
+             very fast shot.
+  BURST      (phase 2+) a stream of shots aimed at you; every 3rd (phase 3:
+             every 2nd) is aimed where you are GOING - change direction.
+  RING       spins and sprays shots all around. Phase 2+: a second ring
+             fires through the gaps of the first (phase 3: spinning back).
+  FAN        (phase 2+) 5 shots wide, then 4 between them - step into gaps.
+  SPIRAL     (phase 3) two streams sweep around it like clock hands, with
+             gaps; it reverses halfway. Run around it close, or slip
+             through a gap.
+
+DEATH
+  It lifts, the light rays spin out with a choir of every voice it held, it
+  collapses, closes its eye, two heartbeats of silence - and the block
+  shatters. The souls drift away. 1500 xp.
+
+AFTERWARDS
+  The block re-forms after 5 minutes (fv_eb_block_settings; -1 = the boss can
+  only be killed once). If everybody leaves (nobody within 40 blocks for 15
+  seconds) the boss gives up and turns back into the block. After a restart
+  or a chunk unload during a fight, the block simply re-forms.
+
+
+--------------------------------------------------------------------------
+SOUND DESIGN - "A SOUL TRAPPED IN A BLOCK"
+--------------------------------------------------------------------------
+
+The soul's voice is 18 custom sounds, all synthesised from scratch (no
+samples, nothing licensed): whispers that almost form words ("let me out",
+"help me", "so cold inside", "free us"), wails, short shrieks, gasps, a chant
+("we are still here", "let us go"), a heartbeat inside crystal, the laser's
+charge-up and hum with a voice screaming inside it, a death choir and the
+freed souls.
+
+Every cue layers vanilla sounds on top - breaking amethyst, glass and
+deepslate, chains, sculk shriekers, the warden's heartbeat - so players who
+decline the resource pack still hear a complete fight (minus the voice).
+
+Want to swap in your own recordings? Replace the .ogg files in
+plugins/Nexo/pack/assets/fv_endboss/sounds/ (mono .ogg - Minecraft only
+places mono sounds in the world - same names) and run /nexo reload all. The
+events are listed in sounds.json, the subtitles in lang/en_us.json, and
+which cue plays what in skills/fv_endboss_fx.yml.
+
+
+--------------------------------------------------------------------------
+WHAT WAS CHANGED IN THE MODELS - functional only
+--------------------------------------------------------------------------
+
+The look of both models is untouched: geometry, textures, UVs, pivots and
+the designed motion are exactly as delivered. These are the only changes:
+
+  1. math.random() baked. Blockbench re-rolls math.random() every frame -
+     that is what makes the shaker bones jitter. ModelEngine does not, so the
+     jitter is pre-rolled into one keyframe per tick (20 per second, the
+     most the game can show) within the very same ranges, using Blockbench's
+     own interpolation rules. on_spawn, idle, damage, attack1, attack2,
+     shooting and death; the laser flicker in attack1/attack2 too.
+  2. idle: the eye cubes eye1/eye2/eye3 are hidden. All four eye cubes sit in
+     the same spot; Blockbench draws eye4 on top, in game identical faces
+     flicker. Hiding the three covered ones gives exactly the editor's look.
+  3. A new animation "dormant": the closed block - on_spawn's very first
+     frame without the light rays. No new geometry; it is what the block
+     shows before you click it.
+  4. "override" is ticked on every animation, so ModelEngine plays one
+     animation at a time instead of adding idle on top of the attacks.
+  5. Saved in Blockbench's legacy 4.10 format (the same as "File > Export
+     Legacy Project" in Blockbench 5), which every ModelEngine build reads.
+  6. Renamed to fv_endboss / fv_endboss_projectile.
+
+Source Files contains your originals and the converted models in
+Blockbench 5 format for editing. If you change an animation, save it, then
+use "File > Export Legacy Project" over the blueprint in
+plugins/ModelEngine/blueprints (or copy it there if your ModelEngine
+version reads Blockbench 5 files).
+
+
+--------------------------------------------------------------------------
+TUNING
+--------------------------------------------------------------------------
+
+Everything worth balancing is listed in the "TUNING CHEAT SHEET" at the top
+of plugins/MythicMobs/packs/fv_endboss/skills/fv_endboss_core.yml.
+
+The most common changes:
+  - boss health ............. Health: in mobs/fv_endboss_mobs.yml (750 suits
+                              1-3 players; add ~250 per extra player)
+  - respawn time ............ fv_eb_block_settings (seconds, -1 = once)
+  - arena radius ............ fv_eb_boss_settings
+  - damage numbers .......... the damage{amount=..} lines (listed in the
+                              cheat sheet)
+  - idle time, openings, how
+    many shots, gaps ........ the PHASE TABLES (fv_eb_phase_1/2/3)
+  - which patterns a phase
+    may use ................. fv_eb_type_* in fv_endboss_core.yml
+  - projectile speeds ....... v= in the fv_eb_fire_* skills (shooting file)
+
+The animation speeds (speed=1.0/1.1/1.2 on the state{} lines in
+fv_eb_anim_*) drive the tick numbers in the phase tables. If you change a
+speed, redo the division written next to the table.
+
+The boss bar uses the colour BLUE on purpose: no vanilla boss uses it, so a
+custom boss bar texture can later replace the blue bar sprites without
+touching the Ender Dragon, Wither or raid bars.
+
+
+--------------------------------------------------------------------------
+IF SOMETHING LOOKS WRONG
+--------------------------------------------------------------------------
+
+The block / boss is invisible
+  Check /meg reload printed no errors and that both .bbmodel files are in
+  plugins/ModelEngine/blueprints. Players must accept the Nexo pack.
+
+Projectiles or the explosion are invisible
+  Set "Marker: false" in fv_endboss_fx_base (mobs file) - a few ModelEngine
+  builds will not render models on marker armour stands.
+
+The boss vanished / the block came back on its own
+  Nobody was within 40 blocks for 15 seconds, the chunk unloaded, or the
+  server restarted - in all three cases the fight resets on purpose.
+
+The boss does nothing after waking up
+  Your difficulty is Peaceful (slimes are removed), or the chunk is not
+  loaded. The fight needs Easy or higher.
+
+It flies through my arena's pillars
+  The flying attack teleports. Keep the floor within fv_eb_boss_settings'
+  radius open and flat.
+
+No custom voice, only vanilla sounds
+  The player declined the resource pack, or Nexo has not rebuilt it - run
+  /nexo reload all after installing.
+
+Errors in the console mentioning fv_eb_...
+  Please send me the lines; each skill is named after what it does.
+
+
+--------------------------------------------------------------------------
+BEFORE YOU OPEN THE ARENA
+--------------------------------------------------------------------------
+
+Do one test fight in Survival with the resource pack accepted: wake the
+block, let it run through a few attacks, and watch the console for errors
+during /mm reload. Fighting it in Creative works too, but Creative players
+are ignored by every attack.
+
+
+If you have any questions, please reach out to me on my Discord server:
+https://discord.com/invite/NMYgCMRM9e
