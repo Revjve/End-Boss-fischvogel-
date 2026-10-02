@@ -17,6 +17,14 @@ A MythicMobs + ModelEngine + Nexo boss: a soul trapped in a block.
 | `Fischvogel's End Boss/Source Files/` | The original `.bbmodel` files as delivered, plus the converted models in Blockbench 5 format. |
 | `tools/` | Build, conversion, sound synthesis, static checker and fight simulator. |
 
+## Where it sits in the game
+
+![Side view of every state at its in-game height](docs/in-game-heights.png)
+
+Every height in the skills was measured against the blueprint (`tools/model_lowest.json`,
+the lowest point of the cube and frame per animation tick) so the frame never sinks into
+the floor; the fight simulator checks this every tick.
+
 ## Tools
 
 ```sh

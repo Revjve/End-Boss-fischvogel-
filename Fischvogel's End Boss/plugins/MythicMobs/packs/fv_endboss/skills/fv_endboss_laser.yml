@@ -93,7 +93,7 @@ fv_eb_l_aim_tick:
 fv_eb_laser_straight:
   Skills:
   - skill{s=fv_eb_laser_begin} @self
-  - skill{s=fv_eb_height_to_idle} @self
+  - skill{s=fv_eb_height_to_aim} @self
   - setvariable{var=caster.fv_eb_aim_n;type=INTEGER;value=<caster.var.fv_eb_t_a1_lock>}
   - skill{s=fv_eb_l_aim_tick} @self
   - delay{ticks=<caster.var.fv_eb_t_a1_lock>}
@@ -280,7 +280,7 @@ fv_eb_spin_rotate:
 fv_eb_laser_hunter:
   Skills:
   - skill{s=fv_eb_laser_begin} @self
-  - skill{s=fv_eb_height_to_idle} @self
+  - skill{s=fv_eb_height_to_aim} @self
   - setvariable{var=caster.fv_eb_aim_n;type=INTEGER;value=<caster.var.fv_eb_t_a1_lock>}
   - skill{s=fv_eb_l_aim_tick} @self
   - delay{ticks=<caster.var.fv_eb_t_a1_lock>}

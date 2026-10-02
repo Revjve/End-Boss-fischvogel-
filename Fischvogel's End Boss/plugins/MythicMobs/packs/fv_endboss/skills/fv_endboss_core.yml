@@ -51,12 +51,14 @@
 #
 #  ---- HEIGHT ---------------------------------------------------------------
 #   All heights are in model pixels (16 px = 1 block) above the floor the
-#   block sat on (fv_eb_hpx). Between attacks the boss hovers at 16 px.
-#   The frame corners hang up to 9 px below the model's origin in attack1,
-#   8 px in damage / shooting and 6 px when attack2 lands, so the boss never
-#   goes lower than that while those play - otherwise the frame sinks into
-#   the floor:  idle 16 | low laser 9 | landed / dazed 8 | flying 0 (attack2
-#   lifts the cube 4 blocks itself).
+#   block sat on (fv_eb_hpx). Every height was measured against the
+#   blueprint so the frame never touches the floor (the corners hang up to
+#   9 px below the cube's origin in attack1):
+#      between attacks .......... 20 px  (floats 1.25 blocks up)
+#      chest laser / shooting ... 16 px  (beam and shots at chest height)
+#      low laser sweep ..........  9 px  (beam at knee height - jump it)
+#      landed / dazed ...........  8 px
+#      flying (attack2) .........  0 px  (the animation lifts the cube 4 blocks)
 #   Moves are done in exact pixel steps by fv_eb_height_step, so the height
 #   can never drift over a long fight. Use a flat arena floor.
 # ============================================================================
@@ -220,14 +222,20 @@ fv_eb_block_spawn:
   - skill{s=fv_eb_snap_yaw} @self
   - skill{s=fv_eb_block_model} @self
 
-# The dormant look: on_spawn's very first frame without the light rays -
-# closed frame, closed eye, every effect bone hidden. Lit by the world like
-# a normal block; it only starts to glow once it wakes up.
+# The dormant look: on_spawn's very first frame, frozen - the closed block
+# exactly as it looks the moment it starts to wake (every bone pinned, the
+# light rays not out yet). Lit by the world like a normal block; it only
+# starts to glow once it wakes up.
+# ModelEngine plays "default states" on its own (idle while standing still,
+# walk while moving, ...). Here they are pointed at "dormant" too, so nothing
+# can ever make the block move.
 fv_eb_block_model:
   Skills:
   - model{mid=fv_endboss;usm=true;hitbox=false;lockpitch=true;damagetint=false;showshadow=false;radius=64;initrender=false} @self
+  - defaultstate{mid=fv_endboss;type=IDLE;state=dormant;li=0;lo=0} @self
+  - defaultstate{mid=fv_endboss;type=WALK;state=dormant;li=0;lo=0} @self
   - bodyrotation{mid=fv_endboss;playermode=false;mh=0;mb=0;stable=0;rdelay=0;rduration=0} @self
-  - state{mid=fv_endboss;s=dormant;p=1;li=0;lo=0;force=true} @self
+  - state{mid=fv_endboss;s=dormant;p=10;li=0;lo=0;force=true} @self
   - renderinit{mid=fv_endboss} @self
 
 # Blocks only come in four directions - turn to the nearest one.
@@ -255,7 +263,7 @@ fv_eb_block_load:
 fv_eb_block_hit:
   Skills:
   - cancelevent
-  - skill{s=fv_eb_block_wake} @self ?~entitytype{t=PLAYER}
+  - skill{s=fv_eb_block_wake} @self
 
 fv_eb_block_click:
   Skills:
@@ -319,8 +327,8 @@ fv_eb_block_ambience:
 fv_eb_block_peek:
   Cooldown: 7
   Skills:
-  - state{mid=fv_endboss;s=dormant;p=1;r=true;i=true} @self
-  - state{mid=fv_endboss;s=eyes;p=1;li=0;lo=0;force=true} @self
+  - state{mid=fv_endboss;s=dormant;p=10;r=true;i=true} @self
+  - state{mid=fv_endboss;s=eyes;p=10;li=0;lo=0;force=true} @self
   - skill{s=fv_eb_sfx_block_peek} @self
   # eyes is 29 ticks long and ends on the open eye - switch back one tick
   # early so the model is never left without an animation
@@ -329,8 +337,8 @@ fv_eb_block_peek:
 
 fv_eb_block_peek_end:
   Skills:
-  - state{mid=fv_endboss;s=eyes;p=1;r=true;i=true} @self
-  - state{mid=fv_endboss;s=dormant;p=1;li=0;lo=0;force=true} @self
+  - state{mid=fv_endboss;s=eyes;p=10;r=true;i=true} @self
+  - state{mid=fv_endboss;s=dormant;p=10;li=0;lo=0;force=true} @self
 
 fv_eb_noop:
   Skills:
@@ -380,11 +388,17 @@ fv_eb_boss_spawn:
   - skill{s=fv_eb_phase_1} @self
   - skill{s=fv_eb_boss_settings} @self
   - model{mid=fv_endboss;usm=true;hitbox=false;lockpitch=true;damagetint=true;showshadow=true;radius=64;initrender=false} @self
+  # ModelEngine's own default states (idle while standing still, walk while
+  # moving, death when it dies) all point at the empty "blank" animation:
+  # only the states these skills choose ever move the model
+  - defaultstate{mid=fv_endboss;type=IDLE;state=blank;li=0;lo=0} @self
+  - defaultstate{mid=fv_endboss;type=WALK;state=blank;li=0;lo=0} @self
+  - defaultstate{mid=fv_endboss;type=DEATH;state=blank;li=0;lo=0} @self
   # the model always faces exactly where the boss faces - the laser's hit
   # detection relies on this (0 degree head/body clamps, no delay)
   - bodyrotation{mid=fv_endboss;playermode=false;mh=0;mb=0;stable=0;rdelay=0;rduration=0} @self
   - brightness{mid=fv_endboss;b=15;s=15} @self
-  - state{mid=fv_endboss;s=on_spawn;p=1;li=0;lo=6;force=true} @self
+  - state{mid=fv_endboss;s=on_spawn;p=10;li=0;lo=6;force=true} @self
   - renderinit{mid=fv_endboss} @self
   - skill{s=fv_eb_wake_timeline} @self
 
@@ -412,8 +426,8 @@ fv_eb_wake_timeline:
 # 6 equal steps, so the cube stays exactly where it is on screen.
 fv_eb_wake_handover:
   Skills:
-  - state{mid=fv_endboss;s=on_spawn;p=1;r=true} @self
-  - state{mid=fv_endboss;s=idle;p=1;li=6;lo=6;force=true} @self
+  - state{mid=fv_endboss;s=on_spawn;p=10;r=true} @self
+  - state{mid=fv_endboss;s=idle;p=10;li=6;lo=6;force=true} @self
   - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
   - delay 1
   - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
@@ -541,9 +555,9 @@ fv_eb_combo:
 fv_eb_return_home:
   Skills:
   - skill{s=fv_eb_sfx_blink} @self
-  - teleport{unsafe=true;preserveyaw=true} @VariableLocation{var=caster.fv_eb_home;y=1}
-  - setvariable{var=caster.fv_eb_hpx;type=INTEGER;value=16}
-  - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=16}
+  - teleport{unsafe=true;preserveyaw=true} @VariableLocation{var=caster.fv_eb_home;y=1.25}
+  - setvariable{var=caster.fv_eb_hpx;type=INTEGER;value=20}
+  - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=20}
   - skill{s=fv_eb_sfx_blink} @self
 
 # Faces the closest player whenever it is not busy attacking.
@@ -587,7 +601,7 @@ fv_eb_phase_break:
   - setvariable{var=caster.fv_eb_alive;type=INTEGER;value=1;duration=200}
   - setvariable{var=caster.fv_eb_mode;type=STRING;value=IMMUNE}
   - skill{s=fv_eb_stop_body} @self
-  - state{mid=fv_endboss;s=damage;p=1;li=3;lo=8;force=true} @self
+  - state{mid=fv_endboss;s=damage;p=10;li=3;lo=8;force=true} @self
   - skill{s=fv_eb_sfx_phase_roar} @self
   - delay 6
   - skill{s=fv_eb_roar_wave} @self
@@ -676,11 +690,53 @@ fv_eb_tip_immune:
 fv_eb_boss_second:
   Skills:
   # tell the block its boss is still alive (expires after 5 s)
-  - setvariable{var=target.fv_eb_boss_alive;type=INTEGER;value=1;duration=100} @Owner
+  - skill{s=fv_eb_link_alive} @MobsInRadius{types=fv_endboss_dormant;r=48}
   # the fight loop stopped answering -> restart it cleanly
   - skill{s=fv_eb_watchdog} @self ?variableequals{var=caster.fv_eb_state;value=FIGHT} ?!variableisset{var=caster.fv_eb_alive}
   # nobody within 40 blocks for 15 seconds -> give up and turn back into the block
   - skill{s=fv_eb_alone_check} @self ?variableequals{var=caster.fv_eb_state;value=FIGHT}
+
+# ---- the link to its block ------------------------------------------------
+# The block summons the boss in its own spot, so the boss's block is the
+# dormant block at (or hidden right under) the boss's home x / z - within
+# 2 blocks, in case summoning nudged the boss onto the block's surface.
+# A second arena's block (keep arenas 5+ blocks apart) is never touched.
+fv_eb_link_measure:
+  Skills:
+  - setvariable{var=target.fv_eb_link_d;type=FLOAT;value="abs((<target.l.x.double>)-(<caster.var.fv_eb_home_x>))+abs((<target.l.z.double>)-(<caster.var.fv_eb_home_z>))"}
+
+fv_eb_link_alive:
+  Skills:
+  - skill{s=fv_eb_link_measure}
+  - skill{s=fv_eb_link_alive_mine}
+
+fv_eb_link_alive_mine:
+  TargetConditions:
+  - variableinrange{var=target.fv_eb_link_d;value=0to2} true
+  Skills:
+  - setvariable{var=target.fv_eb_boss_alive;type=INTEGER;value=1;duration=100}
+
+fv_eb_link_reset:
+  Skills:
+  - skill{s=fv_eb_link_measure}
+  - skill{s=fv_eb_link_reset_mine}
+
+fv_eb_link_reset_mine:
+  TargetConditions:
+  - variableinrange{var=target.fv_eb_link_d;value=0to2} true
+  Skills:
+  - signal{s=FV_EB_RESET}
+
+fv_eb_link_defeated:
+  Skills:
+  - skill{s=fv_eb_link_measure}
+  - skill{s=fv_eb_link_defeated_mine}
+
+fv_eb_link_defeated_mine:
+  TargetConditions:
+  - variableinrange{var=target.fv_eb_link_d;value=0to2} true
+  Skills:
+  - signal{s=FV_EB_DEFEATED}
 
 fv_eb_alone_check:
   Skills:
@@ -693,7 +749,7 @@ fv_eb_reset:
   - setvariable{var=caster.fv_eb_state;type=STRING;value=RESET}
   - skill{s=fv_eb_abort} @self
   - skill{s=fv_eb_sfx_reset} @self
-  - signal{s=FV_EB_RESET} @Owner
+  - skill{s=fv_eb_link_reset} @MobsInRadius{types=fv_endboss_dormant;r=48}
   - remove{delay=4} @self
 
 fv_eb_watchdog:
@@ -720,7 +776,14 @@ fv_eb_abort:
 #  the target every tick, so a new target simply redirects it. It moves
 #  2 px per tick (1 px for the last odd pixel) and keeps fv_eb_hpx exact.
 # ============================================================================
+# floating between attacks: 1.25 blocks
 fv_eb_height_to_idle:
+  Skills:
+  - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=20}
+  - skill{s=fv_eb_height_start} @self
+
+# chest laser / shooting: beam and shots fly at chest height
+fv_eb_height_to_aim:
   Skills:
   - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=16}
   - skill{s=fv_eb_height_start} @self
@@ -785,47 +848,47 @@ fv_eb_h_down2:
 # ============================================================================
 fv_eb_stop_body:
   Skills:
-  - state{mid=fv_endboss;s=on_spawn;p=1;r=true} @self
-  - state{mid=fv_endboss;s=idle;p=1;r=true} @self
-  - state{mid=fv_endboss;s=attack1;p=1;r=true} @self
-  - state{mid=fv_endboss;s=attack2;p=1;r=true} @self
-  - state{mid=fv_endboss;s=shooting;p=1;r=true} @self
-  - state{mid=fv_endboss;s=damage;p=1;r=true} @self
+  - state{mid=fv_endboss;s=on_spawn;p=10;r=true} @self
+  - state{mid=fv_endboss;s=idle;p=10;r=true} @self
+  - state{mid=fv_endboss;s=attack1;p=10;r=true} @self
+  - state{mid=fv_endboss;s=attack2;p=10;r=true} @self
+  - state{mid=fv_endboss;s=shooting;p=10;r=true} @self
+  - state{mid=fv_endboss;s=damage;p=10;r=true} @self
 
 fv_eb_play_idle:
   Skills:
   - skill{s=fv_eb_stop_body} @self
-  - state{mid=fv_endboss;s=idle;p=1;li=6;lo=6;force=true} @self
+  - state{mid=fv_endboss;s=idle;p=10;li=6;lo=6;force=true} @self
 
 fv_eb_anim_attack1:
   Skills:
   - skill{s=fv_eb_stop_body} @self
-  - state{mid=fv_endboss;s=attack1;p=1;li=4;lo=6;speed=1.0;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=1}
-  - state{mid=fv_endboss;s=attack1;p=1;li=4;lo=6;speed=1.1;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=2}
-  - state{mid=fv_endboss;s=attack1;p=1;li=4;lo=6;speed=1.2;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=3}
+  - state{mid=fv_endboss;s=attack1;p=10;li=4;lo=6;speed=1.0;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=1}
+  - state{mid=fv_endboss;s=attack1;p=10;li=4;lo=6;speed=1.1;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=2}
+  - state{mid=fv_endboss;s=attack1;p=10;li=4;lo=6;speed=1.2;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=3}
 
 fv_eb_anim_attack2:
   Skills:
   - skill{s=fv_eb_stop_body} @self
-  - state{mid=fv_endboss;s=attack2;p=1;li=4;lo=4;speed=1.0;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=1}
-  - state{mid=fv_endboss;s=attack2;p=1;li=4;lo=4;speed=1.1;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=2}
-  - state{mid=fv_endboss;s=attack2;p=1;li=4;lo=4;speed=1.2;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=3}
+  - state{mid=fv_endboss;s=attack2;p=10;li=4;lo=4;speed=1.0;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=1}
+  - state{mid=fv_endboss;s=attack2;p=10;li=4;lo=4;speed=1.1;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=2}
+  - state{mid=fv_endboss;s=attack2;p=10;li=4;lo=4;speed=1.2;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=3}
 
 # Restarted for every shot (force=true restarts a playing state), so a
 # volley reads as rapid recoil. Every pattern fires again well before the
 # 50 tick animation could run out, and hands over to idle before it ends.
 fv_eb_anim_shoot:
   Skills:
-  - state{mid=fv_endboss;s=idle;p=1;r=true} @self
-  - state{mid=fv_endboss;s=shooting;p=1;li=2;lo=6;speed=1.0;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=1}
-  - state{mid=fv_endboss;s=shooting;p=1;li=2;lo=6;speed=1.1;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=2}
-  - state{mid=fv_endboss;s=shooting;p=1;li=2;lo=6;speed=1.2;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=3}
+  - state{mid=fv_endboss;s=idle;p=10;r=true} @self
+  - state{mid=fv_endboss;s=shooting;p=10;li=2;lo=6;speed=1.0;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=1}
+  - state{mid=fv_endboss;s=shooting;p=10;li=2;lo=6;speed=1.1;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=2}
+  - state{mid=fv_endboss;s=shooting;p=10;li=2;lo=6;speed=1.2;force=true} @self ?variableequals{var=caster.fv_eb_phase;value=3}
 
 # Dazed on the floor (the "damage" animation loops seamlessly).
 fv_eb_anim_dazed:
   Skills:
   - skill{s=fv_eb_stop_body} @self
-  - state{mid=fv_endboss;s=damage;p=1;li=3;lo=8;force=true} @self
+  - state{mid=fv_endboss;s=damage;p=10;li=3;lo=8;force=true} @self
 
 
 # ============================================================================
@@ -844,14 +907,16 @@ fv_eb_on_death:
   - skill{s=fv_eb_abort} @self
   - summon{type=fv_endboss_deathfx;amount=1;radius=0} @SelfLocation
   - model{mid=fv_endboss;remove=true} @self
-  - signal{s=FV_EB_DEFEATED} @Owner
+  - skill{s=fv_eb_link_defeated} @MobsInRadius{types=fv_endboss_dormant;r=48}
 
 fv_eb_death_start:
   Skills:
   - model{mid=fv_endboss;usm=true;hitbox=false;lockpitch=true;damagetint=false;showshadow=false;radius=64;initrender=false} @self
+  - defaultstate{mid=fv_endboss;type=IDLE;state=blank;li=0;lo=0} @self
+  - defaultstate{mid=fv_endboss;type=WALK;state=blank;li=0;lo=0} @self
   - bodyrotation{mid=fv_endboss;playermode=false;mh=0;mb=0;stable=0;rdelay=0;rduration=0} @self
   - brightness{mid=fv_endboss;b=15;s=15} @self
-  - state{mid=fv_endboss;s=death;p=1;li=0;lo=0;force=true} @self
+  - state{mid=fv_endboss;s=death;p=10;li=0;lo=0;force=true} @self
   - renderinit{mid=fv_endboss} @self
   - skill{s=fv_eb_death_timeline} @self
 

@@ -47,6 +47,8 @@ fv_eb_shoot_begin:
   - setvariable{var=caster.fv_eb_mode;type=STRING;value=OPEN}
   - setvariable{var=caster.fv_eb_alive;type=INTEGER;value=1;duration=440}
   - setvariable{var=caster.fv_eb_shots;type=INTEGER;value=0}
+  # shots leave the eye at chest height
+  - skill{s=fv_eb_height_to_aim} @self
   - skill{s=fv_eb_sfx_shoot_charge} @self
   - skill{s=fv_eb_vfx_shoot_charge} @self
 
@@ -57,6 +59,7 @@ fv_eb_shoot_end:
   - setvariable{var=caster.fv_eb_shots;type=INTEGER;value=0}
   - delay{ticks=<caster.var.fv_eb_t_sh_settle>}
   - skill{s=fv_eb_play_idle} @self ?variableequals{var=caster.fv_eb_state;value=FIGHT}
+  - skill{s=fv_eb_height_to_idle} @self ?variableequals{var=caster.fv_eb_state;value=FIGHT}
   - skill{s=fv_eb_after_attack} @self ?variableequals{var=caster.fv_eb_state;value=FIGHT}
 
 # One shot's recoil + sound. Every pattern calls this right before it fires.

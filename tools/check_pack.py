@@ -38,11 +38,11 @@ MECHANICS = {
     'model', 'bodyrotation', 'brightness', 'renderinit', 'teleport', 'rotatetowards',
     'setrotation', 'summon', 'remove', 'signal', 'cancelevent', 'modifydamage', 'damage',
     'throw', 'aura', 'sound', 'particles', 'particlering', 'particleline', 'projectile',
-    'sendactionmessage', 'setvarloc',
+    'sendactionmessage', 'setvarloc', 'defaultstate',
 }
 TARGETERS = {
     'self', 'selflocation', 'nearestplayer', 'playersinradius', 'forward', 'variablelocation',
-    'owner', 'trigger', 'origin', 'playersnearorigin',
+    'owner', 'trigger', 'origin', 'playersnearorigin', 'mobsinradius',
 }
 CONDITIONS = {
     'variableequals', 'variableinrange', 'variableisset', 'playerwithin', 'entitytype',
@@ -352,6 +352,9 @@ def main():
                 err(where, f'unknown targeter @{tn}')
             if tn == 'variablelocation':
                 check_var_attr(where, ta)
+            if tn == 'mobsinradius':
+                for t in (ta.get('types') or ta.get('type') or '').split(','):
+                    mob_refs.setdefault(t, []).append(where)
             scan_values(where, ta)
         for pre, cn, ca in p['conds']:
             if pre not in ('?', '?!', '?~', '?~!'):
@@ -395,6 +398,13 @@ def main():
                     err(where, f'delay must be a whole, non-negative number of ticks: {p["numbers"][0]}')
             elif not a.get('ticks'):
                 err(where, 'delay without ticks')
+        elif mech == 'defaultstate':
+            mid = a.get('mid') or a.get('m')
+            st = a.get('state') or a.get('s')
+            if (a.get('type') or '').upper() not in ('IDLE', 'WALK', 'JUMP_START', 'JUMP', 'JUMP_END', 'SPAWN', 'DEATH'):
+                err(where, f'unknown default state type {a.get("type")}')
+            if mid not in anims or st not in anims[mid]:
+                err(where, f'default state animation {st} not in {mid}')
         elif mech in ('state', 'model', 'bodyrotation', 'brightness', 'renderinit'):
             mid = a.get('mid') or a.get('m') or a.get('model')
             if mid not in anims:

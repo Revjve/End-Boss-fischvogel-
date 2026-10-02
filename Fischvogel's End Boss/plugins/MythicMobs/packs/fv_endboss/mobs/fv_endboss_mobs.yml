@@ -203,7 +203,7 @@ fv_endboss_bullet:
   - model{mid=fv_endboss_projectile;usm=true;hitbox=false;showshadow=false;radius=64;initrender=false} @self ~onSpawn
   - bodyrotation{mid=fv_endboss_projectile;playermode=true;stable=0;rdelay=0;rduration=0} @self ~onSpawn
   - brightness{mid=fv_endboss_projectile;b=15;s=15} @self ~onSpawn
-  - state{mid=fv_endboss_projectile;s=idle;p=1;li=0;lo=0;force=true} @self ~onSpawn
+  - state{mid=fv_endboss_projectile;s=idle;p=10;li=0;lo=0;force=true} @self ~onSpawn
   - renderinit{mid=fv_endboss_projectile} @self ~onSpawn
 
 # Spawned where a projectile ends: plays the "explosion" animation (flash,
@@ -212,8 +212,9 @@ fv_endboss_burst:
   Template: fv_endboss_fx_base
   Skills:
   - model{mid=fv_endboss_projectile;usm=true;hitbox=false;showshadow=false;radius=64;initrender=false} @self ~onSpawn
+  - defaultstate{mid=fv_endboss_projectile;type=IDLE;state=blank;li=0;lo=0} @self ~onSpawn
   - brightness{mid=fv_endboss_projectile;b=15;s=15} @self ~onSpawn
-  - state{mid=fv_endboss_projectile;s=explosion;p=1;li=0;lo=0;force=true} @self ~onSpawn
+  - state{mid=fv_endboss_projectile;s=explosion;p=10;li=0;lo=0;force=true} @self ~onSpawn
   - renderinit{mid=fv_endboss_projectile} @self ~onSpawn
   - remove{delay=14} @self ~onSpawn
 

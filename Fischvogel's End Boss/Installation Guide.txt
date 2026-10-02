@@ -166,14 +166,24 @@ the designed motion are exactly as delivered. These are the only changes:
   2. idle: the eye cubes eye1/eye2/eye3 are hidden. All four eye cubes sit in
      the same spot; Blockbench draws eye4 on top, in game identical faces
      flicker. Hiding the three covered ones gives exactly the editor's look.
-  3. A new animation "dormant": the closed block - on_spawn's very first
-     frame without the light rays. No new geometry; it is what the block
-     shows before you click it.
-  4. "override" is ticked on every animation, so ModelEngine plays one
+  3. A new animation "dormant": on_spawn's very first frame, frozen - the
+     closed block, every bone pinned, the light rays and the small side
+     lights tucked in. No new geometry; it is what the block shows before
+     you click it, and waking up starts from exactly this frame.
+  4. A new, empty animation "blank" (in both models). ModelEngine plays
+     "default states" on its own - idle while a model stands still, walk
+     while it moves, death when it dies. The skills point those at "blank"
+     (and the block's at "dormant"), so only the fight's own animations
+     ever move a bone.
+  5. attack2 (the down beam): the whole frame tips over so the eye faces
+     the floor, but the laser bone carried an extra -90 degree tilt on top,
+     which sent the beam out sideways. That extra tilt is set to 0: the beam
+     now fires straight down out of the eye into the glowing ring.
+  6. "override" is ticked on every animation, so ModelEngine plays one
      animation at a time instead of adding idle on top of the attacks.
-  5. Saved in Blockbench's legacy 4.10 format (the same as "File > Export
+  7. Saved in Blockbench's legacy 4.10 format (the same as "File > Export
      Legacy Project" in Blockbench 5), which every ModelEngine build reads.
-  6. Renamed to fv_endboss / fv_endboss_projectile.
+  8. Renamed to fv_endboss / fv_endboss_projectile.
 
 Source Files contains your originals and the converted models in
 Blockbench 5 format for editing. If you change an animation, save it, then
@@ -214,6 +224,12 @@ touching the Ender Dragon, Wither or raid bars.
 --------------------------------------------------------------------------
 IF SOMETHING LOOKS WRONG
 --------------------------------------------------------------------------
+
+Updating from an older version of this pack
+  Replace BOTH .bbmodel files in plugins/ModelEngine/blueprints and the
+  whole plugins/MythicMobs/packs/fv_endboss folder, run /meg reload,
+  /mm reload and /nexo reload all, then kill the old block
+  (/mm mobs kill fv_endboss_dormant) and place a new one.
 
 The block / boss is invisible
   Check /meg reload printed no errors and that both .bbmodel files are in

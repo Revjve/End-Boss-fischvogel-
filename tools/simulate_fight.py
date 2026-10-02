@@ -41,6 +41,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from check_pack import parse_line, parse_condition  # noqa: E402
 
 FLOOR = 64.0
+LOWEST = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model_lowest.json')))['lowest']
 ARENA_R = 22.0
 
 
@@ -338,6 +339,11 @@ class Sim:
             return [meta.trigger] if meta.trigger is not None else []
         if name == 'origin':
             return [meta.origin] if meta.origin is not None else [c.loc]
+        if name == 'mobsinradius':
+            r = float(a.get('r', 5))
+            types = (a.get('types') or a.get('type')).split(',')
+            return [e for e in self.ents if not e.removed and not e.player and e.mtype in types
+                    and self.dist(c, e) <= r]
         if name == 'playersnearorigin':
             o = meta.origin or c.loc
             r = float(a.get('r', 5))
@@ -460,6 +466,16 @@ class Sim:
                     t.model, t.anims = None, {}
                 else:
                     t.model = a['mid']
+        elif m == 'defaultstate':
+            for t in targets:
+                if isinstance(t, Ent) and t.model is None and t.alive:
+                    self.error(f'defaultstate on {t} without a model', meta)
+                elif isinstance(t, Ent):
+                    st = a.get('state') or a.get('s')
+                    if st not in self.blueprints[t.model]:
+                        self.error(f'defaultstate animation {st} not in {t.model}', meta)
+                    t.defaults = getattr(t, 'defaults', {})
+                    t.defaults[a['type'].upper()] = st
         elif m in ('bodyrotation', 'brightness', 'renderinit'):
             for t in targets:
                 if t.model is None and t.alive:
@@ -541,7 +557,9 @@ class Sim:
             return
         loop, length = self.blueprints[e.model][s]
         speed = float(a.get('speed', 1))
-        e.anims[s] = {'start': self.tick, 'end': self.tick + length * 20 / speed if loop == 'once' else None}
+        e.anims[s] = {'start': self.tick, 'speed': speed, 'loop': loop, 'length': length,
+                      'li': int(float(a.get('li', 0))),
+                      'end': self.tick + length * 20 / speed if loop == 'once' else None}
 
     def coverage(self):
         for e in self.ents:
@@ -550,6 +568,26 @@ class Sim:
             live = [s for s, st in e.anims.items() if st['end'] is None or self.tick < st['end']]
             if not live:
                 self.error(f'{e} model {e.model} has NO animation playing (rest pose shows)')
+                continue
+            if e.model != 'fv_endboss':
+                continue
+            # ModelEngine plays its own default states unless they are re-pointed
+            if not getattr(e, 'defaults', {}).get('IDLE') or not e.defaults.get('WALK'):
+                self.error(f'{e.mtype}: ModelEngine default idle/walk not re-pointed - they would play under the skills')
+            # the frame must never sink into the floor
+            name = max(live, key=lambda n: e.anims[n]['start'])
+            st = e.anims[name]
+            if self.tick - st['start'] < st['li']:
+                continue          # still blending in from the previous pose
+            sec = (self.tick - st['start']) * st['speed'] / 20
+            if st['loop'] == 'loop':
+                sec = sec % st['length']
+            idx = min(int(round(sec * 20)), len(LOWEST[name]) - 1)
+            low = LOWEST[name][idx]
+            height = (e.y - FLOOR) * 16
+            if low is not None and height + low < -0.5:
+                self.error(f'{e.mtype}: frame sinks {-(height + low):.1f} px into the floor during "{name}" '
+                           f'(standing {height:.1f} px up)')
 
     # ---- projectiles ----
     def launch(self, a, target, meta):
@@ -632,7 +670,7 @@ class Sim:
             for v in ('fv_eb_beam_n', 'fv_eb_fly_n', 'fv_eb_shots'):
                 if (c.var(v) or 0) > 0:
                     self.error(f'attack ended with {v}={c.var(v)} still running', meta)
-            if c.var('fv_eb_hpx_target') not in (16,):
+            if c.var('fv_eb_hpx_target') not in (20,):
                 self.error(f'attack ended without heading back to hover height '
                            f'(target {c.var("fv_eb_hpx_target")})', meta)
         elif name == 'fv_eb_watchdog':

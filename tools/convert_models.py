@@ -317,6 +317,11 @@ def set_loops(model, modes, log):
 
 
 def add_dormant(model, log):
+    """A frozen copy of on_spawn's very first frame: the closed block exactly
+    as it looks the moment the boss starts waking up (light rays not out
+    yet, small side lights tucked in). EVERY bone/channel that any animation moves gets an explicit key,
+    so nothing else (e.g. ModelEngine's automatic default idle) can leak
+    into the pose. No new geometry."""
     if any(a['name'] == 'dormant' for a in model['animations']):
         return
     anim = {
@@ -324,13 +329,51 @@ def add_dormant(model, log):
         'length': 1, 'snapping': 20, 'selected': False, 'group_name': '', 'scope': 0,
         'anim_time_update': '', 'blend_weight': '', 'start_delay': '', 'loop_delay': '', 'animators': {},
     }
-    hidden = ['eye2', 'eye3', 'eye4', 'smalllight1', 'smalllight2', 'smalllight3', 'smalllight4',
-              'laser', 'groundimpact', 'rootshine']
-    animator(anim, model, 'eye1')['keyframes'].append(scale_key('dormant', 'eye1', 1))
-    for b in hidden:
-        animator(anim, model, b)['keyframes'].append(scale_key('dormant', b, 0))
+    spawn = next(a for a in model['animations'] if a['name'] == 'on_spawn')
+    names = {}
+    for a in model['animations']:
+        for an in a.get('animators', {}).values():
+            for k in an.get('keyframes', []):
+                if k['channel'] in ('position', 'rotation', 'scale'):
+                    names.setdefault(an['name'], set()).add(k['channel'])
+    first = {}
+    calc = Molang(random.Random(0))
+    for an in spawn['animators'].values():
+        by = {}
+        for k in an.get('keyframes', []):
+            by.setdefault(k['channel'], []).append(k)
+        for ch, kfs in by.items():
+            if ch in ('position', 'rotation', 'scale'):
+                first[(an['name'], ch)] = interpolate(kfs, 0.0, spawn['loop'], calc)
+    rest = {'position': [0, 0, 0], 'rotation': [0, 0, 0], 'scale': [1, 1, 1]}
+    # the four small side lights are already half out in that frame - tucked
+    # away here so the block is a clean block (they pop out as it wakes)
+    tucked = {('smalllight%d' % i, 'scale'): [0, 0, 0] for i in range(1, 5)}
+    n = 0
+    for bone in sorted(names):
+        for ch in sorted(names[bone]):
+            v = tucked.get((bone, ch), first.get((bone, ch), rest[ch]))
+            animator(anim, model, bone)['keyframes'].append({
+                'channel': ch, 'data_points': [{'x': js_num(v[0]), 'y': js_num(v[1]), 'z': js_num(v[2])}],
+                'uuid': det_uuid('fv-edit', 'dormant', bone, ch), 'time': 0, 'color': -1,
+                'uniform': ch == 'scale' and v[0] == v[1] == v[2], 'interpolation': 'step'})
+            n += 1
     model['animations'].append(anim)
-    log.append('added animation "dormant" (static closed-block pose, effect bones hidden)')
+    log.append('added animation "dormant" (on_spawn frame 0 frozen, %d channels pinned)' % n)
+
+
+def add_blank(model, log):
+    """An animation with no keyframes. ModelEngine plays its default states
+    (idle / walk / death ...) on its own; pointing them at "blank" (skill
+    defaultstate) means only the states the skills choose ever move a bone."""
+    if any(a['name'] == 'blank' for a in model['animations']):
+        return
+    model['animations'].append({
+        'uuid': det_uuid('fv-edit', model['name'], 'blank'), 'name': 'blank', 'loop': 'loop', 'override': False,
+        'length': 1, 'snapping': 20, 'selected': False, 'group_name': '', 'scope': 0,
+        'anim_time_update': '', 'blend_weight': '', 'start_delay': '', 'loop_delay': '', 'animators': {},
+    })
+    log.append('%s: added empty animation "blank"' % model['name'])
 
 
 def set_override(model, log):
@@ -449,11 +492,13 @@ def main(out_dir):
     fix_idle_eyes(boss, log)
     fix_attack2_beam(boss, log)
     add_dormant(boss, log)
+    add_blank(boss, log)
     set_override(boss, log)
 
     proj = json.load(open(os.path.join(SRC, 'projectile (original).bbmodel'), encoding='utf-8'))
     proj['name'] = 'fv_endboss_projectile'
     log.append('projectile: cleaned %d numeric strings' % clean_numbers(proj))
+    add_blank(proj, log)
     set_override(proj, log)
 
     for m in (boss, proj):
