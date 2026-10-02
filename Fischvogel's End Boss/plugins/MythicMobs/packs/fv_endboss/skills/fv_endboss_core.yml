@@ -52,6 +52,11 @@
 #  ---- HEIGHT ---------------------------------------------------------------
 #   All heights are in model pixels (16 px = 1 block) above the floor the
 #   block sat on (fv_eb_hpx). Between attacks the boss hovers at 16 px.
+#   The frame corners hang up to 9 px below the model's origin in attack1,
+#   8 px in damage / shooting and 6 px when attack2 lands, so the boss never
+#   goes lower than that while those play - otherwise the frame sinks into
+#   the floor:  idle 16 | low laser 9 | landed / dazed 8 | flying 0 (attack2
+#   lifts the cube 4 blocks itself).
 #   Moves are done in exact pixel steps by fv_eb_height_step, so the height
 #   can never drift over a long fight. Use a flat arena floor.
 # ============================================================================
@@ -720,7 +725,14 @@ fv_eb_height_to_idle:
   - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=16}
   - skill{s=fv_eb_height_start} @self
 
-fv_eb_height_to_chest:
+# low laser sweeps (attack1): the frame's lowest corner just touches the floor
+fv_eb_height_to_low:
+  Skills:
+  - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=9}
+  - skill{s=fv_eb_height_start} @self
+
+# crash-landed after attack2 (attack2's landing and "damage" while dazed)
+fv_eb_height_to_landed:
   Skills:
   - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=8}
   - skill{s=fv_eb_height_start} @self

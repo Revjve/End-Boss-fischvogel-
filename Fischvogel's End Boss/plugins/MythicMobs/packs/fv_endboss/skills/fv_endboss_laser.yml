@@ -16,25 +16,30 @@
 #  faces exactly where the boss faces.
 #
 #  Height: between attacks the boss hovers 16 px above the floor.
-#     STRAIGHT / HUNTER  sink to  8 px  -> beam at chest height: dodge sideways
-#     JUMP ROPE / CHAOS  sink to  0 px  -> beam at shin height:  jump over it
+#     STRAIGHT / HUNTER  stay at 16 px -> beam at chest height: dodge sideways
+#     JUMP ROPE / CHAOS  sink to   9 px -> beam at knee height: jump over it
+#  (9 px is as low as it goes: attack1's frame reaches 9 px below the cube's
+#  origin, any lower and it sinks into the floor.)
 #
 #  PATTERNS
 #   STRAIGHT   Tracks you while it charges, a "ping" warns 8 ticks before it
 #              fires, then the beam creeps after you. Phase 2+: every few
 #              seconds it pings again and FLICKS onto where you stand.
-#   JUMP ROPE  Sweeps 360 degrees around itself at shin height. Jump it.
+#   JUMP ROPE  Sweeps 360 degrees around itself at knee height. Jump it.
 #              Phase 3: reverses once mid-sweep (double click warns first).
 #   HUNTER     Follows you with a turn speed that rises every quarter of the
 #              beam. Circle it tightly or get out of its ~10 block reach.
-#   CHAOS      Shin height sweep that randomly reverses or changes speed.
+#   CHAOS      Knee height sweep that randomly reverses or changes speed.
 #              Every change is announced 8 ticks before it happens:
 #              high double click = it reverses, rising chime = new speed.
 #
 #  HIT DETECTION (fv_eb_beam_check) - exact geometry, every tick, per player:
 #     distance along the beam ......... 0.3 to 10.4 blocks
 #     distance from the beam's centre . 0.55 or less (half beam + half player)
-#     feet height relative to the boss  -1.5 to +0.7 (jumping clears the low beam)
+#     feet height relative to the boss  -1.5 to fv_eb_beam_top:
+#                                       +0.7 for the chest beam (no jumping it),
+#                                       +0.03 for the low beam = feet more than
+#                                       0.6 blocks off the floor (a jump) clears it
 #   Fast sweeps also hit everyone the beam passed over since the last tick,
 #   so a quick spin can never skip a player between two ticks.
 #   After a hit you are immune to the laser for 10 ticks (aura fv_eb_if_laser).
@@ -54,6 +59,7 @@ fv_eb_laser_begin:
   - setvariable{var=caster.fv_eb_spin_thr;type=FLOAT;value=-1}
   - setvariable{var=caster.fv_eb_spin_next;type=INTEGER;value=99999}
   - setvariable{var=caster.fv_eb_spin_mode;type=STRING;value=NONE}
+  - setvariable{var=caster.fv_eb_beam_top;type=FLOAT;value=0.7}
   - skill{s=fv_eb_anim_attack1} @self
   - skill{s=fv_eb_sfx_laser_charge} @self
 
@@ -87,7 +93,7 @@ fv_eb_l_aim_tick:
 fv_eb_laser_straight:
   Skills:
   - skill{s=fv_eb_laser_begin} @self
-  - skill{s=fv_eb_height_to_chest} @self
+  - skill{s=fv_eb_height_to_idle} @self
   - setvariable{var=caster.fv_eb_aim_n;type=INTEGER;value=<caster.var.fv_eb_t_a1_lock>}
   - skill{s=fv_eb_l_aim_tick} @self
   - delay{ticks=<caster.var.fv_eb_t_a1_lock>}
@@ -135,7 +141,8 @@ fv_eb_l_flick:
 fv_eb_laser_jumprope:
   Skills:
   - skill{s=fv_eb_laser_begin} @self
-  - skill{s=fv_eb_height_to_floor} @self
+  - skill{s=fv_eb_height_to_low} @self
+  - setvariable{var=caster.fv_eb_beam_top;type=FLOAT;value=0.03}
   - setvariable{var=caster.fv_eb_spin_mode;type=STRING;value=FLIPONLY}
   # spin speed in degrees per tick: 5 / 6 / 7
   - setvariable{var=caster.fv_eb_spin_deg;type=FLOAT;value=5} ?variableequals{var=caster.fv_eb_phase;value=1}
@@ -159,7 +166,8 @@ fv_eb_laser_jumprope:
 fv_eb_laser_chaos:
   Skills:
   - skill{s=fv_eb_laser_begin} @self
-  - skill{s=fv_eb_height_to_floor} @self
+  - skill{s=fv_eb_height_to_low} @self
+  - setvariable{var=caster.fv_eb_beam_top;type=FLOAT;value=0.03}
   - setvariable{var=caster.fv_eb_spin_mode;type=STRING;value=CHAOS}
   - setvariable{var=caster.fv_eb_spin_deg;type=FLOAT;value="floor(random(<caster.var.fv_eb_chaos_lo>,<caster.var.fv_eb_chaos_hi>+1))"}
   # ticks until the first change (counted from the moment the beam fires)
@@ -272,7 +280,7 @@ fv_eb_spin_rotate:
 fv_eb_laser_hunter:
   Skills:
   - skill{s=fv_eb_laser_begin} @self
-  - skill{s=fv_eb_height_to_chest} @self
+  - skill{s=fv_eb_height_to_idle} @self
   - setvariable{var=caster.fv_eb_aim_n;type=INTEGER;value=<caster.var.fv_eb_t_a1_lock>}
   - skill{s=fv_eb_l_aim_tick} @self
   - delay{ticks=<caster.var.fv_eb_t_a1_lock>}
@@ -337,7 +345,7 @@ fv_eb_beam_check:
   - setvariable{var=target.fv_eb_along;type=FLOAT;value="(<target.var.fv_eb_dz>)*cos(<target.var.fv_eb_yaw>)-(<target.var.fv_eb_dx>)*sin(<target.var.fv_eb_yaw>)"}
   - setvariable{var=target.fv_eb_perp;type=FLOAT;value="abs((<target.var.fv_eb_dx>)*cos(<target.var.fv_eb_yaw>)+(<target.var.fv_eb_dz>)*sin(<target.var.fv_eb_yaw>))"}
   - setvariable{var=target.fv_eb_ad;type=FLOAT;value="abs(((todegree(atan2(0-(<target.var.fv_eb_dx>),<target.var.fv_eb_dz>))-(<caster.l.yaw>)+(<caster.var.fv_eb_spin_half>))%360+540)%360-180)"}
-  - setvariable{var=target.fv_eb_hit;type=FLOAT;value="((<target.var.fv_eb_along>)>=0.3)*((<target.var.fv_eb_along>)<=10.4)*((<target.var.fv_eb_dy>)>=-1.5)*((<target.var.fv_eb_dy>)<=0.7)*max((<target.var.fv_eb_perp>)<=0.55,(<target.var.fv_eb_ad>)<=(<caster.var.fv_eb_spin_thr>))"}
+  - setvariable{var=target.fv_eb_hit;type=FLOAT;value="((<target.var.fv_eb_along>)>=0.3)*((<target.var.fv_eb_along>)<=10.4)*((<target.var.fv_eb_dy>)>=-1.5)*((<target.var.fv_eb_dy>)<=(<caster.var.fv_eb_beam_top>))*max((<target.var.fv_eb_perp>)<=0.55,(<target.var.fv_eb_ad>)<=(<caster.var.fv_eb_spin_thr>))"}
   - skill{s=fv_eb_beam_hit}
 
 fv_eb_beam_hit:

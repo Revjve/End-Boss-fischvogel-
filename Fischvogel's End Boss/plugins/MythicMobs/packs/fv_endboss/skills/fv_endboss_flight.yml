@@ -94,6 +94,8 @@ fv_eb_flight_sequence:
   - skill{s=fv_eb_sfx_flight_cutoff} @self
   - delay{ticks=<caster.var.fv_eb_t_a2_hover>}
   # ---- COMING DOWN ----
+  # lands 8 px up: the landing pose and "damage" hang 6-8 px below the origin
+  - skill{s=fv_eb_height_to_landed} @self
   - skill{s=fv_eb_sfx_flight_descend} @self
   - delay{ticks=<caster.var.fv_eb_t_a2_desc>}
   # ---- LANDED ---- (dazed takes over 2 ticks before attack2 ends)

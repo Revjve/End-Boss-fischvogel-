@@ -83,12 +83,12 @@ ATTACK 1 - LASER (attack1)
   STRAIGHT   tracks you while charging, then the beam creeps after you at
              chest height - step sideways. Phase 2+: it pings again and
              FLICKS onto where you stand.
-  JUMP ROPE  sinks to the floor and sweeps 360 degrees at shin height - JUMP.
+  JUMP ROPE  sinks low and sweeps 360 degrees at knee height - JUMP.
              A red ring on the floor shows the beam's reach. Phase 3: it
              reverses once halfway (high double click warns you).
   HUNTER     (phase 2+) follows you, turning faster every quarter of the
              beam. Circle it tightly or get out of its reach.
-  CHAOS      (phase 2+) shin-height sweep that randomly reverses (high double
+  CHAOS      (phase 2+) knee-height sweep that randomly reverses (high double
              click) or changes speed (rising chime). Both are announced.
 
 ATTACK 2 - FLIGHT (attack2)
