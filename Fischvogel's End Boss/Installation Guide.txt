@@ -92,7 +92,7 @@ ATTACK 1 - LASER (attack1)
              click) or changes speed (rising chime). Both are announced.
 
 ATTACK 2 - FLIGHT (attack2)
-  The cube rises 4 blocks; the thruster fires and the glowing ring under it
+  The cube rises 4 blocks, fires its beam straight down, and the glowing ring under it
   marks where it is. Danger: under the cube, the shockwave pulses of the
   ring, a burning trail on the floor, and its landing. It finishes with a
   crash-landing: dazed on the floor = the big damage window.

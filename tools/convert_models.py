@@ -291,6 +291,24 @@ def fix_idle_eyes(model, log):
         log.append('idle: %s scale 0 (eye4 stays the visible eye, as in Blockbench)' % eye)
 
 
+def fix_attack2_beam(model, log):
+    """attack2 tips the whole frame (root) -90 on X so the eye faces the floor.
+    rootlaser carried an extra -90 on top, so the two added up and the beam came
+    out sideways instead of out of the eye. Zero the extra tilt: the beam now
+    follows the eye straight down into the impact ring."""
+    a2 = next(a for a in model['animations'] if a['name'] == 'attack2')
+    an = animator(a2, model, 'rootlaser')
+    n = 0
+    for k in an['keyframes']:
+        if k['channel'] == 'rotation':
+            for dp in k['data_points']:
+                dp['x'], dp['y'], dp['z'] = '0', '0', '0'
+            n += 1
+    if not n:
+        raise SystemExit('attack2 rootlaser has no rotation keys - nothing to fix')
+    log.append('attack2: rootlaser rotation -90 -> 0 on %d keys (beam follows the eye down)' % n)
+
+
 def set_loops(model, modes, log):
     for a in model['animations']:
         if a['name'] in modes and a['loop'] != modes[a['name']]:
@@ -429,6 +447,7 @@ def main(out_dir):
     log.append('endboss: cleaned %d numeric strings' % clean_numbers(boss))
     bake_random(boss, log)
     fix_idle_eyes(boss, log)
+    fix_attack2_beam(boss, log)
     add_dormant(boss, log)
     set_override(boss, log)
 

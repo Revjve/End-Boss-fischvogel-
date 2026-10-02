@@ -275,7 +275,7 @@ fv_eb_block_wake:
   # 2 ticks of overlap so the boss model is on screen before this one goes
   - delay 2
   - model{mid=fv_endboss;remove=true} @self
-  - teleport @SelfLocation{y=-3}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=-3}
   - setvariable{var=caster.fv_eb_hidden;type=INTEGER;value=1;save=true}
 
 fv_eb_block_second:
@@ -300,7 +300,7 @@ fv_eb_block_countdown:
 # Back on the ground, model on, ready for the next fight.
 fv_eb_block_restore:
   Skills:
-  - teleport @SelfLocation{y=3} ?variableequals{var=caster.fv_eb_hidden;value=1}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=3} ?variableequals{var=caster.fv_eb_hidden;value=1}
   - setvariable{var=caster.fv_eb_hidden;type=INTEGER;value=0;save=true}
   - setvariable{var=caster.fv_eb_block;type=STRING;value=READY;save=true}
   - skill{s=fv_eb_block_model} @self
@@ -414,17 +414,17 @@ fv_eb_wake_handover:
   Skills:
   - state{mid=fv_endboss;s=on_spawn;p=1;r=true} @self
   - state{mid=fv_endboss;s=idle;p=1;li=6;lo=6;force=true} @self
-  - teleport @SelfLocation{y=0.3125}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
   - delay 1
-  - teleport @SelfLocation{y=0.3125}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
   - delay 1
-  - teleport @SelfLocation{y=0.3125}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
   - delay 1
-  - teleport @SelfLocation{y=0.3125}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
   - delay 1
-  - teleport @SelfLocation{y=0.3125}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
   - delay 1
-  - teleport @SelfLocation{y=0.3125}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
   - setvariable{var=caster.fv_eb_hpx;type=INTEGER;value=30}
   - delay 2
   - setvariable{var=caster.fv_eb_state;type=STRING;value=FIGHT}
@@ -541,7 +541,7 @@ fv_eb_combo:
 fv_eb_return_home:
   Skills:
   - skill{s=fv_eb_sfx_blink} @self
-  - teleport @VariableLocation{var=caster.fv_eb_home;y=1}
+  - teleport{unsafe=true;preserveyaw=true} @VariableLocation{var=caster.fv_eb_home;y=1}
   - setvariable{var=caster.fv_eb_hpx;type=INTEGER;value=16}
   - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=16}
   - skill{s=fv_eb_sfx_blink} @self
@@ -759,19 +759,19 @@ fv_eb_height_step:
 
 fv_eb_h_up2:
   Skills:
-  - teleport @SelfLocation{y=0.125}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.125}
   - variableadd{var=caster.fv_eb_hpx;amount=2}
 fv_eb_h_up1:
   Skills:
-  - teleport @SelfLocation{y=0.0625}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.0625}
   - variableadd{var=caster.fv_eb_hpx;amount=1}
 fv_eb_h_down1:
   Skills:
-  - teleport @SelfLocation{y=-0.0625}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=-0.0625}
   - variableadd{var=caster.fv_eb_hpx;amount=-1}
 fv_eb_h_down2:
   Skills:
-  - teleport @SelfLocation{y=-0.125}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=-0.125}
   - variableadd{var=caster.fv_eb_hpx;amount=-2}
 
 

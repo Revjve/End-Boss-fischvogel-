@@ -3,16 +3,15 @@
 # ============================================================================
 #  What the animation does (100% speed, ticks):
 #     0 - 15   the cube rises 64 px (4 blocks) and flips its eye to the ground
-#    47 - 52   the frame bursts open, the laser ignites pointing BACKWARDS -
-#              it is a thruster - and a glowing impact ring appears on the
+#    47 - 52   the frame bursts open, the laser fires straight DOWN out of
+#              the eye and a glowing impact ring appears where it hits the
 #              ground under the boss
-#    50 - 147  FLIGHT: thruster on; the ring's walls pulse at 67, 87 and 107
-#   147        thruster and ring off
+#    50 - 147  FLIGHT: beam on; the ring's walls pulse at 67, 87 and 107
+#   147        beam and ring off
 #   180 - 201  the cube comes back down and lands
 #  The model stays on the boss, so the boss itself travels ALONG THE FLOOR
-#  while the cube is drawn 4 blocks above it: the impact ring is always
-#  right under the cube, and the thruster always trails behind because the
-#  boss flies in the direction it faces.
+#  while the cube is drawn 4 blocks above it: the beam and its impact ring
+#  are always right under the cube.
 #
 #  While it is up there it cannot be hit (IMMUNE). After landing it is dazed
 #  ("damage" animation) on the floor for a few seconds and takes x1.35
@@ -102,7 +101,7 @@ fv_eb_flight_sequence:
   - skill{s=fv_eb_flight_land} @self
   - skill{s=fv_eb_flight_dazed} @self
 
-# Hovering up high while the thruster spools up: show what is coming.
+# Hovering up high while the beam charges: show what is coming.
 fv_eb_flight_telegraph:
   Skills:
   - skill{s=fv_eb_sfx_flight_spool} @self
@@ -178,37 +177,37 @@ fv_eb_flight_dazed:
 # ============================================================================
 fv_eb_fwd_030:
   Skills:
-  - teleport @Forward{f=0.3;lockpitch=true;uel=false}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.3;lockpitch=true;uel=false}
 fv_eb_fwd_036:
   Skills:
-  - teleport @Forward{f=0.36;lockpitch=true;uel=false}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.36;lockpitch=true;uel=false}
 fv_eb_fwd_042:
   Skills:
-  - teleport @Forward{f=0.42;lockpitch=true;uel=false}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.42;lockpitch=true;uel=false}
 fv_eb_fwd_045:
   Skills:
-  - teleport @Forward{f=0.45;lockpitch=true;uel=false}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.45;lockpitch=true;uel=false}
 fv_eb_fwd_048:
   Skills:
-  - teleport @Forward{f=0.48;lockpitch=true;uel=false}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.48;lockpitch=true;uel=false}
 fv_eb_fwd_052:
   Skills:
-  - teleport @Forward{f=0.52;lockpitch=true;uel=false}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.52;lockpitch=true;uel=false}
 fv_eb_fwd_090:
   Skills:
-  - teleport @Forward{f=0.9;lockpitch=true;uel=false}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.9;lockpitch=true;uel=false}
 fv_eb_fwd_100:
   Skills:
-  - teleport @Forward{f=1.0;lockpitch=true;uel=false}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=1.0;lockpitch=true;uel=false}
 fv_eb_fwd_105:
   Skills:
-  - teleport @Forward{f=1.05;lockpitch=true;uel=false}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=1.05;lockpitch=true;uel=false}
 fv_eb_fwd_115:
   Skills:
-  - teleport @Forward{f=1.15;lockpitch=true;uel=false}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=1.15;lockpitch=true;uel=false}
 fv_eb_fwd_130:
   Skills:
-  - teleport @Forward{f=1.3;lockpitch=true;uel=false}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=1.3;lockpitch=true;uel=false}
 
 
 # ============================================================================

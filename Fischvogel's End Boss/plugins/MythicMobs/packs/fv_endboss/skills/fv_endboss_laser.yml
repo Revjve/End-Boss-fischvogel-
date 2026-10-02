@@ -36,12 +36,11 @@
 #  HIT DETECTION (fv_eb_beam_check) - exact geometry, every tick, per player:
 #     distance along the beam ......... 0.3 to 10.4 blocks
 #     distance from the beam's centre . 0.55 or less (half beam + half player)
-#     feet height relative to the boss  -1.5 to fv_eb_beam_top:
-#                                       +0.7 for the chest beam (no jumping it),
-#                                       +0.03 for the low beam = feet more than
-#                                       0.6 blocks off the floor (a jump) clears it
-#   Fast sweeps also hit everyone the beam passed over since the last tick,
-#   so a quick spin can never skip a player between two ticks.
+#     feet height relative to the boss  -1.5 to fv_eb_beam_top
+#                                       (+0.7 chest beam: no jumping it,
+#                                        +0.03 low beam: a jump clears it)
+#   Spinning beams also hit everyone inside the slice they swept since the
+#   last tick, so a fast spin can never skip a player between two ticks.
 #   After a hit you are immune to the laser for 10 ticks (aura fv_eb_if_laser).
 # ============================================================================
 
@@ -67,6 +66,7 @@ fv_eb_laser_on:
   Skills:
   - setvariable{var=caster.fv_eb_mode;type=STRING;value=ARMORED}
   - setvariable{var=caster.fv_eb_beam_n;type=INTEGER;value=<caster.var.fv_eb_t_a1_dur>}
+  - setvariable{var=caster.fv_eb_beam_prev;type=FLOAT;value="<caster.l.yaw>"}
   - skill{s=fv_eb_sfx_laser_fire} @self
 
 fv_eb_laser_off:
@@ -323,34 +323,59 @@ fv_eb_beam_tick:
   - skill{s=fv_eb_beam_check} @PlayersInRadius{r=11}
   - skill{s=fv_eb_vfx_beam} @self
   - skill{s=fv_eb_sfx_laser_hum} @self
+  # where the beam pointed this tick - next tick's sweep test starts here
+  - setvariable{var=caster.fv_eb_beam_prev;type=FLOAT;value="<caster.l.yaw>"}
 
-# Runs once per player within 11 blocks; all values are stored on that
+# Runs once per player within 11 blocks; every value is stored on that
 # player (target scope), so several players are tested independently.
-#   yaw     = where the boss (and so the beam) points, Minecraft convention:
-#             beam direction = (-sin(yaw), 0, cos(yaw))
-#   along   = how far along the beam the player stands
-#   perp    = how far beside the beam's centre line the player stands
-#   ad      = angle between the player and the middle of the area the beam
-#             swept since last tick (for fast spins)
+# Only + - * / sin cos abs min signum are used - no comparisons inside the
+# math; the actual decision is made by TargetConditions on the two hit
+# skills below.
+#   beam direction for yaw a = (-sin a, cos a)
+#   along  how far along the beam the player stands
+#   perp   how far beside the beam's centre line
+#   sect   >= 0 when the player is inside the slice the beam swept since
+#          last tick (spinning patterns only, -99 otherwise)
+#   dyrel  feet height relative to the beam's top limit (<= 0 = low enough
+#          to be hit)
 fv_eb_beam_check:
   TargetConditions:
   - gamemode{m=SURVIVAL,ADVENTURE} true
   - hasaura{auraName=fv_eb_if_laser} false
   Skills:
-  - setvariable{var=target.fv_eb_hit;type=FLOAT;value=0}
   - setvariable{var=target.fv_eb_dx;type=FLOAT;value="(<target.l.x.double>)-(<caster.l.x.double>)"}
   - setvariable{var=target.fv_eb_dz;type=FLOAT;value="(<target.l.z.double>)-(<caster.l.z.double>)"}
   - setvariable{var=target.fv_eb_dy;type=FLOAT;value="(<target.l.y.double>)-(<caster.l.y.double>)"}
-  - setvariable{var=target.fv_eb_yaw;type=FLOAT;value="toradian(<caster.l.yaw>)"}
-  - setvariable{var=target.fv_eb_along;type=FLOAT;value="(<target.var.fv_eb_dz>)*cos(<target.var.fv_eb_yaw>)-(<target.var.fv_eb_dx>)*sin(<target.var.fv_eb_yaw>)"}
-  - setvariable{var=target.fv_eb_perp;type=FLOAT;value="abs((<target.var.fv_eb_dx>)*cos(<target.var.fv_eb_yaw>)+(<target.var.fv_eb_dz>)*sin(<target.var.fv_eb_yaw>))"}
-  - setvariable{var=target.fv_eb_ad;type=FLOAT;value="abs(((todegree(atan2(0-(<target.var.fv_eb_dx>),<target.var.fv_eb_dz>))-(<caster.l.yaw>)+(<caster.var.fv_eb_spin_half>))%360+540)%360-180)"}
-  - setvariable{var=target.fv_eb_hit;type=FLOAT;value="((<target.var.fv_eb_along>)>=0.3)*((<target.var.fv_eb_along>)<=10.4)*((<target.var.fv_eb_dy>)>=-1.5)*((<target.var.fv_eb_dy>)<=(<caster.var.fv_eb_beam_top>))*max((<target.var.fv_eb_perp>)<=0.55,(<target.var.fv_eb_ad>)<=(<caster.var.fv_eb_spin_thr>))"}
+  - setvariable{var=target.fv_eb_dyrel;type=FLOAT;value="(<target.var.fv_eb_dy>)-(<caster.var.fv_eb_beam_top>)"}
+  - setvariable{var=target.fv_eb_ya;type=FLOAT;value="(<caster.l.yaw>)*0.0174532925"}
+  - setvariable{var=target.fv_eb_yb;type=FLOAT;value="(<caster.var.fv_eb_beam_prev>)*0.0174532925"}
+  - setvariable{var=target.fv_eb_along;type=FLOAT;value="(<target.var.fv_eb_dz>)*cos(<target.var.fv_eb_ya>)-(<target.var.fv_eb_dx>)*sin(<target.var.fv_eb_ya>)"}
+  - setvariable{var=target.fv_eb_perp;type=FLOAT;value="abs((<target.var.fv_eb_dx>)*cos(<target.var.fv_eb_ya>)+(<target.var.fv_eb_dz>)*sin(<target.var.fv_eb_ya>))"}
+  - setvariable{var=target.fv_eb_sect;type=FLOAT;value="min((0-sin(<target.var.fv_eb_yb>)*(<target.var.fv_eb_dz>)-cos(<target.var.fv_eb_yb>)*(<target.var.fv_eb_dx>))*signum(<caster.var.fv_eb_spin_deg>),((<target.var.fv_eb_dx>)*cos(<target.var.fv_eb_ya>)+(<target.var.fv_eb_dz>)*sin(<target.var.fv_eb_ya>))*signum(<caster.var.fv_eb_spin_deg>))-99*(1-abs(signum(<caster.var.fv_eb_spin_deg>)))"}
   - skill{s=fv_eb_beam_hit}
+  - skill{s=fv_eb_beam_hit_swept}
 
+# standing in the beam
 fv_eb_beam_hit:
   TargetConditions:
-  - variableinrange{var=target.fv_eb_hit;value=0.5to2} true
+  - hasaura{auraName=fv_eb_if_laser} false
+  - variableinrange{var=target.fv_eb_along;value=0.3to10.4} true
+  - variableinrange{var=target.fv_eb_perp;value=0to0.55} true
+  - variableinrange{var=target.fv_eb_dy;value=-1.5to99} true
+  - variableinrange{var=target.fv_eb_dyrel;value=-99to0} true
+  Skills:
+  - damage{amount=14;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - aura{auraName=fv_eb_if_laser;duration=10;maxStacks=1;refreshDuration=true}
+  - skill{s=fv_eb_sfx_laser_hit}
+
+# a fast sweep passed over the player between two ticks
+fv_eb_beam_hit_swept:
+  TargetConditions:
+  - hasaura{auraName=fv_eb_if_laser} false
+  - variableinrange{var=target.fv_eb_along;value=0.3to10.4} true
+  - variableinrange{var=target.fv_eb_sect;value=0to999} true
+  - variableinrange{var=target.fv_eb_dy;value=-1.5to99} true
+  - variableinrange{var=target.fv_eb_dyrel;value=-99to0} true
   Skills:
   - damage{amount=14;ignoreArmor=false;ii=true;pi=true;pkb=true}
   - aura{auraName=fv_eb_if_laser;duration=10;maxStacks=1;refreshDuration=true}

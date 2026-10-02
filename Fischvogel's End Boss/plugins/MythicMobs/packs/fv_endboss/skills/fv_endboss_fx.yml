@@ -354,7 +354,7 @@ fv_eb_sfx_flight_liftoff:
   - sound{s=fv_endboss:soul.chant;v=1.2;p=1.15} @self
   - particles{particle=gust;amount=3;hs=0.8;vs=0.1;speed=0;y=0.2} @self
 
-# Hovering up high, the thruster spools up.
+# Hovering up high, the beam charges.
 fv_eb_sfx_flight_spool:
   Skills:
   - sound{s=entity.warden.sonic_charge;v=1.5;p=0.8} @self
@@ -368,7 +368,7 @@ fv_eb_sfx_flight_ignite:
   - sound{s=fv_endboss:soul.shriek;v=1.2;p=1} @self
   - particles{particle=explosion;amount=1;hs=0;vs=0;speed=0;y=4.5} @self
 
-# Roar of the thruster, once a second while flying.
+# Roar of the downward beam, once a second while flying.
 fv_eb_sfx_flight_thrust:
   Cooldown: 1
   Skills:

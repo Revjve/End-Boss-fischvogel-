@@ -76,7 +76,9 @@ def main(conv_dir):
         if not is_random:
             a = [(k['time'], k['interpolation'], [str(k['data_points'][0].get(x)).strip() for x in 'xyz']) for k in kfs]
             b = [(k['time'], k['interpolation'], [str(k['data_points'][0].get(x)).strip() for x in 'xyz']) for k in nk]
-            if a != b:
+            if a != b and key[:2] == ('attack2', 'rootlaser') and key[2] == 'rotation':
+                print('A  attack2 rootlaser rotation zeroed on purpose (beam follows the eye down)')
+            elif a != b:
                 print('FAIL A: deterministic channel changed', key)
                 ok = False
             same += 1
