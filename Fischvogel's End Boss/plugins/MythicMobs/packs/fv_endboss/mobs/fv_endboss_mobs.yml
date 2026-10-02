@@ -15,7 +15,7 @@
 #                       turns into the boss without a visible swap.
 #
 #  everything else      invisible effect carriers (projectile, explosion,
-#                       burning trail, death effects). Not real mobs.
+#                       death effects). Not real mobs.
 #
 #  Both the block and the boss stand on an invisible SLIME of size 2, whose
 #  vanilla hitbox is 1.04 x 1.04 blocks - the size of the cube. ModelEngine
@@ -217,15 +217,6 @@ fv_endboss_burst:
   - state{mid=fv_endboss_projectile;s=explosion;p=10;li=0;lo=0;force=true} @self ~onSpawn
   - renderinit{mid=fv_endboss_projectile} @self ~onSpawn
   - remove{delay=14} @self ~onSpawn
-
-# One piece of the burning trail the flight attack (attack2) leaves on the
-# ground. No model - soul fire particles and a small damage zone that you
-# can jump over. Lives 3.2 seconds.
-fv_endboss_scorch:
-  Template: fv_endboss_fx_base
-  Skills:
-  - skill{s=fv_eb_scorch_tick} @self ~onTimer:4
-  - remove{delay=64} @self ~onSpawn
 
 # Death director. When the boss dies, its model is moved onto this carrier,
 # which plays the "death" animation and every sound / particle that belongs

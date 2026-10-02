@@ -1,0 +1,204 @@
+# ============================================================================
+#  FischVogel's End Boss - Attack 2: DOWN BEAM  (animation "attack2")
+# ============================================================================
+#  What the animation does (100% speed, ticks):
+#     0 - 15   the cube rises 64 px (4 blocks) and turns its eye to the floor
+#    47 - 52   the frame bursts open, the beam fires straight DOWN out of the
+#              eye and a glowing impact ring appears where it hits the floor
+#    50 - 147  BEAM: it drifts after the nearest player; the ring's walls
+#              pulse at 67, 87 and 107
+#   147        beam and ring off
+#   180 - 201  the cube comes back down and lands
+#  The model stays on the boss, so the boss itself glides just above the
+#  floor while the cube is drawn 4 blocks above it: the beam always comes
+#  down right under the cube and ends on the floor, inside the ring.
+#
+#  While it is up there it cannot be hit (IMMUNE). After landing it is dazed
+#  ("damage" animation) on the floor for a few seconds and takes x1.35
+#  damage - that is the moment to go in.
+#
+#  DANGER
+#     the beam ......... standing in its impact ring (centre within 0.65 blocks
+#                        of the beam): 14 damage, the same as the chest laser,
+#                        then 0.5 s of laser immunity. The beam reaches from
+#                        the floor up to the cube - jumping does not help,
+#                        walk out of the ring.
+#     landing .......... radius 2.5, 6 damage
+#
+#  MOVEMENT  It turns towards the nearest player and slowly drifts after
+#            them - slower than walking, so keep moving:
+#               phase 1 / 2 / 3 ... 2.2 / 2.8 / 3.4 blocks a second
+#               turning ........... 6 / 8 / 10 degrees a tick
+#            It stops when it is right on top of you, and it never leaves
+#            fv_eb_arena_r (fv_eb_boss_settings, 18 blocks) around its block -
+#            past that it turns back home.
+# ============================================================================
+
+
+fv_eb_downbeam:
+  Skills:
+  - setvariable{var=caster.fv_eb_lasttype;type=STRING;value=DOWNBEAM}
+  - setvariable{var=caster.fv_eb_mode;type=STRING;value=OPEN}
+  - setvariable{var=caster.fv_eb_alive;type=INTEGER;value=1;duration=440}
+  - setvariable{var=caster.fv_eb_db_n;type=INTEGER;value=0}
+  - skill{s=fv_eb_anim_attack2} @self
+  - skill{s=fv_eb_sfx_downbeam_rise} @self
+  # the animation lifts the cube 4 blocks; at the same time the boss sinks
+  # to 4 px above the floor - from there the beam ends right on the floor
+  # and the impact ring lies flat on it (16 px in 8 ticks, so the cube
+  # still rises on screen)
+  - skill{s=fv_eb_height_to_beam} @self
+  # the beam fires t_a2_ign ticks after the animation started; 8 of them
+  # are spent here, the rest is waited out below
+  - setvariable{var=skill.wait;type=INTEGER;value="max(1,(<caster.var.fv_eb_t_a2_ign>)-8)"}
+  - delay 8
+  - setvariable{var=caster.fv_eb_mode;type=STRING;value=IMMUNE}
+  - skill{s=fv_eb_downbeam_telegraph} @self
+  - delay{ticks=<skill.var.wait>}
+  # ---- BEAM ON ----
+  - skill{s=fv_eb_sfx_downbeam_ignite} @self
+  - setvariable{var=caster.fv_eb_db_n;type=INTEGER;value=<caster.var.fv_eb_t_a2_beam>}
+  - skill{s=fv_eb_downbeam_tick} @self
+  - skill{s=fv_eb_downbeam_pulses} @self
+  - delay{ticks=<caster.var.fv_eb_t_a2_beam>}
+  # ---- BEAM OFF ----
+  - setvariable{var=caster.fv_eb_db_n;type=INTEGER;value=0}
+  - skill{s=fv_eb_sfx_downbeam_off} @self
+  - delay{ticks=<caster.var.fv_eb_t_a2_hover>}
+  # ---- COMING DOWN ----
+  # lands 8 px up: the landing pose and "damage" hang 6-8 px below the origin
+  - skill{s=fv_eb_height_to_landed} @self
+  - skill{s=fv_eb_sfx_downbeam_descend} @self
+  - delay{ticks=<caster.var.fv_eb_t_a2_desc>}
+  # ---- LANDED ---- (dazed takes over 2 ticks before attack2 ends)
+  - skill{s=fv_eb_downbeam_land} @self
+  - skill{s=fv_eb_downbeam_dazed} @self
+
+# Hovering up there while the beam charges: the spot it is about to burn
+# is marked on the floor.
+fv_eb_downbeam_telegraph:
+  Skills:
+  - skill{s=fv_eb_sfx_downbeam_charge} @self
+  - skill{s=fv_eb_vfx_downbeam_mark} @self
+
+# Every tick while the beam is on: 1. turn, 2. drift, 3. burn.
+# Outside the arena radius (fv_eb_boss_settings) it does not chase anyone -
+# it turns back towards its block instead.
+fv_eb_downbeam_tick:
+  Skills:
+  - variableadd{var=caster.fv_eb_db_n;amount=-1}
+  - setvariable{var=skill.out;type=FLOAT;value="sqrt(((<caster.l.x.double>)-(<caster.var.fv_eb_home_x>))^2+((<caster.l.z.double>)-(<caster.var.fv_eb_home_z>))^2)>(<caster.var.fv_eb_arena_r>)"}
+  - skill{s=fv_eb_downbeam_steer} @self ?variableinrange{var=skill.out;value=-1to0.5}
+  - skill{s=fv_eb_downbeam_leash} @self ?variableinrange{var=skill.out;value=0.5to2}
+  # right on top of someone already: stay put instead of overshooting
+  - skill{s=fv_eb_downbeam_drift} @self ?!playerwithin{d=0.5}
+  - skill{s=fv_eb_downbeam_check} @PlayersInRadius{r=6}
+  - skill{s=fv_eb_vfx_downbeam} @self
+  - skill{s=fv_eb_sfx_downbeam_roar} @self
+  - skill{s=fv_eb_downbeam_tick;delay=1} @self ?variableinrange{var=caster.fv_eb_db_n;value=1to99999} ?variableequals{var=caster.fv_eb_state;value=FIGHT}
+
+fv_eb_downbeam_steer:
+  Skills:
+  - rotatetowards{maxyaw=6} @NearestPlayer{r=48} ?variableequals{var=caster.fv_eb_phase;value=1}
+  - rotatetowards{maxyaw=8} @NearestPlayer{r=48} ?variableequals{var=caster.fv_eb_phase;value=2}
+  - rotatetowards{maxyaw=10} @NearestPlayer{r=48} ?variableequals{var=caster.fv_eb_phase;value=3}
+
+# Turns 20 degrees per tick towards home (worked out from the stored home
+# coordinates, so it needs nothing else).
+fv_eb_downbeam_leash:
+  Skills:
+  - setvariable{var=skill.home;type=FLOAT;value="todegree(atan2(0-((<caster.var.fv_eb_home_x>)-(<caster.l.x.double>)),(<caster.var.fv_eb_home_z>)-(<caster.l.z.double>)))"}
+  - setvariable{var=skill.turn;type=FLOAT;value="(((<skill.var.home>)-(<caster.l.yaw>))%360+540)%360-180"}
+  - setrotation{relative=true;yaw=20} @self ?variableinrange{var=skill.turn;value=10to180}
+  - setrotation{relative=true;yaw=-20} @self ?variableinrange{var=skill.turn;value=-180to-10}
+
+# Forward along the floor, in the direction it faces (blocks per tick).
+fv_eb_downbeam_drift:
+  Skills:
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.11;lockpitch=true;uel=false} ?variableequals{var=caster.fv_eb_phase;value=1}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.14;lockpitch=true;uel=false} ?variableequals{var=caster.fv_eb_phase;value=2}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.17;lockpitch=true;uel=false} ?variableequals{var=caster.fv_eb_phase;value=3}
+
+# The three wall pulses of the impact ring (67 / 87 / 107 at 100% speed):
+# the ring flares up. Only a visual and a sound - the beam is the danger.
+fv_eb_downbeam_pulses:
+  Skills:
+  - delay{ticks=<caster.var.fv_eb_t_a2_p1>}
+  - skill{s=fv_eb_downbeam_pulse} @self
+  - delay{ticks=<caster.var.fv_eb_t_a2_p2>}
+  - skill{s=fv_eb_downbeam_pulse} @self
+  - delay{ticks=<caster.var.fv_eb_t_a2_p3>}
+  - skill{s=fv_eb_downbeam_pulse} @self
+
+fv_eb_downbeam_pulse:
+  Conditions:
+  - variableequals{var=caster.fv_eb_state;value=FIGHT} true
+  Skills:
+  - skill{s=fv_eb_sfx_pulse} @self
+  - skill{s=fv_eb_vfx_pulse} @self
+
+fv_eb_downbeam_land:
+  Skills:
+  - skill{s=fv_eb_sfx_downbeam_land} @self
+  - skill{s=fv_eb_vfx_land} @self
+  - skill{s=fv_eb_land_check} @PlayersInRadius{r=3.2}
+
+# Crashed on the floor, dazed. Hit it now.
+fv_eb_downbeam_dazed:
+  Skills:
+  - setvariable{var=caster.fv_eb_mode;type=STRING;value=STAGGER}
+  - skill{s=fv_eb_anim_dazed} @self
+  - skill{s=fv_eb_sfx_dazed} @self
+  - delay{ticks=<caster.var.fv_eb_t_stagger>}
+  - setvariable{var=caster.fv_eb_mode;type=STRING;value=OPEN}
+  - skill{s=fv_eb_play_idle} @self
+  - skill{s=fv_eb_height_to_idle} @self
+  - skill{s=fv_eb_after_attack} @self
+
+
+# ============================================================================
+#  DAMAGE
+# ============================================================================
+# hd = horizontal distance from the beam's centre (the boss' own spot),
+# dy = feet height relative to the boss gliding 4 px above the floor.
+# The values are stored on each player (target scope) and the _hit skill
+# checks them with TargetConditions, so every player is judged on their own
+# position. (An inline ?condition would test the boss, not the player.)
+fv_eb_downbeam_check:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  - hasaura{auraName=fv_eb_if_laser} false
+  Skills:
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value=99}
+  - setvariable{var=target.fv_eb_dy;type=FLOAT;value="(<target.l.y.double>)-(<caster.l.y.double>)"}
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value="sqrt(((<target.l.x.double>)-(<caster.l.x.double>))^2+((<target.l.z.double>)-(<caster.l.z.double>))^2)"}
+  - skill{s=fv_eb_downbeam_hit}
+
+# Inside the impact ring, anywhere between the floor and the cube.
+fv_eb_downbeam_hit:
+  TargetConditions:
+  - hasaura{auraName=fv_eb_if_laser} false
+  - variableinrange{var=target.fv_eb_hd;value=0to0.65} true
+  - variableinrange{var=target.fv_eb_dy;value=-1.5to3.6} true
+  Skills:
+  - damage{amount=14;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - aura{auraName=fv_eb_if_laser;duration=10;maxStacks=1;refreshDuration=true}
+  - skill{s=fv_eb_sfx_laser_hit}
+
+fv_eb_land_check:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  Skills:
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value=99}
+  - setvariable{var=target.fv_eb_dy;type=FLOAT;value="(<target.l.y.double>)-(<caster.l.y.double>)"}
+  - setvariable{var=target.fv_eb_hd;type=FLOAT;value="sqrt(((<target.l.x.double>)-(<caster.l.x.double>))^2+((<target.l.z.double>)-(<caster.l.z.double>))^2)"}
+  - skill{s=fv_eb_land_hit}
+
+fv_eb_land_hit:
+  TargetConditions:
+  - variableinrange{var=target.fv_eb_hd;value=0to2.5} true
+  - variableinrange{var=target.fv_eb_dy;value=-1.5to0.8} true
+  Skills:
+  - damage{amount=6;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - throw{velocity=7;velocityY=3}
+  - skill{s=fv_eb_sfx_body_hit}

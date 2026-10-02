@@ -171,7 +171,7 @@ fv_eb_sfx_immune:
   - sound{s=item.shield.block;v=0.6;p=1.4} @self
   - sound{s=block.amethyst_block.chime;v=1;p=1.6} @self
 
-# A player hit by the body / dash / shockwave (runs on the player).
+# A player hit by the landing (runs on the player).
 fv_eb_sfx_body_hit:
   Skills:
   - sound{s=entity.player.attack.strong;v=1;p=0.6}
@@ -344,10 +344,10 @@ fv_eb_tip_low_beam:
 
 
 # ============================================================================
-#  FLIGHT
+#  DOWN BEAM  (attack2)
 # ============================================================================
-# The cube rises 4 blocks.
-fv_eb_sfx_flight_liftoff:
+# The cube rises 4 blocks and turns its eye to the floor.
+fv_eb_sfx_downbeam_rise:
   Skills:
   - sound{s=entity.breeze.inhale;v=1.5;p=0.6} @self
   - sound{s=block.respawn_anchor.charge;v=1.5;p=0.8} @self
@@ -355,36 +355,64 @@ fv_eb_sfx_flight_liftoff:
   - particles{particle=gust;amount=3;hs=0.8;vs=0.1;speed=0;y=0.2} @self
 
 # Hovering up high, the beam charges.
-fv_eb_sfx_flight_spool:
+fv_eb_sfx_downbeam_charge:
   Skills:
   - sound{s=entity.warden.sonic_charge;v=1.5;p=0.8} @self
   - sound{s=block.conduit.activate;v=1.2;p=0.8} @self
 
-fv_eb_sfx_flight_ignite:
+# The spot it is about to burn: a red ring the size of the impact ring,
+# pulsing on the floor under the cube until the beam fires.
+fv_eb_vfx_downbeam_mark:
+  Skills:
+  - skill{s=fv_eb_vfx_downbeam_mark_pulse}
+  - skill{s=fv_eb_vfx_downbeam_mark_pulse;delay=10}
+  - skill{s=fv_eb_vfx_downbeam_mark_pulse;delay=20}
+  - skill{s=fv_eb_vfx_downbeam_mark_pulse;delay=30}
+
+fv_eb_vfx_downbeam_mark_pulse:
+  Conditions:
+  - variableequals{var=caster.fv_eb_state;value=FIGHT} true
+  Skills:
+  - particlering{particle=dust;color=#FF3B3B;size=1.2;radius=0.65;points=14;amount=1;hs=0;vs=0;speed=0;y=-0.2} @SelfLocation
+  - particles{particle=dust;color=#FF3B3B;size=1;amount=6;hs=0.15;vs=0.9;speed=0;y=1} @self
+  - sound{s=block.note_block.basedrum;v=1;p=0.8} @self
+
+# The beam fires: the soul shrieks through it.
+fv_eb_sfx_downbeam_ignite:
   Skills:
   - sound{s=entity.firework_rocket.launch;v=1.5;p=0.6} @self
   - sound{s=entity.generic.explode;v=1;p=1.4} @self
   - sound{s=entity.ender_dragon.growl;v=1.5;p=1.8} @self
   - sound{s=fv_endboss:soul.shriek;v=1.2;p=1} @self
-  - particles{particle=explosion;amount=1;hs=0;vs=0;speed=0;y=4.5} @self
+  - particles{particle=explosion;amount=1;hs=0;vs=0;speed=0;y=0} @self
+  - particles{particle=end_rod;amount=10;hs=0.2;vs=0.2;speed=0.12;y=3.9} @self
 
-# Roar of the downward beam, once a second while flying.
-fv_eb_sfx_flight_thrust:
+# Roar of the beam, once a second while it burns.
+fv_eb_sfx_downbeam_roar:
   Cooldown: 1
   Skills:
   - sound{s=entity.blaze.burn;v=1.5;p=0.6} @self
   - sound{s=block.beacon.ambient;v=1.5;p=0.8} @self
+  - sound{s=fv_endboss:laser.hum;v=1;p=0.8} @self
 
-fv_eb_sfx_flight_cutoff:
+# Where the beam hits the floor: soul fire and sparks splashing out.
+fv_eb_vfx_downbeam:
+  Cooldown: 0.1
+  Skills:
+  - particles{particle=soul_fire_flame;amount=3;hs=0.25;vs=0.02;speed=0.03;y=-0.15} @self
+  - particles{particle=dust;color=#BFFFFF;size=1.1;amount=2;hs=0.3;vs=0.05;speed=0;y=-0.1} @self
+  - particles{particle=electric_spark;amount=1;hs=0.2;vs=0.2;speed=0.2;y=0} @self
+
+fv_eb_sfx_downbeam_off:
   Skills:
   - sound{s=block.fire.extinguish;v=1.5;p=0.7} @self
   - sound{s=block.beacon.deactivate;v=1.5;p=0.8} @self
 
-fv_eb_sfx_flight_descend:
+fv_eb_sfx_downbeam_descend:
   Skills:
   - sound{s=entity.phantom.swoop;v=1.5;p=0.6} @self
 
-fv_eb_sfx_flight_land:
+fv_eb_sfx_downbeam_land:
   Skills:
   - sound{s=item.mace.smash_ground_heavy;v=1.5;p=0.8} @self
   - sound{s=entity.generic.explode;v=1.2;p=0.8} @self
@@ -400,77 +428,22 @@ fv_eb_sfx_dazed:
   - particlering{particle=crit;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4;delay=10} @SelfLocation
   - particlering{particle=crit;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4;delay=20} @SelfLocation
 
-fv_eb_sfx_dash:
-  Skills:
-  - sound{s=entity.ender_dragon.flap;v=1.5;p=1.4} @self
-  - sound{s=entity.phantom.swoop;v=1.5;p=1.6} @self
-  - sound{s=entity.player.attack.sweep;v=1;p=0.5} @self
-
+# The impact ring's walls pulse: the ring flares on the floor.
 fv_eb_sfx_pulse:
   Skills:
-  - sound{s=entity.breeze.wind_burst;v=1.5;p=0.8} @self
+  - sound{s=entity.breeze.wind_burst;v=1.2;p=0.9} @self
   - sound{s=block.respawn_anchor.deplete;v=1;p=1.6} @self
 
-fv_eb_sfx_scorch:
-  Skills:
-  - sound{s=block.fire.extinguish;v=0.6;p=1.5}
-  - sound{s=entity.player.hurt_on_fire;v=0.8;p=1}
-
-# Thruster trail of the flying cube (the cube is drawn 4 blocks up).
-fv_eb_vfx_flight:
-  Cooldown: 0.1
-  Skills:
-  - particles{particle=soul_fire_flame;amount=3;hs=0.25;vs=0.25;speed=0.02;y=4.5} @self
-  - particles{particle=dust;color=#9FFCFF;size=1.2;amount=2;hs=0.3;vs=0.3;speed=0;y=4.5} @self
-
-# The impact ring's walls pulse: a shockwave runs along the floor.
 fv_eb_vfx_pulse:
   Skills:
-  - particlering{particle=dust;color=#9FFCFF;size=1.5;radius=1.2;points=16;amount=1;hs=0;vs=0;speed=0;y=0.15} @SelfLocation
-  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=2.4;points=28;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=1} @SelfLocation
-  - particlering{particle=dust;color=#9FFCFF;size=1.3;radius=3.5;points=40;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=2} @SelfLocation
-  - particlering{particle=gust;radius=2.5;points=8;amount=1;hs=0;vs=0;speed=0;y=0.3;delay=1} @SelfLocation
+  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=0.8;points=14;amount=1;hs=0;vs=0;speed=0;y=-0.1} @SelfLocation
+  - particlering{particle=dust;color=#9FFCFF;size=1.2;radius=1.2;points=20;amount=1;hs=0;vs=0;speed=0;y=-0.1;delay=1} @SelfLocation
 
 fv_eb_vfx_land:
   Skills:
   - particles{particle=explosion;amount=2;hs=0.6;vs=0.1;speed=0;y=0.3} @self
   - particlering{particle=cloud;radius=1.5;points=16;amount=1;hs=0;vs=0;speed=0.05;y=0.2} @SelfLocation
   - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=2.5;points=32;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=1} @SelfLocation
-
-# DASH: the red line where it is about to dash.
-fv_eb_vfx_dash_line:
-  Cooldown: 0.1
-  Skills:
-  - particleline{particle=dust;color=#FF3B3B;size=1.1;amount=1;distanceBetween=0.5;startYOffset=0.15;targetYOffset=0.15;fromOrigin=false} @Forward{f=16;lockpitch=true;uel=false}
-
-# X-CROSS: marks your spot while it hovers. Runs on the player (no targeter
-# = the player it was called on), so the mark follows them until ignition,
-# when the X is aimed.
-fv_eb_vfx_x_mark:
-  Skills:
-  - skill{s=fv_eb_vfx_x_mark_pulse}
-  - skill{s=fv_eb_vfx_x_mark_pulse;delay=12}
-  - skill{s=fv_eb_vfx_x_mark_pulse;delay=24}
-  - skill{s=fv_eb_vfx_x_mark_pulse;delay=34}
-
-fv_eb_vfx_x_mark_pulse:
-  Skills:
-  - particlering{particle=dust;color=#FF3B3B;size=1.4;radius=1.4;points=22;amount=1;hs=0;vs=0;speed=0;y=0.15}
-  - particles{particle=dust;color=#FF3B3B;size=1.2;amount=12;hs=0.15;vs=1;speed=0;y=1}
-  - sound{s=block.note_block.basedrum;v=1;p=0.8}
-
-# ORBIT: draws the circle it is about to fly around you (runs on the player).
-fv_eb_vfx_orbit_mark:
-  Skills:
-  - skill{s=fv_eb_vfx_orbit_mark_pulse}
-  - skill{s=fv_eb_vfx_orbit_mark_pulse;delay=12}
-  - skill{s=fv_eb_vfx_orbit_mark_pulse;delay=24}
-  - skill{s=fv_eb_vfx_orbit_mark_pulse;delay=34}
-
-fv_eb_vfx_orbit_mark_pulse:
-  Skills:
-  - particlering{particle=dust;color=#FF3B3B;size=1.3;radius=5;points=48;amount=1;hs=0;vs=0;speed=0;y=0.15}
-  - sound{s=block.note_block.basedrum;v=1;p=0.7}
 
 
 # ============================================================================

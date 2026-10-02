@@ -23,6 +23,11 @@ left exactly as authored. What this script does, per model:
     4. Adds a static "dormant" pose: the closed block with every effect bone
        hidden and the closed eye (eye1) showing - i.e. on_spawn's first frame
        minus the light rays that burst out when it wakes up. No new geometry.
+       Plus "blank", an empty animation for ModelEngine's default states.
+    4b. attack1 / attack2: the laser's "rotate in global space" flag is
+       replaced by plain keyframes that give the same pose (see
+       bake_global_rotation) - ModelEngine handles the flag differently from
+       Blockbench, which turned attack2's downward beam sideways in game.
     5. Sets "override" on every animation. ModelEngine combines all states
        that are playing at once unless an animation overrides the ones below
        it, so without the flag the idle pose would be ADDED on top of
@@ -291,22 +296,110 @@ def fix_idle_eyes(model, log):
         log.append('idle: %s scale 0 (eye4 stays the visible eye, as in Blockbench)' % eye)
 
 
-def fix_attack2_beam(model, log):
-    """attack2 tips the whole frame (root) -90 on X so the eye faces the floor.
-    rootlaser carried an extra -90 on top, so the two added up and the beam came
-    out sideways instead of out of the eye. Zero the extra tilt: the beam now
-    follows the eye straight down into the impact ring."""
-    a2 = next(a for a in model['animations'] if a['name'] == 'attack2')
-    an = animator(a2, model, 'rootlaser')
-    n = 0
-    for k in an['keyframes']:
-        if k['channel'] == 'rotation':
-            for dp in k['data_points']:
-                dp['x'], dp['y'], dp['z'] = '0', '0', '0'
-            n += 1
-    if not n:
-        raise SystemExit('attack2 rootlaser has no rotation keys - nothing to fix')
-    log.append('attack2: rootlaser rotation -90 -> 0 on %d keys (beam follows the eye down)' % n)
+def x_only(kfs):
+    return all(float(k['data_points'][0].get(ax) or 0) == 0 for k in kfs for ax in 'yz')
+
+
+def bake_global_rotation(model, log):
+    """attack1 and attack2 turn the laser bone "in global space" (Blockbench's
+    rotation_global animator flag). Blockbench evaluates bones in the order of
+    the project's group list, and the laser comes after root but before its
+    own parent rootlaser - so in the editor the laser cancels root's rotation
+    and keeps rootlaser's:  laser = root(t) * rootlaser(t) * root(t)^-1.
+      attack1  root tilts, rootlaser 0         -> the beam stays level
+      attack2  root flips -89.87, rootlaser -90 -> the beam points straight
+               DOWN, scaled to exactly the drop from the eye to the floor
+    ModelEngine does not reproduce that order trick: a global-space bone
+    there simply ignores every parent rotation, so attack2's beam stayed
+    level ("sideways"). The same motion is written here as plain keyframes
+    and the flag is removed, so the hierarchy alone gives the editor's look
+    in every engine:
+      attack1  laser rotation = -root(t)                 (root cancelled)
+      attack2  rootlaser rotation = -90 - root(t), and its random scale's
+               Y/Z swapped (the quarter turn that used to sit between that
+               scale and the beam now sits above it)
+    Both are exact for engines that compose bones as matrices and for the
+    ones that multiply scales per axis (verify_models.py check G)."""
+    order = [g['name'] for g in model['groups']]
+    parent = {}
+
+    def walk(n, p):
+        if isinstance(n, dict):
+            parent[n['uuid']] = p
+            for c in n.get('children', []):
+                walk(c, n['uuid'])
+    for n in model['outliner']:
+        walk(n, None)
+    gby = {g['name']: g for g in model['groups']}
+    for anim in model['animations']:
+        for uid, an in list(anim.get('animators', {}).items()):
+            if not an.get('rotation_global'):
+                continue
+            if an['name'] != 'laser':
+                raise SystemExit('rotation_global on unexpected bone %s' % an['name'])
+            lz, rl, rt = gby['laser'], gby['rootlaser'], gby['root']
+            if parent[lz['uuid']] != rl['uuid'] or parent[rl['uuid']] != rt['uuid']:
+                raise SystemExit('laser hierarchy changed - global rotation bake needs root > rootlaser > laser')
+            if not order.index('root') < order.index('laser') < order.index('rootlaser'):
+                raise SystemExit('unexpected Blockbench bone order around the laser')
+            above, p = [], parent[rt['uuid']]
+            while p is not None:
+                above.append(p)
+                p = parent[p]
+            if any(anim['animators'].get(u, {}).get('keyframes') for u in above):
+                raise SystemExit('%s: a bone above root is animated' % anim['name'])
+            chain = [lz, rl, rt] + [g for g in model['groups'] if g['uuid'] in above]
+            if any(g.get('rotation', [0, 0, 0]) != [0, 0, 0] for g in chain) or lz['origin'] != rl['origin']:
+                raise SystemExit('laser / rootlaser / root rest pose changed')
+            if any(k['channel'] in ('rotation', 'position') for k in an['keyframes']):
+                raise SystemExit('%s: laser has its own rotation/position keys' % anim['name'])
+            root = anim['animators'][rt['uuid']]
+            rlan = animator(anim, model, 'rootlaser')
+            rk = sorted([k for k in root['keyframes'] if k['channel'] == 'rotation'], key=lambda k: k['time'])
+            lk = [k for k in rlan['keyframes'] if k['channel'] == 'rotation']
+            if not rk or not x_only(rk) or not x_only(lk):
+                raise SystemExit('%s: only X rotations are handled' % anim['name'])
+            consts = {float(k['data_points'][0]['x']) for k in lk} or {0.0}
+            if len(consts) != 1:
+                raise SystemExit('%s: rootlaser rotation is not constant' % anim['name'])
+            c = consts.pop()
+            # root's angle wherever the beam can be seen
+            calc = Molang(random.Random(0))
+            lsc = [k for k in an['keyframes'] if k['channel'] == 'scale']
+            seen = []
+            for i in range(int(round(float(anim['length']) / TICK)) + 1):
+                t = round(i * TICK, 4)
+                s = interpolate(lsc, t, anim['loop'], calc)
+                if s and min(abs(v) for v in s) > 1e-6:
+                    seen.append(interpolate(rk, t, anim['loop'], calc)[0])
+            quarter = {round(r / 90) for r in seen}
+            if len(quarter) != 1:
+                raise SystemExit('%s: root turns through a quarter while the beam is visible' % anim['name'])
+            q = quarter.pop()
+
+            def key(kf, value, tag):
+                return {'channel': 'rotation', 'data_points': [{'x': js_num(round(value, 4)), 'y': '0', 'z': '0'}],
+                        'uuid': det_uuid('fv-edit', anim['name'], tag, kf['time']), 'time': kf['time'], 'color': -1,
+                        'interpolation': kf['interpolation']}
+            if c == 0 and q == 0:
+                # the laser itself undoes root's rotation
+                an['keyframes'] += [key(k, -float(k['data_points'][0]['x']), 'laser') for k in rk]
+                how = 'laser rotation = -root (%d keys)' % len(rk)
+            else:
+                rlan['keyframes'] = [k for k in rlan['keyframes'] if k['channel'] != 'rotation'] + \
+                    [key(k, c - float(k['data_points'][0]['x']), 'rootlaser') for k in rk]
+                how = 'rootlaser rotation = %s - root (%d keys)' % (js_num(c), len(rk))
+                if q % 2:
+                    n = 0
+                    for k in rlan['keyframes']:
+                        if k['channel'] == 'scale':
+                            dp = k['data_points'][0]
+                            dp['y'], dp['z'] = dp['z'], dp['y']
+                            k['uniform'] = False
+                            n += 1
+                    how += ', rootlaser scale Y/Z swapped (%d keys)' % n
+            an['rotation_global'] = False
+            log.append('%s: laser global-space rotation baked: %s' % (anim['name'], how))
 
 
 def set_loops(model, modes, log):
@@ -490,7 +583,7 @@ def main(out_dir):
     log.append('endboss: cleaned %d numeric strings' % clean_numbers(boss))
     bake_random(boss, log)
     fix_idle_eyes(boss, log)
-    fix_attack2_beam(boss, log)
+    bake_global_rotation(boss, log)
     add_dormant(boss, log)
     add_blank(boss, log)
     set_override(boss, log)

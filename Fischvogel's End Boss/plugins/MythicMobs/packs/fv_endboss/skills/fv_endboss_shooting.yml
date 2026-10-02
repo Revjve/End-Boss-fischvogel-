@@ -8,8 +8,8 @@
 #
 #  Every shot flies straight and level, exactly the way the cube faces at
 #  the moment it fires - what you see is what comes at you.
-#     direct hit ...... 9 damage, hit radius 0.5
-#     burst splash .... 4 damage within 1.6 blocks of where a shot ends
+#     direct hit ...... 7 damage, hit radius 0.5
+#     burst splash .... 3 damage within 1.6 blocks of where a shot ends
 #                       (not on top of a direct hit)
 #
 #  PATTERNS
@@ -444,7 +444,7 @@ fv_eb_proj_hit:
   TargetConditions:
   - gamemode{m=SURVIVAL,ADVENTURE} true
   Skills:
-  - damage{amount=9;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - damage{amount=7;ignoreArmor=false;ii=true;pi=true;pkb=true}
   - aura{auraName=fv_eb_if_proj;duration=10;maxStacks=1;refreshDuration=true}
   - skill{s=fv_eb_sfx_proj_hit}
 
@@ -461,5 +461,5 @@ fv_eb_proj_splash:
   - gamemode{m=SURVIVAL,ADVENTURE} true
   - hasaura{auraName=fv_eb_if_proj} false
   Skills:
-  - damage{amount=4;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - damage{amount=3;ignoreArmor=false;ii=true;pi=true;pkb=true}
   - aura{auraName=fv_eb_if_proj;duration=10;maxStacks=1;refreshDuration=true}

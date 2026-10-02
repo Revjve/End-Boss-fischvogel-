@@ -12,7 +12,7 @@ invariants is checked:
   * exactly one attack chain at a time (pick -> attack -> after_attack)
   * the fight-loop watchdog never has to step in
   * the same attack TYPE is never picked twice in a row
-  * every attack ends with its tick loops stopped (beam, flight, shots)
+  * every attack ends with its tick loops stopped (beam, down beam, shots)
   * the model always has a body animation playing (no rest-pose frame)
   * the boss' height in pixels (fv_eb_hpx) always matches its real height
   * no variable is ever read before it was set
@@ -659,7 +659,7 @@ class Sim:
             self.active_attacks += 1
             if self.active_attacks > 1:
                 self.error('a second attack chain started while one is running', meta)
-            for v in ('fv_eb_beam_n', 'fv_eb_fly_n', 'fv_eb_shots'):
+            for v in ('fv_eb_beam_n', 'fv_eb_db_n', 'fv_eb_shots'):
                 if (c.var(v) or 0) > 0:
                     self.error(f'attack picked while {v}={c.var(v)}', meta)
         elif name == 'fv_eb_after_attack':
@@ -667,7 +667,7 @@ class Sim:
             if self.active_attacks < 0:
                 self.error('after_attack without a running attack', meta)
                 self.active_attacks = 0
-            for v in ('fv_eb_beam_n', 'fv_eb_fly_n', 'fv_eb_shots'):
+            for v in ('fv_eb_beam_n', 'fv_eb_db_n', 'fv_eb_shots'):
                 if (c.var(v) or 0) > 0:
                     self.error(f'attack ended with {v}={c.var(v)} still running', meta)
             if c.var('fv_eb_hpx_target') not in (20,):
@@ -679,8 +679,8 @@ class Sim:
             self.active_attacks = 0
         elif name == 'fv_eb_phase_break':
             self.stats['phase_breaks'] += 1
-        elif name in ('fv_eb_laser_begin', 'fv_eb_flight_sequence', 'fv_eb_shoot_begin'):
-            typ = {'fv_eb_laser_begin': 'LASER', 'fv_eb_flight_sequence': 'FLIGHT',
+        elif name in ('fv_eb_laser_begin', 'fv_eb_downbeam', 'fv_eb_shoot_begin'):
+            typ = {'fv_eb_laser_begin': 'LASER', 'fv_eb_downbeam': 'DOWNBEAM',
                    'fv_eb_shoot_begin': 'SHOOT'}[name]
             pat = meta.chain[-2] if len(meta.chain) > 1 else '?'
             if self.stats['attacks'] and self.stats['attacks'][-1][0] == typ:
@@ -723,6 +723,10 @@ class Sim:
             dx, dz = p.x - boss.x, p.z - boss.z
             d = math.hypot(dx, dz) or 0.01
             want = 2.2 if (state == 'FIGHT' and mode in ('OPEN', 'STAGGER')) else 7.0
+            # player1 is careless during the down beam and walks right under
+            # it, so its damage path gets exercised too
+            if p.name == 'player1' and boss.var('fv_eb_lasttype') == 'DOWNBEAM' and mode == 'IMMUNE':
+                want = 0.0
             if self.rng.random() < 0.01:
                 p.dirsign *= -1
             radial = max(-0.2, min(0.2, (want - d) * 0.25))
@@ -819,8 +823,7 @@ class Sim:
                     last = self.stats['attacks'][-1] if self.stats['attacks'] else None
                     near = min((math.hypot(p.x - self.home.x, p.z - self.home.z) for p in self.players()), default=-1)
                     self.error(f'boss strayed more than 24 blocks from its block during {last} '
-                               f'(dash stage {boss.var("fv_eb_dash_stage")}, fly_n {boss.var("fv_eb_fly_n")}, '
-                               f'pattern {boss.var("fv_eb_fly_pattern")}, nearest player {near:.1f} from home)')
+                               f'(db_n {boss.var("fv_eb_db_n")}, nearest player {near:.1f} from home)')
             self.move_players(boss)
             if leave_at is not None and self.tick == leave_at:
                 for p in self.players():

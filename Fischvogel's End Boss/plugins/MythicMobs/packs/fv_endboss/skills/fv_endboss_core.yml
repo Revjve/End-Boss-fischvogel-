@@ -4,14 +4,14 @@
 #  The block, waking up, the fight loop, phases, damage rules, movement and
 #  death. The three attacks live in their own files:
 #     fv_endboss_laser.yml      attack1  - 4 laser patterns
-#     fv_endboss_flight.yml     attack2  - 4 flight patterns
+#     fv_endboss_downbeam.yml   attack2  - the down beam
 #     fv_endboss_shooting.yml   shooting - 5 projectile patterns
 #     fv_endboss_fx.yml         every sound / particle cue
 #
 #  ---- TUNING CHEAT SHEET -------------------------------------------------
 #   Boss health ............. Health: in mobs/fv_endboss_mobs.yml
 #   Block respawn time ...... fv_eb_block_settings (seconds, -1 = one-time)
-#   Arena radius ............ fv_eb_boss_settings (the flight never leaves it)
+#   Arena radius ............ fv_eb_boss_settings (the down beam never leaves it)
 #   Phase thresholds ........ fv_eb_check_phase (66% / 33% health)
 #   Speed per phase ......... speed= on the state{} lines in fv_eb_anim_*
 #   Idle time per phase ..... fv_eb_t_idle / fv_eb_t_idle_rand in the
@@ -21,11 +21,8 @@
 #     attacks / is stunned .. fv_eb_on_damaged (x0.5 / x1.35)
 #   Attack damage ........... the damage{} lines, one per hit type:
 #                               laser 14 ........ fv_eb_beam_hit
-#                               dash 12 ......... fv_eb_dash_hit
-#                               under boss 10 ... fv_eb_under_hit
-#                               shockwave 8 ..... fv_eb_pulse_hit
-#                               projectile 9+4 .. fv_eb_proj_hit / _splash
-#                               burning trail 4 . fv_eb_scorch_hit
+#                               down beam 14 .... fv_eb_downbeam_hit
+#                               projectile 7+3 .. fv_eb_proj_hit / _splash
 #                               landing 6 ....... fv_eb_land_hit
 #                               phase roar 6 .... fv_eb_roar_hit
 #   Which attacks a phase
@@ -35,8 +32,8 @@
 #   block clicked -> boss summoned in the same spot -> on_spawn (7 s,
 #   cannot be damaged) -> LOOP:
 #      idle (open for hits) -> pick an attack type that is NOT the same as
-#      last time (laser / flight / shooting) -> random pattern of that type
-#      -> recover -> LOOP
+#      last time (laser / down beam / shooting) -> random pattern of that
+#      type -> recover -> LOOP
 #   Health 66% / 33%: phase 2 / phase 3. The change happens right away, the
 #   roar + shockwave plays as soon as the current attack is finished.
 #   Phase 3: after a shooting attack it may chain straight into the next
@@ -44,10 +41,10 @@
 #
 #  ---- DAMAGE RULES (fv_eb_on_damaged) ------------------------------------
 #   WAKING   no damage (on_spawn is playing)
-#   IMMUNE   no damage (flying 4 blocks up during attack2, phase roar)
+#   IMMUNE   no damage (4 blocks up during the down beam, phase roar)
 #   ARMORED  x0.5  while a laser beam is live
 #   OPEN     x1    idle, wind-ups, shooting
-#   STAGGER  x1.35 dazed on the floor after the flight attack crash-lands
+#   STAGGER  x1.35 dazed on the floor after the down beam, when it lands
 #
 #  ---- HEIGHT ---------------------------------------------------------------
 #   All heights are in model pixels (16 px = 1 block) above the floor the
@@ -58,7 +55,11 @@
 #      chest laser / shooting ... 16 px  (beam and shots at chest height)
 #      low laser sweep ..........  9 px  (beam at knee height - jump it)
 #      landed / dazed ...........  8 px
-#      flying (attack2) .........  0 px  (the animation lifts the cube 4 blocks)
+#      down beam (attack2) ......  4 px  (the animation lifts the cube 4
+#                                         blocks; its beam ends 2.6 px
+#                                         below the boss, so 4 px puts the
+#                                         tip and the impact ring just on
+#                                         top of the floor)
 #   Moves are done in exact pixel steps by fv_eb_height_step, so the height
 #   can never drift over a long fight. Use a flat arena floor.
 # ============================================================================
@@ -72,7 +73,7 @@
 #  are the animation's own key moments divided by that speed, so sounds,
 #  damage and the visuals stay in sync:
 #     attack1   beam on 50, beam off 231, settled 252
-#     attack2   thruster on 50, shockwaves 67 / 87 / 107, thruster off 147,
+#     attack2   beam on 50, ring pulses 67 / 87 / 107, beam off 147,
 #               descent 180, landed 201 (the dazed animation takes over
 #               right there, 2 ticks before attack2 would end at 203)
 #     shooting  50 ticks; a shot is fired the moment it (re)starts and idle
@@ -85,15 +86,15 @@ fv_eb_phase_1:
   # idle between attacks: t_idle + random(0 .. t_idle_rand) ticks
   - setvariable{var=caster.fv_eb_t_idle;type=INTEGER;value=50}
   - setvariable{var=caster.fv_eb_t_idle_rand;type=INTEGER;value=20}
-  # dazed on the floor after the flight attack lands
+  # dazed on the floor after the down beam lands
   - setvariable{var=caster.fv_eb_t_stagger;type=INTEGER;value=60}
   # attack1 (laser): lock = beam on - 8 (the warning ping), dur = beam live, rec = recoil
   - setvariable{var=caster.fv_eb_t_a1_lock;type=INTEGER;value=42}
   - setvariable{var=caster.fv_eb_t_a1_dur;type=INTEGER;value=181}
   - setvariable{var=caster.fv_eb_t_a1_rec;type=INTEGER;value=21}
-  # attack2 (flight): ignition, flight time, shockwave gaps, hover, descent
+  # attack2 (down beam): beam on, beam time, ring pulse gaps, hover, descent
   - setvariable{var=caster.fv_eb_t_a2_ign;type=INTEGER;value=50}
-  - setvariable{var=caster.fv_eb_t_a2_fly;type=INTEGER;value=97}
+  - setvariable{var=caster.fv_eb_t_a2_beam;type=INTEGER;value=97}
   - setvariable{var=caster.fv_eb_t_a2_p1;type=INTEGER;value=17}
   - setvariable{var=caster.fv_eb_t_a2_p2;type=INTEGER;value=20}
   - setvariable{var=caster.fv_eb_t_a2_p3;type=INTEGER;value=20}
@@ -120,10 +121,6 @@ fv_eb_phase_1:
   - setvariable{var=caster.fv_eb_n_fan;type=INTEGER;value=2}
   - setvariable{var=caster.fv_eb_t_fan_gap;type=INTEGER;value=16}
   - setvariable{var=caster.fv_eb_n_spiral;type=INTEGER;value=20}
-  # flight pattern settings
-  - setvariable{var=caster.fv_eb_n_dash_aim;type=INTEGER;value=10}
-  - setvariable{var=caster.fv_eb_n_dash_go;type=INTEGER;value=16}
-  - setvariable{var=caster.fv_eb_n_dash_brake;type=INTEGER;value=4}
 
 fv_eb_phase_2:
   Skills:
@@ -135,7 +132,7 @@ fv_eb_phase_2:
   - setvariable{var=caster.fv_eb_t_a1_dur;type=INTEGER;value=165}
   - setvariable{var=caster.fv_eb_t_a1_rec;type=INTEGER;value=19}
   - setvariable{var=caster.fv_eb_t_a2_ign;type=INTEGER;value=45}
-  - setvariable{var=caster.fv_eb_t_a2_fly;type=INTEGER;value=89}
+  - setvariable{var=caster.fv_eb_t_a2_beam;type=INTEGER;value=89}
   - setvariable{var=caster.fv_eb_t_a2_p1;type=INTEGER;value=16}
   - setvariable{var=caster.fv_eb_t_a2_p2;type=INTEGER;value=18}
   - setvariable{var=caster.fv_eb_t_a2_p3;type=INTEGER;value=18}
@@ -157,9 +154,6 @@ fv_eb_phase_2:
   - setvariable{var=caster.fv_eb_n_fan;type=INTEGER;value=3}
   - setvariable{var=caster.fv_eb_t_fan_gap;type=INTEGER;value=14}
   - setvariable{var=caster.fv_eb_n_spiral;type=INTEGER;value=24}
-  - setvariable{var=caster.fv_eb_n_dash_aim;type=INTEGER;value=8}
-  - setvariable{var=caster.fv_eb_n_dash_go;type=INTEGER;value=14}
-  - setvariable{var=caster.fv_eb_n_dash_brake;type=INTEGER;value=4}
 
 fv_eb_phase_3:
   Skills:
@@ -171,7 +165,7 @@ fv_eb_phase_3:
   - setvariable{var=caster.fv_eb_t_a1_dur;type=INTEGER;value=151}
   - setvariable{var=caster.fv_eb_t_a1_rec;type=INTEGER;value=17}
   - setvariable{var=caster.fv_eb_t_a2_ign;type=INTEGER;value=42}
-  - setvariable{var=caster.fv_eb_t_a2_fly;type=INTEGER;value=81}
+  - setvariable{var=caster.fv_eb_t_a2_beam;type=INTEGER;value=81}
   - setvariable{var=caster.fv_eb_t_a2_p1;type=INTEGER;value=14}
   - setvariable{var=caster.fv_eb_t_a2_p2;type=INTEGER;value=17}
   - setvariable{var=caster.fv_eb_t_a2_p3;type=INTEGER;value=16}
@@ -193,9 +187,6 @@ fv_eb_phase_3:
   - setvariable{var=caster.fv_eb_n_fan;type=INTEGER;value=4}
   - setvariable{var=caster.fv_eb_t_fan_gap;type=INTEGER;value=12}
   - setvariable{var=caster.fv_eb_n_spiral;type=INTEGER;value=30}
-  - setvariable{var=caster.fv_eb_n_dash_aim;type=INTEGER;value=7}
-  - setvariable{var=caster.fv_eb_n_dash_go;type=INTEGER;value=12}
-  - setvariable{var=caster.fv_eb_n_dash_brake;type=INTEGER;value=3}
 
 
 # ============================================================================
@@ -349,8 +340,8 @@ fv_eb_noop:
 #  BOSS SETTINGS
 # ============================================================================
 #  fv_eb_arena_r  radius (blocks) of the open, flat floor around the block.
-#                 The flying attack never leaves it: past this distance the
-#                 boss steers back towards its block. Set it to your arena's
+#                 The down beam never leaves it: past this distance the
+#                 boss turns back towards its block. Set it to your arena's
 #                 radius minus 2. Between attacks it also blinks back home if
 #                 it ever ends up more than 24 blocks away.
 fv_eb_boss_settings:
@@ -481,34 +472,31 @@ fv_eb_pick:
 fv_eb_pick_p1:
   Skills:
   - setvariable{var=skill.last;type=STRING;value=<caster.var.fv_eb_lasttype>}
-  - randomskill{skills=fv_eb_type_flight_p1,fv_eb_type_shoot_p1} @self ?variableequals{var=skill.last;value=LASER}
-  - randomskill{skills=fv_eb_type_laser_p1,fv_eb_type_shoot_p1} @self ?variableequals{var=skill.last;value=FLIGHT}
-  - randomskill{skills=fv_eb_type_laser_p1,fv_eb_type_flight_p1} @self ?variableequals{var=skill.last;value=SHOOT}
-  - randomskill{skills=fv_eb_type_laser_p1,fv_eb_type_flight_p1,fv_eb_type_shoot_p1} @self ?variableequals{var=skill.last;value=NONE}
+  - randomskill{skills=fv_eb_type_downbeam,fv_eb_type_shoot_p1} @self ?variableequals{var=skill.last;value=LASER}
+  - randomskill{skills=fv_eb_type_laser_p1,fv_eb_type_shoot_p1} @self ?variableequals{var=skill.last;value=DOWNBEAM}
+  - randomskill{skills=fv_eb_type_laser_p1,fv_eb_type_downbeam} @self ?variableequals{var=skill.last;value=SHOOT}
+  - randomskill{skills=fv_eb_type_laser_p1,fv_eb_type_downbeam,fv_eb_type_shoot_p1} @self ?variableequals{var=skill.last;value=NONE}
 
 fv_eb_pick_p2:
   Skills:
   - setvariable{var=skill.last;type=STRING;value=<caster.var.fv_eb_lasttype>}
-  - randomskill{skills=fv_eb_type_flight_p2,fv_eb_type_shoot_p2} @self ?variableequals{var=skill.last;value=LASER}
-  - randomskill{skills=fv_eb_type_laser_p2,fv_eb_type_shoot_p2} @self ?variableequals{var=skill.last;value=FLIGHT}
-  - randomskill{skills=fv_eb_type_laser_p2,fv_eb_type_flight_p2} @self ?variableequals{var=skill.last;value=SHOOT}
-  - randomskill{skills=fv_eb_type_laser_p2,fv_eb_type_flight_p2,fv_eb_type_shoot_p2} @self ?variableequals{var=skill.last;value=NONE}
+  - randomskill{skills=fv_eb_type_downbeam,fv_eb_type_shoot_p2} @self ?variableequals{var=skill.last;value=LASER}
+  - randomskill{skills=fv_eb_type_laser_p2,fv_eb_type_shoot_p2} @self ?variableequals{var=skill.last;value=DOWNBEAM}
+  - randomskill{skills=fv_eb_type_laser_p2,fv_eb_type_downbeam} @self ?variableequals{var=skill.last;value=SHOOT}
+  - randomskill{skills=fv_eb_type_laser_p2,fv_eb_type_downbeam,fv_eb_type_shoot_p2} @self ?variableequals{var=skill.last;value=NONE}
 
 fv_eb_pick_p3:
   Skills:
   - setvariable{var=skill.last;type=STRING;value=<caster.var.fv_eb_lasttype>}
-  - randomskill{skills=fv_eb_type_flight_p3,fv_eb_type_shoot_p3} @self ?variableequals{var=skill.last;value=LASER}
-  - randomskill{skills=fv_eb_type_laser_p3,fv_eb_type_shoot_p3} @self ?variableequals{var=skill.last;value=FLIGHT}
-  - randomskill{skills=fv_eb_type_laser_p3,fv_eb_type_flight_p3} @self ?variableequals{var=skill.last;value=SHOOT}
-  - randomskill{skills=fv_eb_type_laser_p3,fv_eb_type_flight_p3,fv_eb_type_shoot_p3} @self ?variableequals{var=skill.last;value=NONE}
+  - randomskill{skills=fv_eb_type_downbeam,fv_eb_type_shoot_p3} @self ?variableequals{var=skill.last;value=LASER}
+  - randomskill{skills=fv_eb_type_laser_p3,fv_eb_type_shoot_p3} @self ?variableequals{var=skill.last;value=DOWNBEAM}
+  - randomskill{skills=fv_eb_type_laser_p3,fv_eb_type_downbeam} @self ?variableequals{var=skill.last;value=SHOOT}
+  - randomskill{skills=fv_eb_type_laser_p3,fv_eb_type_downbeam,fv_eb_type_shoot_p3} @self ?variableequals{var=skill.last;value=NONE}
 
 # ---- which patterns each phase may use ----------------------------------
 fv_eb_type_laser_p1:
   Skills:
   - randomskill{skills=fv_eb_laser_straight,fv_eb_laser_jumprope} @self
-fv_eb_type_flight_p1:
-  Skills:
-  - randomskill{skills=fv_eb_flight_chase,fv_eb_flight_dash} @self
 fv_eb_type_shoot_p1:
   Skills:
   - randomskill{skills=fv_eb_shoot_aimed,fv_eb_shoot_ring} @self
@@ -516,9 +504,6 @@ fv_eb_type_shoot_p1:
 fv_eb_type_laser_p2:
   Skills:
   - randomskill{skills=fv_eb_laser_straight,fv_eb_laser_jumprope,fv_eb_laser_hunter,fv_eb_laser_chaos} @self
-fv_eb_type_flight_p2:
-  Skills:
-  - randomskill{skills=fv_eb_flight_chase,fv_eb_flight_dash,fv_eb_flight_xcross,fv_eb_flight_orbit} @self
 fv_eb_type_shoot_p2:
   Skills:
   - randomskill{skills=fv_eb_shoot_aimed,fv_eb_shoot_burst,fv_eb_shoot_ring,fv_eb_shoot_fan} @self
@@ -526,12 +511,15 @@ fv_eb_type_shoot_p2:
 fv_eb_type_laser_p3:
   Skills:
   - randomskill{skills=fv_eb_laser_straight,fv_eb_laser_jumprope,fv_eb_laser_hunter,fv_eb_laser_chaos} @self
-fv_eb_type_flight_p3:
-  Skills:
-  - randomskill{skills=fv_eb_flight_dash,fv_eb_flight_xcross,fv_eb_flight_orbit,fv_eb_flight_chase} @self
 fv_eb_type_shoot_p3:
   Skills:
   - randomskill{skills=fv_eb_shoot_burst,fv_eb_shoot_ring,fv_eb_shoot_spiral,fv_eb_shoot_fan} @self
+
+# The down beam is the same attack in every phase - later phases make it
+# drift and turn faster (fv_endboss_downbeam.yml).
+fv_eb_type_downbeam:
+  Skills:
+  - skill{s=fv_eb_downbeam} @self
 
 # Every attack ends here.
 fv_eb_after_attack:
@@ -630,13 +618,13 @@ fv_eb_on_damaged:
   # still waking up (or already gone): nothing gets through
   - cancelevent ?!variableequals{var=caster.fv_eb_state;value=FIGHT}
   - skill{s=fv_eb_tip_waking} @self ?variableequals{var=caster.fv_eb_state;value=WAKING}
-  # high up in the air during the flight attack / mid phase-roar
+  # high up in the air during the down beam / mid phase-roar
   - cancelevent ?variableequals{var=caster.fv_eb_mode;value=IMMUNE}
   - skill{s=fv_eb_hit_immune} @self ?variableequals{var=caster.fv_eb_state;value=FIGHT} ?variableequals{var=caster.fv_eb_mode;value=IMMUNE}
   # the shell hardens while the beam is live
   - modifydamage{a=0.5;modifier=MULTIPLY} ?variableequals{var=caster.fv_eb_mode;value=ARMORED}
   - skill{s=fv_eb_hit_armored} @self ?variableequals{var=caster.fv_eb_state;value=FIGHT} ?variableequals{var=caster.fv_eb_mode;value=ARMORED}
-  # crash-landed after the flight attack: hit it hard now
+  # landed after the down beam, dazed: hit it hard now
   - modifydamage{a=1.35;modifier=MULTIPLY} ?variableequals{var=caster.fv_eb_mode;value=STAGGER}
   - skill{s=fv_eb_hit_stagger} @self ?variableequals{var=caster.fv_eb_state;value=FIGHT} ?variableequals{var=caster.fv_eb_mode;value=STAGGER}
   - skill{s=fv_eb_hit_open} @self ?variableequals{var=caster.fv_eb_state;value=FIGHT} ?variableequals{var=caster.fv_eb_mode;value=OPEN}
@@ -764,7 +752,7 @@ fv_eb_abort:
   Skills:
   - setvariable{var=caster.fv_eb_beam_n;type=INTEGER;value=0}
   - setvariable{var=caster.fv_eb_aim_n;type=INTEGER;value=0}
-  - setvariable{var=caster.fv_eb_fly_n;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_eb_db_n;type=INTEGER;value=0}
   - setvariable{var=caster.fv_eb_shots;type=INTEGER;value=0}
   - setvariable{var=caster.fv_eb_mode;type=STRING;value=OPEN}
 
@@ -794,15 +782,16 @@ fv_eb_height_to_low:
   - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=9}
   - skill{s=fv_eb_height_start} @self
 
-# crash-landed after attack2 (attack2's landing and "damage" while dazed)
+# landed after the down beam (attack2's landing and "damage" while dazed)
 fv_eb_height_to_landed:
   Skills:
   - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=8}
   - skill{s=fv_eb_height_start} @self
 
-fv_eb_height_to_floor:
+# down beam: the beam's tip and the impact ring just on top of the floor
+fv_eb_height_to_beam:
   Skills:
-  - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=4}
   - skill{s=fv_eb_height_start} @self
 
 fv_eb_height_start:

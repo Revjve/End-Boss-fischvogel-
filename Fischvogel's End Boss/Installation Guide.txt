@@ -38,9 +38,9 @@ whether a fight is running or it is on cooldown. Never spawn "fv_endboss"
 (the boss itself) by hand - the block summons it.
 
 The arena: give it an open, flat floor with at least 20 blocks of room
-around the block. The flying attack never goes further than 18 blocks from
-the block (change it in fv_eb_boss_settings), but it moves by teleporting,
-so pillars or walls inside that radius are flown straight through.
+around the block. The down beam never drifts further than 18 blocks from
+the block (change it in fv_eb_boss_settings), but it glides by teleporting,
+so pillars or walls inside that radius are passed straight through.
 
 To remove it again:  /mm mobs kill fv_endboss_dormant  (and fv_endboss, if
 a fight is running).
@@ -62,14 +62,14 @@ WAKING UP (on_spawn, 7 seconds)
 
 THE LOOP
   It floats in place and turns to face the closest player - this is when to
-  hit it. Then it picks an attack - never the same KIND (laser / flight /
+  hit it. Then it picks an attack - never the same KIND (laser / down beam /
   shooting) twice in a row - and a random pattern of that kind.
 
   When it takes damage depends on what it is doing:
     idle, winding up, shooting ......... full damage
     laser beam live .................... half damage (its shell hardens)
-    flying 4 blocks up ................. no damage (out of reach)
-    crash-landed and dazed ............. x1.35 damage - the big opening
+    up in the air for the down beam .... no damage (out of reach)
+    landed and dazed after it .......... x1.35 damage - the big opening
 
   PHASE 2 at 66% health, PHASE 3 at 33%. When the current attack is done it
   screams and a shockwave throws everyone back. Every phase makes it faster:
@@ -91,20 +91,21 @@ ATTACK 1 - LASER (attack1)
   CHAOS      (phase 2+) knee-height sweep that randomly reverses (high double
              click) or changes speed (rising chime). Both are announced.
 
-ATTACK 2 - FLIGHT (attack2)
-  The cube rises 4 blocks, fires its beam straight down, and the glowing ring under it
-  marks where it is. Danger: under the cube, the shockwave pulses of the
-  ring, a burning trail on the floor, and its landing. It finishes with a
-  crash-landing: dazed on the floor = the big damage window.
-  CHASE      homes in on you - faster than you, but it turns slowly.
-  DASH       a red line on the floor shows the next dash. Get off the line.
-  X-CROSS    (phase 2+) marks your spot, cuts an X through it, then chases.
-  ORBIT      (phase 2+) circles you while spiralling in - the burning trail
-             closes around you, jump over it to get out.
+ATTACK 2 - DOWN BEAM (attack2)
+  The cube rises 4 blocks, turns its eye to the floor and charges - a red
+  ring marks the spot under it. Then the beam fires straight down into a
+  glowing ring on the floor and the boss slowly drifts after the closest
+  player for about 5 seconds. Standing in the ring burns like the laser
+  (14). The beam reaches from the floor up to the cube, so jumping does not
+  help - walk out of the ring and keep moving. It is slower than walking
+  (phase 1 / 2 / 3: 2.2 / 2.8 / 3.4 blocks a second, players walk 4.3) and
+  turns faster every phase. It cannot be hit while it is up there. Then it
+  comes back down (a small shockwave when it lands) and sits dazed on the
+  floor: the big damage window.
 
 ATTACK 3 - SHOOTING (shooting + the projectile model)
-  Shots fly straight and level and burst where they end (direct hit 9,
-  burst splash 4).
+  Shots fly straight and level and burst where they end (direct hit 7,
+  burst splash 3).
   AIMED      (phase 1-2) tracks you, PING + a thin red sight line, then a
              very fast shot.
   BURST      (phase 2+) a stream of shots aimed at you; every 3rd (phase 3:
@@ -175,10 +176,16 @@ the designed motion are exactly as delivered. These are the only changes:
      while it moves, death when it dies. The skills point those at "blank"
      (and the block's at "dormant"), so only the fight's own animations
      ever move a bone.
-  5. attack2 (the down beam): the whole frame tips over so the eye faces
-     the floor, but the laser bone carried an extra -90 degree tilt on top,
-     which sent the beam out sideways. That extra tilt is set to 0: the beam
-     now fires straight down out of the eye into the glowing ring.
+  5. attack1 / attack2: the laser bone was set to "rotate in global space".
+     Blockbench and ModelEngine handle that setting differently: in
+     Blockbench attack2's beam points straight down at the floor, but
+     ModelEngine ignores the cube flipping over, so the beam came out
+     sideways. The same rotation is now written as plain keyframes (on the
+     laser's parent bone) and the setting is off, so ModelEngine draws
+     exactly what Blockbench shows: the beam straight down out of the eye,
+     ending on the floor inside the glowing ring. A check in the build
+     compares every corner of the beam, every tick, with Blockbench's pose
+     (it matches to within one model pixel).
   6. "override" is ticked on every animation, so ModelEngine plays one
      animation at a time instead of adding idle on top of the attacks.
   7. Saved in Blockbench's legacy 4.10 format (the same as "File > Export
@@ -247,9 +254,14 @@ The boss does nothing after waking up
   Your difficulty is Peaceful (slimes are removed), or the chunk is not
   loaded. The fight needs Easy or higher.
 
-It flies through my arena's pillars
-  The flying attack teleports. Keep the floor within fv_eb_boss_settings'
-  radius open and flat.
+The down beam still points sideways
+  The old blueprint is still loaded. Replace BOTH .bbmodel files, run
+  /meg reload, then kill the old block and place a new one (see "Updating
+  from an older version" above).
+
+It glides through my arena's pillars
+  The down beam moves by teleporting. Keep the floor within
+  fv_eb_boss_settings' radius open and flat.
 
 No custom voice, only vanilla sounds
   The player declined the resource pack, or Nexo has not rebuilt it - run
