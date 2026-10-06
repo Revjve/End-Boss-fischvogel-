@@ -1,21 +1,21 @@
 # ============================================================================
-#  FischVogel's End Boss - Mobs
+#  Soul Cube (FischVogel) - Mobs
 # ============================================================================
-#  fv_endboss_dormant   THE BLOCK. Spawn this one, once, where the fight
-#                       should happen. It sits on the ground like a normal
-#                       block, cannot be hurt, and wakes up when a player
-#                       left- or right-clicks it. While the fight runs it
-#                       hides; after the boss dies it re-forms on its own
-#                       (respawn timer in fv_endboss_core.yml), and after a
-#                       reset or a server restart it comes back at once.
-#                       It is persistent - place it one time and forget it.
+#  soul_cube_block   THE BLOCK - the one you spawn, once, where the fight
+#                    should happen. It sits on the ground like a normal
+#                    block, cannot be hurt, and wakes up into the boss when
+#                    a player left- or right-clicks it. While the fight runs
+#                    it hides; after the boss dies it re-forms on its own
+#                    (respawn timer in soul_cube_core.yml), and after a
+#                    reset or a server restart it comes back at once.
+#                    It is persistent - place it one time and forget it.
 #
-#  fv_endboss           THE BOSS. Never spawn it by hand - the block summons
-#                       it in exactly its own spot and pose, so the block
-#                       turns into the boss without a visible swap.
+#  soul_cube         THE BOSS. Never spawn it by hand - the block summons
+#                    it in exactly its own spot and pose, so the block
+#                    turns into the boss without a visible swap.
 #
-#  everything else      invisible effect carriers (projectile, explosion,
-#                       death effects). Not real mobs.
+#  everything else   invisible effect carriers (projectile, explosion,
+#                    death effects). Never spawn them by hand.
 #
 #  Both the block and the boss stand on an invisible SLIME of size 2, whose
 #  vanilla hitbox is 1.04 x 1.04 blocks - the size of the cube. ModelEngine
@@ -31,16 +31,16 @@
 #  invisibility a green slime would flash up in both moments.
 #
 #  Blueprints (plugins/ModelEngine/blueprints/):
-#     fv_endboss.bbmodel             dormant, on_spawn, idle, attack1, attack2,
-#                                    shooting, damage, eyes, death
-#     fv_endboss_projectile.bbmodel  idle, explosion
+#     soul_cube.bbmodel             dormant, on_spawn, eyes, idle, attack1,
+#                                   attack2, shooting, damage, death, blank
+#     soul_cube_projectile.bbmodel  idle, explosion, blank
 # ============================================================================
 
 
 # ============================================================================
 #  THE BLOCK
 # ============================================================================
-fv_endboss_dormant:
+soul_cube_block:
   Type: SLIME
   Display: ''
   Health: 100
@@ -70,18 +70,18 @@ fv_endboss_dormant:
   - clear
   Skills:
   # put the model on, snap to the block grid rotation, get ready
-  - skill{s=fv_eb_block_spawn} @self ~onSpawn
+  - skill{s=soul_cube_block_spawn} @self ~onSpawn
   # after a restart / chunk reload: if a fight was running, come back now
-  - skill{s=fv_eb_block_load} @self ~onLoad
+  - skill{s=soul_cube_block_load} @self ~onLoad
   # left click arrives as damage, right click as interact. Both are
   # cancelled (sync=true is required for cancelevent) and both wake it up.
-  - skill{s=fv_eb_block_hit;sync=true} @self ~onDamaged
-  - skill{s=fv_eb_block_click;sync=true} @self ~onInteract
+  - skill{s=soul_cube_block_hit;sync=true} @self ~onDamaged
+  - skill{s=soul_cube_block_click;sync=true} @self ~onInteract
   # creepy ambience, the occasional peek, respawn countdown, boss watchdog
-  - skill{s=fv_eb_block_second} @self ~onTimer:20
+  - skill{s=soul_cube_block_second} @self ~onTimer:20
   # the boss reports back
-  - skill{s=fv_eb_block_on_defeat} @self ~onSignal:FV_EB_DEFEATED
-  - skill{s=fv_eb_block_restore} @self ~onSignal:FV_EB_RESET
+  - skill{s=soul_cube_block_on_defeat} @self ~onSignal:SOUL_CUBE_DEFEATED
+  - skill{s=soul_cube_block_restore} @self ~onSignal:SOUL_CUBE_RESET
 
 
 # ============================================================================
@@ -94,7 +94,7 @@ fv_endboss_dormant:
 #  custom boss bar texture is made later it can simply replace the blue bar
 #  sprites without touching the Ender Dragon / Wither / raid bars.
 # ============================================================================
-fv_endboss:
+soul_cube:
   Type: SLIME
   Display: '<gradient:#9ffcff:#ffffff>Soul Cube</gradient>'
   Health: 750
@@ -147,14 +147,14 @@ fv_endboss:
   Drops:
   - exp 1500
   Skills:
-  - skill{s=fv_eb_boss_spawn} @self ~onSpawn
-  - skill{s=fv_eb_on_damaged;sync=true} @self ~onDamaged
-  - skill{s=fv_eb_on_interact;sync=true} @self ~onInteract
+  - skill{s=soul_cube_boss_spawn} @self ~onSpawn
+  - skill{s=soul_cube_on_damaged;sync=true} @self ~onDamaged
+  - skill{s=soul_cube_on_interact;sync=true} @self ~onInteract
   # turns to face the closest player while it is not attacking
-  - skill{s=fv_eb_watch} @self ~onTimer:2
+  - skill{s=soul_cube_watch} @self ~onTimer:2
   # watchdog, leash, "everyone left" reset, link to the block
-  - skill{s=fv_eb_boss_second} @self ~onTimer:20
-  - skill{s=fv_eb_on_death} @self ~onDeath
+  - skill{s=soul_cube_boss_second} @self ~onTimer:20
+  - skill{s=soul_cube_on_death} @self ~onDeath
 
 
 # ============================================================================
@@ -165,7 +165,7 @@ fv_endboss:
 #  If your ModelEngine build refuses to render models on marker armour
 #  stands, set Marker: false - nothing here relies on them being markers.
 # ============================================================================
-fv_endboss_fx_base:
+soul_cube_fx_base:
   Type: ARMOR_STAND
   Display: ''
   Health: 1
@@ -194,34 +194,34 @@ fv_endboss_fx_base:
   - remove @self ~onTimer:200
 
 # The flying projectile. MythicMobs moves this along the projectile path
-# (bulletType=MOB in fv_endboss_shooting.yml) and removes it when the
+# (bulletType=MOB in soul_cube_shooting.yml) and removes it when the
 # projectile ends. "idle" is the spinning star; it MUST be playing at all
 # times, because the projectile's rest pose shows its explosion shards.
-fv_endboss_bullet:
-  Template: fv_endboss_fx_base
+soul_cube_bullet:
+  Template: soul_cube_fx_base
   Skills:
-  - model{mid=fv_endboss_projectile;usm=true;hitbox=false;showshadow=false;radius=64;initrender=false} @self ~onSpawn
-  - bodyrotation{mid=fv_endboss_projectile;playermode=true;stable=0;rdelay=0;rduration=0} @self ~onSpawn
-  - brightness{mid=fv_endboss_projectile;b=15;s=15} @self ~onSpawn
-  - state{mid=fv_endboss_projectile;s=idle;p=10;li=0;lo=0;force=true} @self ~onSpawn
-  - renderinit{mid=fv_endboss_projectile} @self ~onSpawn
+  - model{mid=soul_cube_projectile;usm=true;hitbox=false;showshadow=false;radius=64;initrender=false} @self ~onSpawn
+  - bodyrotation{mid=soul_cube_projectile;playermode=true;stable=0;rdelay=0;rduration=0} @self ~onSpawn
+  - brightness{mid=soul_cube_projectile;b=15;s=15} @self ~onSpawn
+  - state{mid=soul_cube_projectile;s=idle;p=10;li=0;lo=0;force=true} @self ~onSpawn
+  - renderinit{mid=soul_cube_projectile} @self ~onSpawn
 
 # Spawned where a projectile ends: plays the "explosion" animation (flash,
 # shards fly out - it is finished after ~0.25 s) and removes itself.
-fv_endboss_burst:
-  Template: fv_endboss_fx_base
+soul_cube_burst:
+  Template: soul_cube_fx_base
   Skills:
-  - model{mid=fv_endboss_projectile;usm=true;hitbox=false;showshadow=false;radius=64;initrender=false} @self ~onSpawn
-  - defaultstate{mid=fv_endboss_projectile;type=IDLE;state=blank;li=0;lo=0} @self ~onSpawn
-  - brightness{mid=fv_endboss_projectile;b=15;s=15} @self ~onSpawn
-  - state{mid=fv_endboss_projectile;s=explosion;p=10;li=0;lo=0;force=true} @self ~onSpawn
-  - renderinit{mid=fv_endboss_projectile} @self ~onSpawn
+  - model{mid=soul_cube_projectile;usm=true;hitbox=false;showshadow=false;radius=64;initrender=false} @self ~onSpawn
+  - defaultstate{mid=soul_cube_projectile;type=IDLE;state=blank;li=0;lo=0} @self ~onSpawn
+  - brightness{mid=soul_cube_projectile;b=15;s=15} @self ~onSpawn
+  - state{mid=soul_cube_projectile;s=explosion;p=10;li=0;lo=0;force=true} @self ~onSpawn
+  - renderinit{mid=soul_cube_projectile} @self ~onSpawn
   - remove{delay=14} @self ~onSpawn
 
 # Death director. When the boss dies, its model is moved onto this carrier,
 # which plays the "death" animation and every sound / particle that belongs
 # to it, independent of how long the dead slime itself stays around.
-fv_endboss_deathfx:
-  Template: fv_endboss_fx_base
+soul_cube_deathfx:
+  Template: soul_cube_fx_base
   Skills:
-  - skill{s=fv_eb_death_start} @self ~onSpawn
+  - skill{s=soul_cube_death_start} @self ~onSpawn

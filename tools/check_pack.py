@@ -210,7 +210,7 @@ KNOWN_PH = re.compile(r'^(caster|target)\.(l\.(x|y|z)\.double|l\.yaw|hp|mhp)$|^(
 def main():
     plugins = sys.argv[1]
     vdir = sys.argv[2] if len(sys.argv) > 2 else None
-    mm = os.path.join(plugins, 'MythicMobs', 'packs', 'fv_endboss')
+    mm = os.path.join(plugins, 'MythicMobs', 'packs', 'soul_cube')
     me = os.path.join(plugins, 'ModelEngine', 'blueprints')
 
     # ---- vanilla data ----

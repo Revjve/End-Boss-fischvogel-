@@ -1,50 +1,84 @@
 Hey, thank you very much for purchasing.
 
-To use this pack install "MythicMobs", "ModelEngine" (R4) and "Nexo".
-Minecraft 1.21.1 or newer (Paper / Purpur), MythicMobs 5.x.
+SOUL CUBE - a soul trapped inside a block.
+MythicMobs + ModelEngine + Nexo boss.
 
-Drop the contents of the "plugins" folder into your server's plugins folder,
-keeping the exact structure it comes in. Then restart the server and run:
 
-    /meg reload
-    /mm reload
-    /nexo reload all
+--------------------------------------------------------------------------
+REQUIREMENTS
+--------------------------------------------------------------------------
 
-Nexo builds the resource pack for you and merges ModelEngine's pack (the
-models) into it automatically, so there is no separate resource pack to
-install - just make sure your players accept the pack Nexo sends them.
-Every sound in the fight is a vanilla Minecraft sound, so the pack adds no
-sound files.
+  - Paper / Purpur 1.21.1 or newer
+  - MythicMobs 5.x
+  - ModelEngine R4
+  - Nexo (sends the resource pack with the models to your players)
 
-Nothing in the pack touches your existing configs: the MythicMobs files live
-in their own pack (plugins/MythicMobs/packs/fv_endboss), the models in
-ModelEngine's blueprints folder.
+
+--------------------------------------------------------------------------
+INSTALLING
+--------------------------------------------------------------------------
+
+1. Drop the contents of the "plugins" folder into your server's plugins
+   folder, keeping the exact structure it comes in.
+2. Restart the server, then run:
+
+       /meg reload
+       /mm reload
+       /nexo reload all
+
+Nexo builds the resource pack and merges ModelEngine's models into it
+automatically - just make sure your players accept the pack. Every sound is
+a vanilla Minecraft sound, so there are no sound files to install.
+
+The pack only adds its own files:
+  plugins/ModelEngine/blueprints/soul_cube.bbmodel             the boss model
+  plugins/ModelEngine/blueprints/soul_cube_projectile.bbmodel  its projectile
+  plugins/MythicMobs/packs/soul_cube/                          mobs and skills
+
+
+--------------------------------------------------------------------------
+THE MOBS - WHICH ONE DO I SPAWN?
+--------------------------------------------------------------------------
+
+  soul_cube_block   THE BLOCK. This is the one you spawn. It sits in your
+                    arena looking like a normal block and cannot be hurt.
+                    When a player LEFT or RIGHT clicks it, it wakes up and
+                    turns into the boss right where it stands.
+
+  soul_cube         THE BOSS ("Soul Cube", with boss bar). Never spawn it by
+                    hand - the block summons it and keeps track of it.
+
+  soul_cube_bullet, soul_cube_burst, soul_cube_deathfx, soul_cube_fx_base
+                    Invisible effect helpers (projectile, explosion, death
+                    animation). Used by the skills - never spawn them.
 
 
 --------------------------------------------------------------------------
 PLACING THE BOSS
 --------------------------------------------------------------------------
 
-Stand in the middle of your arena and spawn THE BLOCK - once:
+Stand in the middle of your arena, on the floor, and spawn the block once:
 
-    /mm mobs spawn fv_endboss_dormant
+    /mm mobs spawn soul_cube_block
 
-For a perfect fit on the block grid, spawn it from the console with the
-centre of a block (X and Z of the block + 0.5, Y = the top of the floor):
+For a perfect fit on the block grid, spawn it from the console at the
+centre of a block (X and Z + 0.5, Y = the TOP of the floor block, e.g. 64
+for a floor block at Y 63):
 
-    mm mobs spawn fv_endboss_dormant 1 world,100.5,64,200.5
+    mm mobs spawn soul_cube_block 1 world,100.5,64,200.5
 
-That is all. The block is persistent: it survives restarts and remembers
-whether a fight is running or it is on cooldown. Never spawn "fv_endboss"
-(the boss itself) by hand - the block summons it.
+That is all. The block is persistent: it survives restarts, remembers
+whether a fight is running, and re-forms by itself after the boss is
+killed. Every height in the fight is measured from the block, so it has to
+sit ON the floor, not inside it.
 
-The arena: give it an open, flat floor with at least 20 blocks of room
-around the block. The down beam never drifts further than 18 blocks from
-the block (change it in fv_eb_boss_settings), but it glides by teleporting,
-so pillars or walls inside that radius are passed straight through.
+The arena: an open, flat floor with at least 20 blocks of room around the
+block. The boss never moves further than 18 blocks from the block (change
+it in soul_cube_boss_settings); it moves by teleporting, so pillars inside
+that radius are passed straight through.
 
-To remove it again:  /mm mobs kill fv_endboss_dormant  (and fv_endboss, if
-a fight is running).
+To remove it:  /mm mobs kill soul_cube_block  (and /mm mobs kill soul_cube
+if a fight is running).
 
 
 --------------------------------------------------------------------------
@@ -100,10 +134,11 @@ ATTACK 2 - DOWN BEAM (attack2)
   glowing ring hovering just above the floor, and the boss slowly drifts
   after the closest player for 4 to 5 seconds. Standing in the ring burns
   like the laser (14). The beam reaches from the ring up to the cube, so
-  jumping does not help - walk out of the ring and keep moving. It is slower than walking
-  (phase 1 / 2 / 3: 2.2 / 2.8 / 3.4 blocks a second, players walk 4.3) and
-  turns faster every phase. If it catches you it stops right on top of you;
-  get behind it and it turns round on the spot before it follows again. It cannot be hit while it is up there. Then it
+  jumping does not help - walk out of the ring and keep moving. It is
+  slower than walking (phase 1 / 2 / 3: 2.2 / 2.8 / 3.4 blocks a second,
+  players walk 4.3) and turns faster every phase. If it catches you it
+  stops right on top of you; get behind it and it turns round on the spot
+  before it follows again. It cannot be hit while it is up there. Then it
   comes back down (a small shockwave when it lands) and hovers low, dazed:
   the big damage window.
 
@@ -127,72 +162,11 @@ DEATH
   shatters. The souls drift away. 1500 xp.
 
 AFTERWARDS
-  The block re-forms after 5 minutes (fv_eb_block_settings; -1 = the boss can
-  only be killed once). If everybody leaves (nobody within 40 blocks for 15
-  seconds) the boss gives up and turns back into the block. After a restart
+  The block re-forms after 5 minutes (soul_cube_block_settings; -1 = the
+  boss can only be killed once). If everybody leaves (nobody within 40
+  blocks for 15 seconds) the boss gives up and turns back into the block. After a restart
   or a chunk unload during a fight, the block simply re-forms.
 
-
---------------------------------------------------------------------------
-SOUND DESIGN - "A SOUL TRAPPED IN A BLOCK"
---------------------------------------------------------------------------
-
-Only vanilla Minecraft sounds, layered and pitched: its voice is ghasts,
-vexes and the soul sand valley (wails, shrieks, whispers), its body is
-breaking amethyst, glass, deepslate and chains, its heartbeat is the
-warden's, its beams are beacons and conduits. Nothing to download, nothing
-for players to miss if they decline the resource pack.
-
-Which cue plays what is in skills/fv_endboss_fx.yml - one skill per moment
-of the fight (fv_eb_sfx_...), so a sound is easy to swap.
-
-
---------------------------------------------------------------------------
-WHAT WAS CHANGED IN THE MODELS - functional only
---------------------------------------------------------------------------
-
-The look of both models is untouched: geometry, textures, UVs, pivots and
-the designed motion are exactly as delivered. These are the only changes:
-
-  1. math.random() baked. Blockbench re-rolls math.random() every frame -
-     that is what makes the shaker bones jitter. ModelEngine does not, so the
-     jitter is pre-rolled into one keyframe per tick (20 per second, the
-     most the game can show) within the very same ranges, using Blockbench's
-     own interpolation rules. on_spawn, idle, damage, attack1, attack2,
-     shooting and death; the laser flicker in attack1/attack2 too.
-  2. idle: the eye cubes eye1/eye2/eye3 are hidden. All four eye cubes sit in
-     the same spot; Blockbench draws eye4 on top, in game identical faces
-     flicker. Hiding the three covered ones gives exactly the editor's look.
-  3. A new animation "dormant": on_spawn's very first frame, frozen - the
-     closed block, every bone pinned, the light rays and the small side
-     lights tucked in. No new geometry; it is what the block shows before
-     you click it, and waking up starts from exactly this frame.
-  4. A new, empty animation "blank" (in both models). ModelEngine plays
-     "default states" on its own - idle while a model stands still, walk
-     while it moves, death when it dies. The skills point those at "blank"
-     (and the block's at "dormant"), so only the fight's own animations
-     ever move a bone.
-  5. attack1 / attack2: the laser bone was set to "rotate in global space".
-     Blockbench and ModelEngine handle that setting differently: in
-     Blockbench attack2's beam points straight down at the floor, but
-     ModelEngine ignores the cube flipping over, so the beam came out
-     sideways. The same rotation is now written as plain keyframes (on the
-     laser's parent bone) and the setting is off, so ModelEngine draws
-     exactly what Blockbench shows: the beam straight down out of the eye,
-     ending on the floor inside the glowing ring. A check in the build
-     compares every corner of the beam, every tick, with Blockbench's pose
-     (it matches to within one model pixel).
-  6. "override" is ticked on every animation, so ModelEngine plays one
-     animation at a time instead of adding idle on top of the attacks.
-  7. Saved in Blockbench's legacy 4.10 format (the same as "File > Export
-     Legacy Project" in Blockbench 5), which every ModelEngine build reads.
-  8. Renamed to fv_endboss / fv_endboss_projectile.
-
-Source Files contains your originals and the converted models in
-Blockbench 5 format for editing. If you change an animation, save it, then
-use "File > Export Legacy Project" over the blueprint in
-plugins/ModelEngine/blueprints (or copy it there if your ModelEngine
-version reads Blockbench 5 files).
 
 
 --------------------------------------------------------------------------
@@ -200,84 +174,76 @@ TUNING
 --------------------------------------------------------------------------
 
 Everything worth balancing is listed in the "TUNING CHEAT SHEET" at the top
-of plugins/MythicMobs/packs/fv_endboss/skills/fv_endboss_core.yml.
+of plugins/MythicMobs/packs/soul_cube/skills/soul_cube_core.yml.
 
 The most common changes:
-  - boss health ............. Health: in mobs/fv_endboss_mobs.yml (750 suits
+  - boss health ............. Health: in mobs/soul_cube_mobs.yml (750 suits
                               1-3 players; add ~250 per extra player)
-  - respawn time ............ fv_eb_block_settings (seconds, -1 = once)
-  - arena radius ............ fv_eb_boss_settings
+  - respawn time ............ soul_cube_block_settings (seconds, -1 = once)
+  - arena radius ............ soul_cube_boss_settings
   - damage numbers .......... the damage{amount=..} lines (listed in the
                               cheat sheet)
   - idle time, openings, how
-    many shots, gaps ........ the PHASE TABLES (fv_eb_phase_1/2/3)
+    many shots, gaps ........ the PHASE TABLES (soul_cube_phase_1/2/3)
   - which patterns a phase
-    may use ................. fv_eb_type_* in fv_endboss_core.yml
-  - projectile speeds ....... v= in the fv_eb_fire_* skills (shooting file)
+    may use ................. soul_cube_type_* in soul_cube_core.yml
+  - projectile speeds ....... v= in the soul_cube_fire_* skills (shooting file)
+  - sounds .................. skills/soul_cube_fx.yml, one skill per moment
+                              of the fight (soul_cube_sfx_...)
 
 The animation speeds (speed=1.0/1.1/1.2 on the state{} lines in
-fv_eb_anim_*) drive the tick numbers in the phase tables. If you change a
-speed, redo the division written next to the table.
+soul_cube_anim_*) drive the tick numbers in the phase tables. If you change
+a speed, redo the division written next to the table.
 
-The boss bar uses the colour BLUE on purpose: no vanilla boss uses it, so a
-custom boss bar texture can later replace the blue bar sprites without
-touching the Ender Dragon, Wither or raid bars.
+The boss bar is BLUE on purpose: no vanilla boss uses that colour, so a
+custom boss bar texture can replace it without touching the Ender Dragon,
+Wither or raid bars.
+
+
+--------------------------------------------------------------------------
+EDITING THE MODELS
+--------------------------------------------------------------------------
+
+"Source Files" holds both models as Blockbench 5 projects. Edit them there,
+then use "File > Export Legacy Project" and save over the matching file in
+plugins/ModelEngine/blueprints, and run /meg reload. The blueprints use
+Blockbench's legacy project format, which every ModelEngine build reads.
+
+The skills rely on these animations by name: dormant, on_spawn, eyes,
+idle, attack1, attack2, shooting, damage, death, blank (boss) and idle,
+explosion, blank (projectile).
 
 
 --------------------------------------------------------------------------
 IF SOMETHING LOOKS WRONG
 --------------------------------------------------------------------------
 
-Updating from an older version of this pack
-  Replace BOTH .bbmodel files in plugins/ModelEngine/blueprints and the
-  whole plugins/MythicMobs/packs/fv_endboss folder, run /meg reload,
-  /mm reload and /nexo reload all, then kill the old block
-  (/mm mobs kill fv_endboss_dormant) and place a new one. Older versions
-  had custom sounds in plugins/Nexo/pack/assets/fv_endboss - that folder
-  is not used any more and can be deleted.
-
 The block / boss is invisible
-  Check /meg reload printed no errors and that both .bbmodel files are in
-  plugins/ModelEngine/blueprints. Players must accept the Nexo pack.
+  Check that /meg reload printed no errors and that both .bbmodel files are
+  in plugins/ModelEngine/blueprints. Players must accept the Nexo pack.
 
 Projectiles or the explosion are invisible
-  Set "Marker: false" in fv_endboss_fx_base (mobs file) - a few ModelEngine
+  Set "Marker: false" in soul_cube_fx_base (mobs file) - a few ModelEngine
   builds will not render models on marker armour stands.
 
-The boss vanished / the block came back on its own
-  Nobody was within 40 blocks for 15 seconds, the chunk unloaded, or the
-  server restarted - in all three cases the fight resets on purpose.
+The boss sits too low, or the low laser sweep never hits
+  The block was placed inside the floor. Kill it and spawn it again standing
+  on the floor (see PLACING THE BOSS).
+
+Its attacks do not hurt me
+  Creative and Spectator players are ignored by every attack - fight it in
+  Survival or Adventure.
 
 The boss does nothing after waking up
   Your difficulty is Peaceful (slimes are removed), or the chunk is not
   loaded. The fight needs Easy or higher.
 
-The down beam still points sideways
-  The old blueprint is still loaded. Replace BOTH .bbmodel files, run
-  /meg reload, then kill the old block and place a new one (see "Updating
-  from an older version" above).
+The boss vanished / the block came back on its own
+  Nobody was within 40 blocks for 15 seconds, the chunk unloaded, or the
+  server restarted - in all three cases the fight resets on purpose.
 
-It glides through my arena's pillars
-  The down beam moves by teleporting. Keep the floor within
-  fv_eb_boss_settings' radius open and flat.
-
-The boss sits too low / the low sweep never hits
-  Every height in the fight is measured from the block's Y. Spawn the block
-  standing on the floor, or from the console with Y = the TOP of the floor
-  block (64 for a floor block at Y 63) - not inside the floor.
-
-Errors in the console mentioning fv_eb_...
+Errors in the console mentioning soul_cube_...
   Please send me the lines; each skill is named after what it does.
-
-
---------------------------------------------------------------------------
-BEFORE YOU OPEN THE ARENA
---------------------------------------------------------------------------
-
-Do one test fight in Survival with the resource pack accepted: wake the
-block, let it run through a few attacks, and watch the console for errors
-during /mm reload. Fighting it in Creative works too, but Creative players
-are ignored by every attack.
 
 
 If you have any questions, please reach out to me on my Discord server:

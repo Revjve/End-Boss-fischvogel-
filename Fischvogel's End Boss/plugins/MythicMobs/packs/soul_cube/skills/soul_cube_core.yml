@@ -1,0 +1,918 @@
+# ============================================================================
+#  Soul Cube (FischVogel) - Core
+# ============================================================================
+#  The block, waking up, the fight loop, phases, damage rules, movement and
+#  death. The three attacks live in their own files:
+#     soul_cube_laser.yml      attack1  - 4 laser patterns
+#     soul_cube_downbeam.yml   attack2  - the down beam
+#     soul_cube_shooting.yml   shooting - 5 projectile patterns
+#     soul_cube_fx.yml         every sound / particle cue
+#
+#  ---- TUNING CHEAT SHEET -------------------------------------------------
+#   Boss health ............. Health: in mobs/soul_cube_mobs.yml
+#   Block respawn time ...... soul_cube_block_settings (seconds, -1 = one-time)
+#   Arena radius ............ soul_cube_boss_settings (the down beam never leaves it)
+#   Phase thresholds ........ soul_cube_check_phase (66% / 33% health)
+#   Speed per phase ......... speed= on the state{} lines in soul_cube_anim_*
+#   Idle time per phase ..... soul_cube_t_idle / soul_cube_t_idle_rand in the
+#                             PHASE TABLES below (ticks, 20 = 1 second)
+#   Crash-landing window .... soul_cube_t_stagger in the PHASE TABLES
+#   Damage taken while it
+#     attacks / is stunned .. soul_cube_on_damaged (x0.5 / x1.35)
+#   Attack damage ........... the damage{} lines, one per hit type:
+#                               laser 14 ........ soul_cube_beam_hit
+#                               down beam 14 .... soul_cube_downbeam_hit
+#                               projectile 7+3 .. soul_cube_proj_hit / _splash
+#                               landing 6 ....... soul_cube_land_hit
+#                               phase roar 6 .... soul_cube_roar_hit
+#   Which attacks a phase
+#     may pick .............. soul_cube_type_* lists below
+#
+#  ---- HOW THE FIGHT FLOWS ------------------------------------------------
+#   block clicked -> boss summoned in the same spot -> on_spawn (7 s,
+#   cannot be damaged) -> LOOP:
+#      idle (open for hits) -> pick an attack type that is NOT the same as
+#      last time (laser / down beam / shooting) -> random pattern of that
+#      type -> recover -> LOOP
+#   Health 66% / 33%: phase 2 / phase 3. The change happens right away, the
+#   roar + shockwave plays as soon as the current attack is finished.
+#   Phase 3: after a shooting attack it may chain straight into the next
+#   attack without idling.
+#
+#  ---- DAMAGE RULES (soul_cube_on_damaged) ------------------------------------
+#   WAKING   no damage (on_spawn is playing)
+#   IMMUNE   no damage (4 blocks up during the down beam, phase roar)
+#   ARMORED  x0.5  while a laser beam is live
+#   OPEN     x1    idle, wind-ups, shooting
+#   STAGGER  x1.35 dazed on the floor after the down beam, when it lands
+#
+#  ---- HEIGHT ---------------------------------------------------------------
+#   All heights are in model pixels (16 px = 1 block) above the floor the
+#   block sat on (soul_cube_hpx). Every height was measured against the
+#   blueprint so the frame never touches the floor (the corners hang up to
+#   9 px below the cube's origin in attack1):
+#      between attacks .......... 20 px  (floats 1.25 blocks up)
+#      chest laser / shooting ... 16 px  (beam and shots at chest height)
+#      low laser sweep ..........  9 px  (beam at hip height - jump it)
+#      landed / dazed ........... 16 px  (1 block; the frame hangs half a
+#                                         block above the floor)
+#      down beam (attack2) ...... 12 px  (the animation lifts the cube 4
+#                                         more blocks; the beam ends 2.6 px
+#                                         below the boss, so its tip and the
+#                                         impact ring float just over half
+#                                         a block above the floor)
+#   Moves are done in exact pixel steps by soul_cube_height_step, so the height
+#   can never drift over a long fight. Use a flat arena floor.
+# ============================================================================
+
+
+# ============================================================================
+#  PHASE TABLES
+# ============================================================================
+#  Every attack animation runs faster in later phases (speed 1.0 / 1.1 /
+#  1.2, set on the state{} lines in soul_cube_anim_*). The tick numbers below
+#  are the animation's own key moments divided by that speed, so sounds,
+#  damage and the visuals stay in sync:
+#     attack1   beam on 50, beam off 231, settled 252
+#     attack2   beam on 50, ring pulses 67 / 87 / 107, beam off 147,
+#               descent 180, landed 201 (the dazed animation takes over
+#               right there, 2 ticks before attack2 would end at 203)
+#     shooting  50 ticks; a shot is fired the moment it (re)starts and idle
+#               takes over 6 ticks before it ends
+#  If you change a speed= value, redo the division for that phase.
+# ============================================================================
+soul_cube_phase_1:
+  Skills:
+  - setvariable{var=caster.soul_cube_phase;type=INTEGER;value=1}
+  # idle between attacks: t_idle + random(0 .. t_idle_rand) ticks
+  - setvariable{var=caster.soul_cube_t_idle;type=INTEGER;value=50}
+  - setvariable{var=caster.soul_cube_t_idle_rand;type=INTEGER;value=20}
+  # dazed on the floor after the down beam lands
+  - setvariable{var=caster.soul_cube_t_stagger;type=INTEGER;value=60}
+  # attack1 (laser): lock = beam on - 8 (the warning ping), dur = beam live, rec = recoil
+  - setvariable{var=caster.soul_cube_t_a1_lock;type=INTEGER;value=42}
+  - setvariable{var=caster.soul_cube_t_a1_dur;type=INTEGER;value=181}
+  - setvariable{var=caster.soul_cube_t_a1_rec;type=INTEGER;value=21}
+  # attack2 (down beam): beam on, beam time, ring pulse gaps, hover, descent
+  - setvariable{var=caster.soul_cube_t_a2_ign;type=INTEGER;value=50}
+  - setvariable{var=caster.soul_cube_t_a2_beam;type=INTEGER;value=97}
+  - setvariable{var=caster.soul_cube_t_a2_p1;type=INTEGER;value=17}
+  - setvariable{var=caster.soul_cube_t_a2_p2;type=INTEGER;value=20}
+  - setvariable{var=caster.soul_cube_t_a2_p3;type=INTEGER;value=20}
+  - setvariable{var=caster.soul_cube_t_a2_hover;type=INTEGER;value=33}
+  - setvariable{var=caster.soul_cube_t_a2_desc;type=INTEGER;value=21}
+  # shooting animation: from the last shot until idle takes over
+  - setvariable{var=caster.soul_cube_t_sh_settle;type=INTEGER;value=44}
+  # laser pattern settings
+  - setvariable{var=caster.soul_cube_flick_every;type=INTEGER;value=99999}
+  - setvariable{var=caster.soul_cube_chaos_lo;type=INTEGER;value=4}
+  - setvariable{var=caster.soul_cube_chaos_hi;type=INTEGER;value=6}
+  - setvariable{var=caster.soul_cube_chaos_min;type=INTEGER;value=30}
+  - setvariable{var=caster.soul_cube_chaos_max;type=INTEGER;value=46}
+  # shooting pattern settings (n_ = number of shots / volleys, t_ = ticks)
+  #   aimed: tracking time before each shot, then ping -> shot after t_aimed_lock
+  #   burst: v_burst = burst shot speed in blocks per tick (lead aiming)
+  - setvariable{var=caster.soul_cube_n_aimed;type=INTEGER;value=2}
+  - setvariable{var=caster.soul_cube_t_aimed_gap;type=INTEGER;value=18}
+  - setvariable{var=caster.soul_cube_t_aimed_lock;type=INTEGER;value=9}
+  - setvariable{var=caster.soul_cube_n_burst;type=INTEGER;value=6}
+  - setvariable{var=caster.soul_cube_t_burst_gap;type=INTEGER;value=7}
+  - setvariable{var=caster.soul_cube_v_burst;type=FLOAT;value=0.7}
+  - setvariable{var=caster.soul_cube_n_ring;type=INTEGER;value=12}
+  - setvariable{var=caster.soul_cube_n_fan;type=INTEGER;value=2}
+  - setvariable{var=caster.soul_cube_t_fan_gap;type=INTEGER;value=16}
+  - setvariable{var=caster.soul_cube_n_spiral;type=INTEGER;value=20}
+
+soul_cube_phase_2:
+  Skills:
+  - setvariable{var=caster.soul_cube_phase;type=INTEGER;value=2}
+  - setvariable{var=caster.soul_cube_t_idle;type=INTEGER;value=34}
+  - setvariable{var=caster.soul_cube_t_idle_rand;type=INTEGER;value=16}
+  - setvariable{var=caster.soul_cube_t_stagger;type=INTEGER;value=46}
+  - setvariable{var=caster.soul_cube_t_a1_lock;type=INTEGER;value=37}
+  - setvariable{var=caster.soul_cube_t_a1_dur;type=INTEGER;value=165}
+  - setvariable{var=caster.soul_cube_t_a1_rec;type=INTEGER;value=19}
+  - setvariable{var=caster.soul_cube_t_a2_ign;type=INTEGER;value=45}
+  - setvariable{var=caster.soul_cube_t_a2_beam;type=INTEGER;value=89}
+  - setvariable{var=caster.soul_cube_t_a2_p1;type=INTEGER;value=16}
+  - setvariable{var=caster.soul_cube_t_a2_p2;type=INTEGER;value=18}
+  - setvariable{var=caster.soul_cube_t_a2_p3;type=INTEGER;value=18}
+  - setvariable{var=caster.soul_cube_t_a2_hover;type=INTEGER;value=30}
+  - setvariable{var=caster.soul_cube_t_a2_desc;type=INTEGER;value=19}
+  - setvariable{var=caster.soul_cube_t_sh_settle;type=INTEGER;value=39}
+  - setvariable{var=caster.soul_cube_flick_every;type=INTEGER;value=60}
+  - setvariable{var=caster.soul_cube_chaos_lo;type=INTEGER;value=4}
+  - setvariable{var=caster.soul_cube_chaos_hi;type=INTEGER;value=7}
+  - setvariable{var=caster.soul_cube_chaos_min;type=INTEGER;value=22}
+  - setvariable{var=caster.soul_cube_chaos_max;type=INTEGER;value=40}
+  - setvariable{var=caster.soul_cube_n_aimed;type=INTEGER;value=3}
+  - setvariable{var=caster.soul_cube_t_aimed_gap;type=INTEGER;value=14}
+  - setvariable{var=caster.soul_cube_t_aimed_lock;type=INTEGER;value=8}
+  - setvariable{var=caster.soul_cube_n_burst;type=INTEGER;value=8}
+  - setvariable{var=caster.soul_cube_t_burst_gap;type=INTEGER;value=5}
+  - setvariable{var=caster.soul_cube_v_burst;type=FLOAT;value=0.75}
+  - setvariable{var=caster.soul_cube_n_ring;type=INTEGER;value=32}
+  - setvariable{var=caster.soul_cube_n_fan;type=INTEGER;value=3}
+  - setvariable{var=caster.soul_cube_t_fan_gap;type=INTEGER;value=14}
+  - setvariable{var=caster.soul_cube_n_spiral;type=INTEGER;value=24}
+
+soul_cube_phase_3:
+  Skills:
+  - setvariable{var=caster.soul_cube_phase;type=INTEGER;value=3}
+  - setvariable{var=caster.soul_cube_t_idle;type=INTEGER;value=20}
+  - setvariable{var=caster.soul_cube_t_idle_rand;type=INTEGER;value=12}
+  - setvariable{var=caster.soul_cube_t_stagger;type=INTEGER;value=34}
+  - setvariable{var=caster.soul_cube_t_a1_lock;type=INTEGER;value=34}
+  - setvariable{var=caster.soul_cube_t_a1_dur;type=INTEGER;value=151}
+  - setvariable{var=caster.soul_cube_t_a1_rec;type=INTEGER;value=17}
+  - setvariable{var=caster.soul_cube_t_a2_ign;type=INTEGER;value=42}
+  - setvariable{var=caster.soul_cube_t_a2_beam;type=INTEGER;value=81}
+  - setvariable{var=caster.soul_cube_t_a2_p1;type=INTEGER;value=14}
+  - setvariable{var=caster.soul_cube_t_a2_p2;type=INTEGER;value=17}
+  - setvariable{var=caster.soul_cube_t_a2_p3;type=INTEGER;value=16}
+  - setvariable{var=caster.soul_cube_t_a2_hover;type=INTEGER;value=27}
+  - setvariable{var=caster.soul_cube_t_a2_desc;type=INTEGER;value=18}
+  - setvariable{var=caster.soul_cube_t_sh_settle;type=INTEGER;value=35}
+  - setvariable{var=caster.soul_cube_flick_every;type=INTEGER;value=45}
+  - setvariable{var=caster.soul_cube_chaos_lo;type=INTEGER;value=5}
+  - setvariable{var=caster.soul_cube_chaos_hi;type=INTEGER;value=9}
+  - setvariable{var=caster.soul_cube_chaos_min;type=INTEGER;value=14}
+  - setvariable{var=caster.soul_cube_chaos_max;type=INTEGER;value=30}
+  - setvariable{var=caster.soul_cube_n_aimed;type=INTEGER;value=3}
+  - setvariable{var=caster.soul_cube_t_aimed_gap;type=INTEGER;value=12}
+  - setvariable{var=caster.soul_cube_t_aimed_lock;type=INTEGER;value=7}
+  - setvariable{var=caster.soul_cube_n_burst;type=INTEGER;value=10}
+  - setvariable{var=caster.soul_cube_t_burst_gap;type=INTEGER;value=4}
+  - setvariable{var=caster.soul_cube_v_burst;type=FLOAT;value=0.8}
+  - setvariable{var=caster.soul_cube_n_ring;type=INTEGER;value=40}
+  - setvariable{var=caster.soul_cube_n_fan;type=INTEGER;value=4}
+  - setvariable{var=caster.soul_cube_t_fan_gap;type=INTEGER;value=12}
+  - setvariable{var=caster.soul_cube_n_spiral;type=INTEGER;value=30}
+
+
+# ============================================================================
+#  THE BLOCK  (soul_cube_block)
+# ============================================================================
+#  States (caster variable soul_cube_block, saved through restarts):
+#     READY     sits on the ground, looks like a block, waits for a click
+#     AWAKE     a fight is running - the block hides 3 blocks under its spot
+#               so its hitbox can never soak up hits meant for the boss
+#     COOLDOWN  the boss was killed; counts down, then re-forms
+# ============================================================================
+
+# Seconds until the block re-forms after the boss was killed.
+# -1 = the boss can only be killed once (the block is removed for good).
+soul_cube_block_settings:
+  Skills:
+  - setvariable{var=caster.soul_cube_respawn;type=INTEGER;value=300;save=true}
+
+soul_cube_block_spawn:
+  Skills:
+  - skill{s=soul_cube_block_settings} @self
+  - setvariable{var=caster.soul_cube_block;type=STRING;value=READY;save=true}
+  - setvariable{var=caster.soul_cube_hidden;type=INTEGER;value=0;save=true}
+  - skill{s=soul_cube_snap_yaw} @self
+  - skill{s=soul_cube_block_model} @self
+
+# The dormant look: on_spawn's very first frame, frozen - the closed block
+# exactly as it looks the moment it starts to wake (every bone pinned, the
+# light rays not out yet). Lit by the world like a normal block; it only
+# starts to glow once it wakes up.
+# ModelEngine plays "default states" on its own (idle while standing still,
+# walk while moving, ...). Here they are pointed at "dormant" too, so nothing
+# can ever make the block move.
+soul_cube_block_model:
+  Skills:
+  - model{mid=soul_cube;usm=true;hitbox=false;lockpitch=true;damagetint=false;showshadow=false;radius=64;initrender=false} @self
+  - defaultstate{mid=soul_cube;type=IDLE;state=dormant;li=0;lo=0} @self
+  - defaultstate{mid=soul_cube;type=WALK;state=dormant;li=0;lo=0} @self
+  - bodyrotation{mid=soul_cube;playermode=false;mh=0;mb=0;stable=0;rdelay=0;rduration=0} @self
+  - state{mid=soul_cube;s=dormant;p=10;li=0;lo=0;force=true} @self
+  - renderinit{mid=soul_cube} @self
+
+# Blocks only come in four directions - turn to the nearest one.
+soul_cube_snap_yaw:
+  Skills:
+  - setvariable{var=skill.yaw;type=FLOAT;value="((<caster.l.yaw>)%360+360)%360"}
+  - setrotation{yaw=0;pitch=0} @self ?variableinrange{var=skill.yaw;value=0to45}
+  - setrotation{yaw=90;pitch=0} @self ?variableinrange{var=skill.yaw;value=45to135}
+  - setrotation{yaw=180;pitch=0} @self ?variableinrange{var=skill.yaw;value=135to225}
+  - setrotation{yaw=270;pitch=0} @self ?variableinrange{var=skill.yaw;value=225to315}
+  - setrotation{yaw=0;pitch=0} @self ?variableinrange{var=skill.yaw;value=315to360}
+
+soul_cube_block_load:
+  Skills:
+  - skill{s=soul_cube_block_settings} @self
+  # READY: just make sure the model is on
+  - skill{s=soul_cube_block_model} @self ?variableequals{var=caster.soul_cube_block;value=READY}
+  # a fight was running when the chunk unloaded / the server stopped
+  - skill{s=soul_cube_block_restore} @self ?variableequals{var=caster.soul_cube_block;value=AWAKE}
+  # killed: keep counting down (the timer below handles it)
+  - skill{s=soul_cube_noop} @self ?variableequals{var=caster.soul_cube_block;value=COOLDOWN}
+  # unknown (variables lost) - treat it as ready
+  - skill{s=soul_cube_block_restore} @self ?!variableisset{var=caster.soul_cube_block}
+
+soul_cube_block_hit:
+  Skills:
+  - cancelevent
+  - skill{s=soul_cube_block_wake} @self
+
+soul_cube_block_click:
+  Skills:
+  - cancelevent
+  - skill{s=soul_cube_block_wake} @self
+
+soul_cube_block_wake:
+  Conditions:
+  - variableequals{var=caster.soul_cube_block;value=READY} true
+  Skills:
+  - setvariable{var=caster.soul_cube_block;type=STRING;value=AWAKE;save=true}
+  # covers the time until the boss sends its first heartbeat
+  - setvariable{var=caster.soul_cube_boss_alive;type=INTEGER;value=1;duration=100}
+  # the boss appears in exactly this spot and rotation and starts on_spawn
+  # from its first frame - the block simply turns into it
+  - summon{type=soul_cube;amount=1;radius=0;sio=true;sip=true} @SelfLocation
+  # 2 ticks of overlap so the boss model is on screen before this one goes
+  - delay 2
+  - model{mid=soul_cube;remove=true} @self
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=-3}
+  - setvariable{var=caster.soul_cube_hidden;type=INTEGER;value=1;save=true}
+
+soul_cube_block_second:
+  Skills:
+  - skill{s=soul_cube_block_ambience} @self ?variableequals{var=caster.soul_cube_block;value=READY}
+  # the boss vanished without reporting back (chunk unload etc.)
+  - skill{s=soul_cube_block_restore} @self ?variableequals{var=caster.soul_cube_block;value=AWAKE} ?!variableisset{var=caster.soul_cube_boss_alive}
+  - skill{s=soul_cube_block_countdown} @self ?variableequals{var=caster.soul_cube_block;value=COOLDOWN}
+
+soul_cube_block_on_defeat:
+  Skills:
+  - skill{s=soul_cube_block_settings} @self
+  - setvariable{var=caster.soul_cube_cd;type=INTEGER;value=<caster.var.soul_cube_respawn>;save=true}
+  - setvariable{var=caster.soul_cube_block;type=STRING;value=COOLDOWN;save=true}
+  - remove @self ?variableinrange{var=caster.soul_cube_respawn;value=-99999to-1}
+
+soul_cube_block_countdown:
+  Skills:
+  - variableadd{var=caster.soul_cube_cd;amount=-1}
+  - skill{s=soul_cube_block_restore} @self ?variableinrange{var=caster.soul_cube_cd;value=-99999to0}
+
+# Back on the ground, model on, ready for the next fight.
+soul_cube_block_restore:
+  Skills:
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=3} ?variableequals{var=caster.soul_cube_hidden;value=1}
+  - setvariable{var=caster.soul_cube_hidden;type=INTEGER;value=0;save=true}
+  - setvariable{var=caster.soul_cube_block;type=STRING;value=READY;save=true}
+  - skill{s=soul_cube_block_model} @self
+  - skill{s=soul_cube_sfx_block_reform} @self
+
+# Runs every second while the block waits.
+soul_cube_block_ambience:
+  Skills:
+  - skill{s=soul_cube_sfx_block_heartbeat} @self ?playerwithin{d=14}
+  - randomskill{skills=soul_cube_sfx_block_whisper,soul_cube_noop,soul_cube_noop} @self ?playerwithin{d=9}
+  - randomskill{skills=soul_cube_block_peek,soul_cube_noop,soul_cube_noop,soul_cube_noop} @self ?playerwithin{d=7}
+
+# It opens its eye and blinks at you ("eyes" animation), then goes still.
+# "eyes" keys exactly the same bones as "dormant", so the two are swapped
+# outright (no blending) - never stacked.
+soul_cube_block_peek:
+  Cooldown: 7
+  Skills:
+  - state{mid=soul_cube;s=dormant;p=10;r=true;i=true} @self
+  - state{mid=soul_cube;s=eyes;p=10;li=0;lo=0;force=true} @self
+  - skill{s=soul_cube_sfx_block_peek} @self
+  # eyes is 29 ticks long and ends on the open eye - switch back one tick
+  # early so the model is never left without an animation
+  - delay 28
+  - skill{s=soul_cube_block_peek_end} @self ?variableequals{var=caster.soul_cube_block;value=READY}
+
+soul_cube_block_peek_end:
+  Skills:
+  - state{mid=soul_cube;s=eyes;p=10;r=true;i=true} @self
+  - state{mid=soul_cube;s=dormant;p=10;li=0;lo=0;force=true} @self
+
+soul_cube_noop:
+  Skills:
+  - setvariable{var=skill.noop;type=INTEGER;value=0}
+
+
+# ============================================================================
+#  BOSS SETTINGS
+# ============================================================================
+#  soul_cube_arena_r  radius (blocks) of the open, flat floor around the block.
+#                 The down beam never leaves it: past this distance the
+#                 boss turns back towards its block. Set it to your arena's
+#                 radius minus 2. Between attacks it also blinks back home if
+#                 it ever ends up more than 24 blocks away.
+soul_cube_boss_settings:
+  Skills:
+  - setvariable{var=caster.soul_cube_arena_r;type=FLOAT;value=18}
+
+
+# ============================================================================
+#  THE BOSS - spawn and wake-up  (on_spawn, 140 ticks at 100% speed)
+# ============================================================================
+#    0   light rays burst out of the block
+#   17   it starts to tremble
+#   51   lifts off (rises 30 px = 1.875 blocks in the animation)
+#   81   the frame strains
+#  117   violent shaking
+#  119   the eye opens
+#  123   the frame bursts open           -> shockwave pushes players back
+#  139   hand-over to idle (one tick before on_spawn would loop)
+#  The whole time it cannot be damaged.
+# ============================================================================
+soul_cube_boss_spawn:
+  Skills:
+  - setvariable{var=caster.soul_cube_state;type=STRING;value=WAKING}
+  - setvariable{var=caster.soul_cube_mode;type=STRING;value=IMMUNE}
+  - setvariable{var=caster.soul_cube_busy;type=INTEGER;value=1}
+  - setvariable{var=caster.soul_cube_hpx;type=INTEGER;value=0}
+  - setvariable{var=caster.soul_cube_hpx_target;type=INTEGER;value=0}
+  - setvariable{var=caster.soul_cube_lasttype;type=STRING;value=NONE}
+  - setvariable{var=caster.soul_cube_phasebreak;type=INTEGER;value=0}
+  - setvariable{var=caster.soul_cube_alone;type=INTEGER;value=0}
+  - setvariable{var=caster.soul_cube_alive;type=INTEGER;value=1;duration=400}
+  - setvarloc{var=caster.soul_cube_home;val=@SelfLocation}
+  - setvariable{var=caster.soul_cube_home_x;type=FLOAT;value=<caster.l.x.double>}
+  - setvariable{var=caster.soul_cube_home_z;type=FLOAT;value=<caster.l.z.double>}
+  - skill{s=soul_cube_phase_1} @self
+  - skill{s=soul_cube_boss_settings} @self
+  - model{mid=soul_cube;usm=true;hitbox=false;lockpitch=true;damagetint=true;showshadow=true;radius=64;initrender=false} @self
+  # ModelEngine's own default states (idle while standing still, walk while
+  # moving, death when it dies) all point at the empty "blank" animation:
+  # only the states these skills choose ever move the model
+  - defaultstate{mid=soul_cube;type=IDLE;state=blank;li=0;lo=0} @self
+  - defaultstate{mid=soul_cube;type=WALK;state=blank;li=0;lo=0} @self
+  - defaultstate{mid=soul_cube;type=DEATH;state=blank;li=0;lo=0} @self
+  # the model always faces exactly where the boss faces - the laser's hit
+  # detection relies on this (0 degree head/body clamps, no delay)
+  - bodyrotation{mid=soul_cube;playermode=false;mh=0;mb=0;stable=0;rdelay=0;rduration=0} @self
+  - brightness{mid=soul_cube;b=15;s=15} @self
+  - state{mid=soul_cube;s=on_spawn;p=10;li=0;lo=6;force=true} @self
+  - renderinit{mid=soul_cube} @self
+  - skill{s=soul_cube_wake_timeline} @self
+
+soul_cube_wake_timeline:
+  Skills:
+  - skill{s=soul_cube_sfx_wake_burst} @self
+  - delay 17
+  - skill{s=soul_cube_sfx_wake_tremble} @self
+  - delay 34
+  - skill{s=soul_cube_sfx_wake_lift} @self
+  - delay 30
+  - skill{s=soul_cube_sfx_wake_strain} @self
+  - delay 36
+  - skill{s=soul_cube_sfx_wake_shake} @self
+  - delay 2
+  - skill{s=soul_cube_sfx_wake_eye} @self
+  - delay 4
+  - skill{s=soul_cube_sfx_wake_frame} @self
+  - skill{s=soul_cube_wake_shockwave} @self
+  - delay 16
+  - skill{s=soul_cube_wake_handover} @self
+
+# on_spawn ends with the cube 30 px up in the air while idle starts at 0 px.
+# Both animations blend over 6 ticks while the boss itself climbs 30 px in
+# 6 equal steps, so the cube stays exactly where it is on screen.
+soul_cube_wake_handover:
+  Skills:
+  - state{mid=soul_cube;s=on_spawn;p=10;r=true} @self
+  - state{mid=soul_cube;s=idle;p=10;li=6;lo=6;force=true} @self
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
+  - delay 1
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
+  - delay 1
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
+  - delay 1
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
+  - delay 1
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
+  - delay 1
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.3125}
+  - setvariable{var=caster.soul_cube_hpx;type=INTEGER;value=30}
+  - delay 2
+  - setvariable{var=caster.soul_cube_state;type=STRING;value=FIGHT}
+  - setvariable{var=caster.soul_cube_mode;type=STRING;value=OPEN}
+  # settle down to the normal hover height (16 px)
+  - skill{s=soul_cube_height_to_idle} @self
+  - skill{s=soul_cube_loop} @self
+
+
+# ============================================================================
+#  FIGHT LOOP
+# ============================================================================
+soul_cube_loop:
+  Conditions:
+  - variableequals{var=caster.soul_cube_state;value=FIGHT} true
+  Skills:
+  - setvariable{var=caster.soul_cube_busy;type=INTEGER;value=0}
+  - setvariable{var=caster.soul_cube_mode;type=STRING;value=OPEN}
+  - setvariable{var=caster.soul_cube_wait;type=INTEGER;value="<caster.var.soul_cube_t_idle>+floor(random(0,<caster.var.soul_cube_t_idle_rand>))"}
+  - setvariable{var=caster.soul_cube_alive;type=INTEGER;value=1;duration=200}
+  - delay{ticks=<caster.var.soul_cube_wait>}
+  - skill{s=soul_cube_pick} @self
+
+soul_cube_pick:
+  Conditions:
+  - variableequals{var=caster.soul_cube_state;value=FIGHT} true
+  Skills:
+  - setvariable{var=caster.soul_cube_busy;type=INTEGER;value=1}
+  - setvariable{var=caster.soul_cube_alive;type=INTEGER;value=1;duration=440}
+  # dragged too far from its block? blink back first
+  - setvariable{var=skill.away;type=FLOAT;value="sqrt(((<caster.l.x.double>)-(<caster.var.soul_cube_home_x>))^2+((<caster.l.z.double>)-(<caster.var.soul_cube_home_z>))^2)"}
+  - skill{s=soul_cube_return_home} @self ?variableinrange{var=skill.away;value=24to99999}
+  - skill{s=soul_cube_pick_p1} @self ?variableequals{var=caster.soul_cube_phase;value=1}
+  - skill{s=soul_cube_pick_p2} @self ?variableequals{var=caster.soul_cube_phase;value=2}
+  - skill{s=soul_cube_pick_p3} @self ?variableequals{var=caster.soul_cube_phase;value=3}
+
+# Never the same attack TYPE twice in a row. The last type is copied into a
+# skill variable first, because the attack that starts on one line already
+# changes soul_cube_lasttype before the next line is checked.
+soul_cube_pick_p1:
+  Skills:
+  - setvariable{var=skill.last;type=STRING;value=<caster.var.soul_cube_lasttype>}
+  - randomskill{skills=soul_cube_type_downbeam,soul_cube_type_shoot_p1} @self ?variableequals{var=skill.last;value=LASER}
+  - randomskill{skills=soul_cube_type_laser_p1,soul_cube_type_shoot_p1} @self ?variableequals{var=skill.last;value=DOWNBEAM}
+  - randomskill{skills=soul_cube_type_laser_p1,soul_cube_type_downbeam} @self ?variableequals{var=skill.last;value=SHOOT}
+  - randomskill{skills=soul_cube_type_laser_p1,soul_cube_type_downbeam,soul_cube_type_shoot_p1} @self ?variableequals{var=skill.last;value=NONE}
+
+soul_cube_pick_p2:
+  Skills:
+  - setvariable{var=skill.last;type=STRING;value=<caster.var.soul_cube_lasttype>}
+  - randomskill{skills=soul_cube_type_downbeam,soul_cube_type_shoot_p2} @self ?variableequals{var=skill.last;value=LASER}
+  - randomskill{skills=soul_cube_type_laser_p2,soul_cube_type_shoot_p2} @self ?variableequals{var=skill.last;value=DOWNBEAM}
+  - randomskill{skills=soul_cube_type_laser_p2,soul_cube_type_downbeam} @self ?variableequals{var=skill.last;value=SHOOT}
+  - randomskill{skills=soul_cube_type_laser_p2,soul_cube_type_downbeam,soul_cube_type_shoot_p2} @self ?variableequals{var=skill.last;value=NONE}
+
+soul_cube_pick_p3:
+  Skills:
+  - setvariable{var=skill.last;type=STRING;value=<caster.var.soul_cube_lasttype>}
+  - randomskill{skills=soul_cube_type_downbeam,soul_cube_type_shoot_p3} @self ?variableequals{var=skill.last;value=LASER}
+  - randomskill{skills=soul_cube_type_laser_p3,soul_cube_type_shoot_p3} @self ?variableequals{var=skill.last;value=DOWNBEAM}
+  - randomskill{skills=soul_cube_type_laser_p3,soul_cube_type_downbeam} @self ?variableequals{var=skill.last;value=SHOOT}
+  - randomskill{skills=soul_cube_type_laser_p3,soul_cube_type_downbeam,soul_cube_type_shoot_p3} @self ?variableequals{var=skill.last;value=NONE}
+
+# ---- which patterns each phase may use ----------------------------------
+soul_cube_type_laser_p1:
+  Skills:
+  - randomskill{skills=soul_cube_laser_straight,soul_cube_laser_jumprope} @self
+soul_cube_type_shoot_p1:
+  Skills:
+  - randomskill{skills=soul_cube_shoot_aimed,soul_cube_shoot_ring} @self
+
+soul_cube_type_laser_p2:
+  Skills:
+  - randomskill{skills=soul_cube_laser_straight,soul_cube_laser_jumprope,soul_cube_laser_hunter,soul_cube_laser_chaos} @self
+soul_cube_type_shoot_p2:
+  Skills:
+  - randomskill{skills=soul_cube_shoot_aimed,soul_cube_shoot_burst,soul_cube_shoot_ring,soul_cube_shoot_fan} @self
+
+soul_cube_type_laser_p3:
+  Skills:
+  - randomskill{skills=soul_cube_laser_straight,soul_cube_laser_jumprope,soul_cube_laser_hunter,soul_cube_laser_chaos} @self
+soul_cube_type_shoot_p3:
+  Skills:
+  - randomskill{skills=soul_cube_shoot_burst,soul_cube_shoot_ring,soul_cube_shoot_spiral,soul_cube_shoot_fan} @self
+
+# The down beam is the same attack in every phase - later phases make it
+# drift and turn faster (soul_cube_downbeam.yml).
+soul_cube_type_downbeam:
+  Skills:
+  - skill{s=soul_cube_downbeam} @self
+
+# Every attack ends here.
+soul_cube_after_attack:
+  Skills:
+  - setvariable{var=caster.soul_cube_mode;type=STRING;value=OPEN}
+  - setvariable{var=skill.pb;type=INTEGER;value=<caster.var.soul_cube_phasebreak>}
+  - setvariable{var=skill.combo;type=INTEGER;value=0}
+  - setvariable{var=skill.combo;type=INTEGER;value=1} ?variableequals{var=caster.soul_cube_phase;value=3} ?variableequals{var=caster.soul_cube_lasttype;value=SHOOT}
+  - skill{s=soul_cube_phase_break} @self ?variableequals{var=skill.pb;value=1}
+  - skill{s=soul_cube_loop} @self ?variableequals{var=skill.pb;value=0} ?variableequals{var=skill.combo;value=0}
+  - randomskill{skills=soul_cube_loop,soul_cube_combo} @self ?variableequals{var=skill.pb;value=0} ?variableequals{var=skill.combo;value=1}
+
+# Phase 3: no breather - straight into the next attack.
+soul_cube_combo:
+  Skills:
+  - setvariable{var=caster.soul_cube_alive;type=INTEGER;value=1;duration=120}
+  - skill{s=soul_cube_sfx_combo} @self
+  - delay 10
+  - skill{s=soul_cube_pick} @self
+
+soul_cube_return_home:
+  Skills:
+  - skill{s=soul_cube_sfx_blink} @self
+  - teleport{unsafe=true;preserveyaw=true} @VariableLocation{var=caster.soul_cube_home;y=1.25}
+  - setvariable{var=caster.soul_cube_hpx;type=INTEGER;value=20}
+  - setvariable{var=caster.soul_cube_hpx_target;type=INTEGER;value=20}
+  - skill{s=soul_cube_sfx_blink} @self
+
+# Faces the closest player whenever it is not busy attacking.
+soul_cube_watch:
+  Conditions:
+  - variableequals{var=caster.soul_cube_state;value=FIGHT} true
+  - variableequals{var=caster.soul_cube_busy;value=0} true
+  Skills:
+  - rotatetowards{maxyaw=8} @NearestPlayer{r=48}
+
+
+# ============================================================================
+#  PHASES
+# ============================================================================
+soul_cube_check_phase:
+  Conditions:
+  - variableequals{var=caster.soul_cube_state;value=FIGHT} true
+  Skills:
+  - setvariable{var=skill.hp;type=FLOAT;value="<caster.hp>/<caster.mhp>"}
+  - skill{s=soul_cube_enter_phase_2} @self ?variableequals{var=caster.soul_cube_phase;value=1} ?variableinrange{var=skill.hp;value=0to0.66}
+  - skill{s=soul_cube_enter_phase_3} @self ?variableequals{var=caster.soul_cube_phase;value=2} ?variableinrange{var=skill.hp;value=0to0.33}
+
+soul_cube_enter_phase_2:
+  Skills:
+  - skill{s=soul_cube_phase_2} @self
+  - setvariable{var=caster.soul_cube_phasebreak;type=INTEGER;value=1}
+  - skill{s=soul_cube_sfx_phase_crack} @self
+
+soul_cube_enter_phase_3:
+  Skills:
+  - skill{s=soul_cube_phase_3} @self
+  - setvariable{var=caster.soul_cube_phasebreak;type=INTEGER;value=1}
+  - skill{s=soul_cube_sfx_phase_crack} @self
+
+# Played once the current attack is over: it screams, the frame bursts
+# ("damage" animation) and a shockwave pushes everyone away.
+soul_cube_phase_break:
+  Skills:
+  - setvariable{var=caster.soul_cube_phasebreak;type=INTEGER;value=0}
+  - setvariable{var=caster.soul_cube_busy;type=INTEGER;value=1}
+  - setvariable{var=caster.soul_cube_alive;type=INTEGER;value=1;duration=200}
+  - setvariable{var=caster.soul_cube_mode;type=STRING;value=IMMUNE}
+  - skill{s=soul_cube_stop_body} @self
+  - state{mid=soul_cube;s=damage;p=10;li=3;lo=8;force=true} @self
+  - skill{s=soul_cube_sfx_phase_roar} @self
+  - delay 6
+  - skill{s=soul_cube_roar_wave} @self
+  - delay 38
+  - skill{s=soul_cube_play_idle} @self
+  - skill{s=soul_cube_loop} @self
+
+soul_cube_roar_wave:
+  Skills:
+  - skill{s=soul_cube_vfx_shockwave} @self
+  - skill{s=soul_cube_roar_hit} @PlayersInRadius{r=6}
+
+soul_cube_roar_hit:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  Skills:
+  - damage{amount=6;ignoreArmor=false;ii=true;pi=true}
+  - throw{velocity=12;velocityY=4}
+
+
+# ============================================================================
+#  DAMAGE RULES
+# ============================================================================
+soul_cube_on_damaged:
+  Skills:
+  # still waking up (or already gone): nothing gets through
+  - cancelevent ?!variableequals{var=caster.soul_cube_state;value=FIGHT}
+  # high up in the air during the down beam / mid phase-roar
+  - cancelevent ?variableequals{var=caster.soul_cube_mode;value=IMMUNE}
+  - skill{s=soul_cube_hit_immune} @self ?variableequals{var=caster.soul_cube_state;value=FIGHT} ?variableequals{var=caster.soul_cube_mode;value=IMMUNE}
+  # the shell hardens while the beam is live
+  - modifydamage{a=0.5;modifier=MULTIPLY} ?variableequals{var=caster.soul_cube_mode;value=ARMORED}
+  - skill{s=soul_cube_hit_armored} @self ?variableequals{var=caster.soul_cube_state;value=FIGHT} ?variableequals{var=caster.soul_cube_mode;value=ARMORED}
+  # landed after the down beam, dazed: hit it hard now
+  - modifydamage{a=1.35;modifier=MULTIPLY} ?variableequals{var=caster.soul_cube_mode;value=STAGGER}
+  - skill{s=soul_cube_hit_stagger} @self ?variableequals{var=caster.soul_cube_state;value=FIGHT} ?variableequals{var=caster.soul_cube_mode;value=STAGGER}
+  - skill{s=soul_cube_hit_open} @self ?variableequals{var=caster.soul_cube_state;value=FIGHT} ?variableequals{var=caster.soul_cube_mode;value=OPEN}
+  - skill{s=soul_cube_check_phase;delay=1} @self ?variableequals{var=caster.soul_cube_state;value=FIGHT}
+
+soul_cube_on_interact:
+  Skills:
+  - cancelevent
+
+soul_cube_hit_open:
+  Cooldown: 0.25
+  Skills:
+  - skill{s=soul_cube_sfx_hurt} @self
+
+soul_cube_hit_stagger:
+  Cooldown: 0.25
+  Skills:
+  - skill{s=soul_cube_sfx_hurt_big} @self
+
+soul_cube_hit_armored:
+  Cooldown: 0.25
+  Skills:
+  - skill{s=soul_cube_sfx_armored} @self
+
+soul_cube_hit_immune:
+  Cooldown: 0.3
+  Skills:
+  - skill{s=soul_cube_sfx_immune} @self
+
+
+# ============================================================================
+#  EVERY SECOND
+# ============================================================================
+soul_cube_boss_second:
+  Skills:
+  # tell the block its boss is still alive (expires after 5 s)
+  - skill{s=soul_cube_link_alive} @MobsInRadius{types=soul_cube_block;r=48}
+  # the fight loop stopped answering -> restart it cleanly
+  - skill{s=soul_cube_watchdog} @self ?variableequals{var=caster.soul_cube_state;value=FIGHT} ?!variableisset{var=caster.soul_cube_alive}
+  # nobody within 40 blocks for 15 seconds -> give up and turn back into the block
+  - skill{s=soul_cube_alone_check} @self ?variableequals{var=caster.soul_cube_state;value=FIGHT}
+
+# ---- the link to its block ------------------------------------------------
+# The block summons the boss in its own spot, so the boss's block is the
+# dormant block at (or hidden right under) the boss's home x / z - within
+# 2 blocks, in case summoning nudged the boss onto the block's surface.
+# A second arena's block (keep arenas 5+ blocks apart) is never touched.
+soul_cube_link_measure:
+  Skills:
+  - setvariable{var=target.soul_cube_link_d;type=FLOAT;value="abs((<target.l.x.double>)-(<caster.var.soul_cube_home_x>))+abs((<target.l.z.double>)-(<caster.var.soul_cube_home_z>))"}
+
+soul_cube_link_alive:
+  Skills:
+  - skill{s=soul_cube_link_measure}
+  - skill{s=soul_cube_link_alive_mine}
+
+soul_cube_link_alive_mine:
+  TargetConditions:
+  - variableinrange{var=target.soul_cube_link_d;value=0to2} true
+  Skills:
+  - setvariable{var=target.soul_cube_boss_alive;type=INTEGER;value=1;duration=100}
+
+soul_cube_link_reset:
+  Skills:
+  - skill{s=soul_cube_link_measure}
+  - skill{s=soul_cube_link_reset_mine}
+
+soul_cube_link_reset_mine:
+  TargetConditions:
+  - variableinrange{var=target.soul_cube_link_d;value=0to2} true
+  Skills:
+  - signal{s=SOUL_CUBE_RESET}
+
+soul_cube_link_defeated:
+  Skills:
+  - skill{s=soul_cube_link_measure}
+  - skill{s=soul_cube_link_defeated_mine}
+
+soul_cube_link_defeated_mine:
+  TargetConditions:
+  - variableinrange{var=target.soul_cube_link_d;value=0to2} true
+  Skills:
+  - signal{s=SOUL_CUBE_DEFEATED}
+
+soul_cube_alone_check:
+  Skills:
+  - setvariable{var=caster.soul_cube_alone;type=INTEGER;value=0} @self ?playerwithin{d=40}
+  - variableadd{var=caster.soul_cube_alone;amount=1} @self ?!playerwithin{d=40}
+  - skill{s=soul_cube_reset} @self ?variableinrange{var=caster.soul_cube_alone;value=15to99999}
+
+soul_cube_reset:
+  Skills:
+  - setvariable{var=caster.soul_cube_state;type=STRING;value=RESET}
+  - skill{s=soul_cube_abort} @self
+  - skill{s=soul_cube_sfx_reset} @self
+  - skill{s=soul_cube_link_reset} @MobsInRadius{types=soul_cube_block;r=48}
+  - remove{delay=4} @self
+
+soul_cube_watchdog:
+  Skills:
+  - skill{s=soul_cube_abort} @self
+  - skill{s=soul_cube_play_idle} @self
+  - skill{s=soul_cube_height_to_idle} @self
+  - skill{s=soul_cube_after_attack} @self
+
+# Stops every running attack loop at its next tick.
+soul_cube_abort:
+  Skills:
+  - setvariable{var=caster.soul_cube_beam_n;type=INTEGER;value=0}
+  - setvariable{var=caster.soul_cube_aim_n;type=INTEGER;value=0}
+  - setvariable{var=caster.soul_cube_db_n;type=INTEGER;value=0}
+  - setvariable{var=caster.soul_cube_shots;type=INTEGER;value=0}
+  - setvariable{var=caster.soul_cube_mode;type=STRING;value=OPEN}
+
+
+# ============================================================================
+#  HEIGHT  (in model pixels above the floor, 16 px = 1 block)
+# ============================================================================
+#  Set the target, start the stepper. Only one stepper ever runs; it reads
+#  the target every tick, so a new target simply redirects it. It moves
+#  2 px per tick (1 px for the last odd pixel) and keeps soul_cube_hpx exact.
+# ============================================================================
+# floating between attacks: 1.25 blocks
+soul_cube_height_to_idle:
+  Skills:
+  - setvariable{var=caster.soul_cube_hpx_target;type=INTEGER;value=20}
+  - skill{s=soul_cube_height_start} @self
+
+# chest laser / shooting: beam and shots fly at chest height
+soul_cube_height_to_aim:
+  Skills:
+  - setvariable{var=caster.soul_cube_hpx_target;type=INTEGER;value=16}
+  - skill{s=soul_cube_height_start} @self
+
+# low laser sweeps (attack1): the frame's lowest corner just touches the floor
+soul_cube_height_to_low:
+  Skills:
+  - setvariable{var=caster.soul_cube_hpx_target;type=INTEGER;value=9}
+  - skill{s=soul_cube_height_start} @self
+
+# landed after the down beam (attack2's landing and "damage" while dazed)
+soul_cube_height_to_landed:
+  Skills:
+  - setvariable{var=caster.soul_cube_hpx_target;type=INTEGER;value=16}
+  - skill{s=soul_cube_height_start} @self
+
+# down beam: the beam's tip and the impact ring float above the floor
+soul_cube_height_to_beam:
+  Skills:
+  - setvariable{var=caster.soul_cube_hpx_target;type=INTEGER;value=12}
+  - skill{s=soul_cube_height_start} @self
+
+soul_cube_height_start:
+  Skills:
+  - skill{s=soul_cube_height_step} @self ?!variableisset{var=caster.soul_cube_hmoving}
+
+soul_cube_height_step:
+  Skills:
+  - setvariable{var=caster.soul_cube_hmoving;type=INTEGER;value=1;duration=3}
+  - setvariable{var=skill.d;type=INTEGER;value="<caster.var.soul_cube_hpx_target>-<caster.var.soul_cube_hpx>"}
+  - skill{s=soul_cube_h_up2} @self ?variableinrange{var=skill.d;value=2to99999}
+  - skill{s=soul_cube_h_up1} @self ?variableequals{var=skill.d;value=1}
+  - skill{s=soul_cube_h_down1} @self ?variableequals{var=skill.d;value=-1}
+  - skill{s=soul_cube_h_down2} @self ?variableinrange{var=skill.d;value=-99999to-2}
+  - skill{s=soul_cube_height_step;delay=1} @self ?!variableequals{var=skill.d;value=0}
+  - variableunset{var=caster.soul_cube_hmoving} ?variableequals{var=skill.d;value=0}
+
+soul_cube_h_up2:
+  Skills:
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.125}
+  - variableadd{var=caster.soul_cube_hpx;amount=2}
+soul_cube_h_up1:
+  Skills:
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.0625}
+  - variableadd{var=caster.soul_cube_hpx;amount=1}
+soul_cube_h_down1:
+  Skills:
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=-0.0625}
+  - variableadd{var=caster.soul_cube_hpx;amount=-1}
+soul_cube_h_down2:
+  Skills:
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=-0.125}
+  - variableadd{var=caster.soul_cube_hpx;amount=-2}
+
+
+# ============================================================================
+#  ANIMATION HELPERS
+# ============================================================================
+#  Every animation of this model has "override" set, so whichever one is
+#  playing fully owns the model. A new animation is always started after
+#  removing the others (each fades out with the lerp-out it was started
+#  with), so two of them never stack.
+# ============================================================================
+soul_cube_stop_body:
+  Skills:
+  - state{mid=soul_cube;s=on_spawn;p=10;r=true} @self
+  - state{mid=soul_cube;s=idle;p=10;r=true} @self
+  - state{mid=soul_cube;s=attack1;p=10;r=true} @self
+  - state{mid=soul_cube;s=attack2;p=10;r=true} @self
+  - state{mid=soul_cube;s=shooting;p=10;r=true} @self
+  - state{mid=soul_cube;s=damage;p=10;r=true} @self
+
+soul_cube_play_idle:
+  Skills:
+  - skill{s=soul_cube_stop_body} @self
+  - state{mid=soul_cube;s=idle;p=10;li=6;lo=6;force=true} @self
+
+soul_cube_anim_attack1:
+  Skills:
+  - skill{s=soul_cube_stop_body} @self
+  - state{mid=soul_cube;s=attack1;p=10;li=4;lo=6;speed=1.0;force=true} @self ?variableequals{var=caster.soul_cube_phase;value=1}
+  - state{mid=soul_cube;s=attack1;p=10;li=4;lo=6;speed=1.1;force=true} @self ?variableequals{var=caster.soul_cube_phase;value=2}
+  - state{mid=soul_cube;s=attack1;p=10;li=4;lo=6;speed=1.2;force=true} @self ?variableequals{var=caster.soul_cube_phase;value=3}
+
+soul_cube_anim_attack2:
+  Skills:
+  - skill{s=soul_cube_stop_body} @self
+  - state{mid=soul_cube;s=attack2;p=10;li=4;lo=4;speed=1.0;force=true} @self ?variableequals{var=caster.soul_cube_phase;value=1}
+  - state{mid=soul_cube;s=attack2;p=10;li=4;lo=4;speed=1.1;force=true} @self ?variableequals{var=caster.soul_cube_phase;value=2}
+  - state{mid=soul_cube;s=attack2;p=10;li=4;lo=4;speed=1.2;force=true} @self ?variableequals{var=caster.soul_cube_phase;value=3}
+
+# Restarted for every shot (force=true restarts a playing state), so a
+# volley reads as rapid recoil. Every pattern fires again well before the
+# 50 tick animation could run out, and hands over to idle before it ends.
+soul_cube_anim_shoot:
+  Skills:
+  - state{mid=soul_cube;s=idle;p=10;r=true} @self
+  - state{mid=soul_cube;s=shooting;p=10;li=2;lo=6;speed=1.0;force=true} @self ?variableequals{var=caster.soul_cube_phase;value=1}
+  - state{mid=soul_cube;s=shooting;p=10;li=2;lo=6;speed=1.1;force=true} @self ?variableequals{var=caster.soul_cube_phase;value=2}
+  - state{mid=soul_cube;s=shooting;p=10;li=2;lo=6;speed=1.2;force=true} @self ?variableequals{var=caster.soul_cube_phase;value=3}
+
+# Dazed on the floor (the "damage" animation loops seamlessly).
+soul_cube_anim_dazed:
+  Skills:
+  - skill{s=soul_cube_stop_body} @self
+  - state{mid=soul_cube;s=damage;p=10;li=3;lo=8;force=true} @self
+
+
+# ============================================================================
+#  DEATH
+# ============================================================================
+#  The model is handed to an effect carrier (soul_cube_deathfx) standing in
+#  the same spot, which plays "death" and everything that goes with it:
+#     0 - 7    lifts 46 px                    7 - 49   light rays spin out
+#    49 - 58   rays collapse, frame closes, eye shuts
+#    58 - 80   silence (heartbeat)            80       the block SHATTERS
+#    85+       nothing left but drifting souls
+# ============================================================================
+soul_cube_on_death:
+  Skills:
+  - setvariable{var=caster.soul_cube_state;type=STRING;value=DEAD}
+  - skill{s=soul_cube_abort} @self
+  - summon{type=soul_cube_deathfx;amount=1;radius=0} @SelfLocation
+  - model{mid=soul_cube;remove=true} @self
+  - skill{s=soul_cube_link_defeated} @MobsInRadius{types=soul_cube_block;r=48}
+
+soul_cube_death_start:
+  Skills:
+  - model{mid=soul_cube;usm=true;hitbox=false;lockpitch=true;damagetint=false;showshadow=false;radius=64;initrender=false} @self
+  - defaultstate{mid=soul_cube;type=IDLE;state=blank;li=0;lo=0} @self
+  - defaultstate{mid=soul_cube;type=WALK;state=blank;li=0;lo=0} @self
+  - bodyrotation{mid=soul_cube;playermode=false;mh=0;mb=0;stable=0;rdelay=0;rduration=0} @self
+  - brightness{mid=soul_cube;b=15;s=15} @self
+  - state{mid=soul_cube;s=death;p=10;li=0;lo=0;force=true} @self
+  - renderinit{mid=soul_cube} @self
+  - skill{s=soul_cube_death_timeline} @self
+
+soul_cube_death_timeline:
+  Skills:
+  - skill{s=soul_cube_sfx_death_scream} @self
+  - delay 7
+  - skill{s=soul_cube_sfx_death_rays} @self
+  - delay 42
+  - skill{s=soul_cube_sfx_death_implode} @self
+  - delay 9
+  - skill{s=soul_cube_sfx_death_close} @self
+  - delay 4
+  - skill{s=soul_cube_sfx_death_heartbeat} @self
+  - delay 10
+  - skill{s=soul_cube_sfx_death_heartbeat} @self
+  - delay 10
+  - skill{s=soul_cube_sfx_death_shatter} @self
+  - delay 12
+  # the animation is invisible from here on and "death" would loop -
+  # take the model off before that can ever happen
+  - model{mid=soul_cube;remove=true} @self
+  - skill{s=soul_cube_sfx_death_souls} @self
+  - delay 40
+  - skill{s=soul_cube_sfx_death_souls} @self
+  - delay 20
+  - remove @self

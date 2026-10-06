@@ -14,7 +14,7 @@ invariants is checked:
   * the same attack TYPE is never picked twice in a row
   * every attack ends with its tick loops stopped (beam, down beam, shots)
   * the model always has a body animation playing (no rest-pose frame)
-  * the boss' height in pixels (fv_eb_hpx) always matches its real height
+  * the boss' height in pixels (soul_cube_hpx) always matches its real height
   * no variable is ever read before it was set
   * phases 2 / 3 start at 66% / 33% health, each roar plays once
   * death hands the model to the effect carrier, the block cools down and
@@ -134,7 +134,7 @@ class Sim:
 
     # ---- loading ----
     def _load(self, plugins):
-        mm = os.path.join(plugins, 'MythicMobs', 'packs', 'fv_endboss')
+        mm = os.path.join(plugins, 'MythicMobs', 'packs', 'soul_cube')
         self.skills, self.mobs, self.parsed = {}, {}, {}
         for root, _, files in os.walk(mm):
             for f in files:
@@ -569,7 +569,7 @@ class Sim:
             if not live:
                 self.error(f'{e} model {e.model} has NO animation playing (rest pose shows)')
                 continue
-            if e.model != 'fv_endboss':
+            if e.model != 'soul_cube':
                 continue
             # ModelEngine plays its own default states unless they are re-pointed
             if not getattr(e, 'defaults', {}).get('IDLE') or not e.defaults.get('WALK'):
@@ -655,37 +655,37 @@ class Sim:
     # ---- hooks: bookkeeping for the invariants ----
     def hook(self, name, meta, extra=None):
         c = meta.caster
-        if name == 'fv_eb_pick':
+        if name == 'soul_cube_pick':
             self.active_attacks += 1
             if self.active_attacks > 1:
                 self.error('a second attack chain started while one is running', meta)
-            for v in ('fv_eb_beam_n', 'fv_eb_db_n', 'fv_eb_shots'):
+            for v in ('soul_cube_beam_n', 'soul_cube_db_n', 'soul_cube_shots'):
                 if (c.var(v) or 0) > 0:
                     self.error(f'attack picked while {v}={c.var(v)}', meta)
-        elif name == 'fv_eb_after_attack':
+        elif name == 'soul_cube_after_attack':
             self.active_attacks -= 1
             if self.active_attacks < 0:
                 self.error('after_attack without a running attack', meta)
                 self.active_attacks = 0
-            for v in ('fv_eb_beam_n', 'fv_eb_db_n', 'fv_eb_shots'):
+            for v in ('soul_cube_beam_n', 'soul_cube_db_n', 'soul_cube_shots'):
                 if (c.var(v) or 0) > 0:
                     self.error(f'attack ended with {v}={c.var(v)} still running', meta)
-            if c.var('fv_eb_hpx_target') not in (20,):
+            if c.var('soul_cube_hpx_target') not in (20,):
                 self.error(f'attack ended without heading back to hover height '
-                           f'(target {c.var("fv_eb_hpx_target")})', meta)
-        elif name == 'fv_eb_watchdog':
+                           f'(target {c.var("soul_cube_hpx_target")})', meta)
+        elif name == 'soul_cube_watchdog':
             self.stats['watchdog'] += 1
             self.error('watchdog had to restart the fight loop', meta)
             self.active_attacks = 0
-        elif name == 'fv_eb_phase_break':
+        elif name == 'soul_cube_phase_break':
             self.stats['phase_breaks'] += 1
-        elif name in ('fv_eb_laser_begin', 'fv_eb_downbeam', 'fv_eb_shoot_begin'):
-            typ = {'fv_eb_laser_begin': 'LASER', 'fv_eb_downbeam': 'DOWNBEAM',
-                   'fv_eb_shoot_begin': 'SHOOT'}[name]
+        elif name in ('soul_cube_laser_begin', 'soul_cube_downbeam', 'soul_cube_shoot_begin'):
+            typ = {'soul_cube_laser_begin': 'LASER', 'soul_cube_downbeam': 'DOWNBEAM',
+                   'soul_cube_shoot_begin': 'SHOOT'}[name]
             pat = meta.chain[-2] if len(meta.chain) > 1 else '?'
             if self.stats['attacks'] and self.stats['attacks'][-1][0] == typ:
                 self.error(f'same attack type twice in a row: {typ}', meta)
-            self.stats['attacks'].append((typ, pat, c.var('fv_eb_phase')))
+            self.stats['attacks'].append((typ, pat, c.var('soul_cube_phase')))
 
     # ---- players ----
     def make_players(self):
@@ -719,13 +719,13 @@ class Sim:
                     p.jump_t = 12
             if boss is None or boss.removed:
                 continue
-            mode, state = boss.var('fv_eb_mode'), boss.var('fv_eb_state')
+            mode, state = boss.var('soul_cube_mode'), boss.var('soul_cube_state')
             dx, dz = p.x - boss.x, p.z - boss.z
             d = math.hypot(dx, dz) or 0.01
             want = 2.2 if (state == 'FIGHT' and mode in ('OPEN', 'STAGGER')) else 7.0
             # player1 is careless during the down beam and walks right under
             # it, so its damage path gets exercised too
-            if p.name == 'player1' and boss.var('fv_eb_lasttype') == 'DOWNBEAM' and mode == 'IMMUNE':
+            if p.name == 'player1' and boss.var('soul_cube_lasttype') == 'DOWNBEAM' and mode == 'IMMUNE':
                 want = 0.0
             if self.rng.random() < 0.01:
                 p.dirsign *= -1
@@ -760,11 +760,11 @@ class Sim:
     # ---- main loop ----
     def run(self, max_ticks=24000):
         self.home = Loc(0.5, FLOOR, 0.5, self.rng.uniform(-180, 180))
-        block = self.spawn('fv_endboss_dormant', self.home.copy())
+        block = self.spawn('soul_cube_block', self.home.copy())
         # shorter respawn for the test
-        self.skills['fv_eb_block_settings']['Skills'][0] = \
-            'setvariable{var=caster.fv_eb_respawn;type=INTEGER;value=8;save=true}'
-        self.parsed['fv_eb_block_settings'] = [parse_line(l) for l in self.skills['fv_eb_block_settings']['Skills']]
+        self.skills['soul_cube_block_settings']['Skills'][0] = \
+            'setvariable{var=caster.soul_cube_respawn;type=INTEGER;value=8;save=true}'
+        self.parsed['soul_cube_block_settings'] = [parse_line(l) for l in self.skills['soul_cube_block_settings']['Skills']]
         self.make_players()
         click_at = 40 + self.rng.randint(0, 60)
         leave_at = None
@@ -798,18 +798,18 @@ class Sim:
             if self.tick == click_at:
                 pl = self.players()[0]
                 self.fire(block, 'oninteract', trigger=pl, event={'damage': 0, 'cancelled': False})
-            bosses = [e for e in self.ents if e.mtype == 'fv_endboss' and not e.removed]
+            bosses = [e for e in self.ents if e.mtype == 'soul_cube' and not e.removed]
             boss = bosses[0] if bosses else None
             if len(bosses) > 1:
                 self.error('more than one boss alive')
             if boss is not None and boss.alive:
                 # phase bookkeeping
-                ph = boss.var('fv_eb_phase')
+                ph = boss.var('soul_cube_phase')
                 if ph and ph not in phase_at_hp:
                     phase_at_hp[ph] = boss.hp / boss.mhp
                 # height invariant
-                hpx = boss.var('fv_eb_hpx')
-                if hpx is not None and boss.var('fv_eb_state') == 'FIGHT':
+                hpx = boss.var('soul_cube_hpx')
+                if hpx is not None and boss.var('soul_cube_state') == 'FIGHT':
                     if not (0 <= hpx <= 30):
                         self.error(f'hpx out of range: {hpx}')
                     real = (boss.y - FLOOR) * 16
@@ -823,7 +823,7 @@ class Sim:
                     last = self.stats['attacks'][-1] if self.stats['attacks'] else None
                     near = min((math.hypot(p.x - self.home.x, p.z - self.home.z) for p in self.players()), default=-1)
                     self.error(f'boss strayed more than 24 blocks from its block during {last} '
-                               f'(db_n {boss.var("fv_eb_db_n")}, nearest player {near:.1f} from home)')
+                               f'(db_n {boss.var("soul_cube_db_n")}, nearest player {near:.1f} from home)')
             self.move_players(boss)
             if leave_at is not None and self.tick == leave_at:
                 for p in self.players():
@@ -838,10 +838,10 @@ class Sim:
             # end conditions
             if boss is not None and not boss.alive and died_at is None:
                 died_at = self.tick
-            if block.var('fv_eb_block') == 'READY' and self.tick > click_at + 10:
+            if block.var('soul_cube_block') == 'READY' and self.tick > click_at + 10:
                 if died_at is not None or leave_at is not None or self.scenario == 'unload':
                     restored = True
-                    if not any(e.mtype == 'fv_endboss' and not e.removed for e in self.ents):
+                    if not any(e.mtype == 'soul_cube' and not e.removed for e in self.ents):
                         break
             self.tick += 1
         # ---- end-of-fight checks ----
@@ -857,10 +857,10 @@ class Sim:
             if self.stats['phase_breaks'] not in (1, 2):
                 self.error(f'{self.stats["phase_breaks"]} phase roars')
         if not restored:
-            self.error(f'block did not re-form (state {block.var("fv_eb_block")})')
+            self.error(f'block did not re-form (state {block.var("soul_cube_block")})')
         if block.model is None or not block.anims:
             self.error('block has no model / animation at the end')
-        if any(e.mtype in ('fv_endboss_bullet', 'fv_endboss_deathfx') and not e.removed for e in self.ents) \
+        if any(e.mtype in ('soul_cube_bullet', 'soul_cube_deathfx') and not e.removed for e in self.ents) \
                 and self.tick < max_ticks - 1:
             pass
         self.stats['ticks'] = self.tick
