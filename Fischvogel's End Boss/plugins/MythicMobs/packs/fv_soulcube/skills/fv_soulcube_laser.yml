@@ -1,0 +1,385 @@
+# ============================================================================
+#  Soul Cube (FischVogel) - Attack 1: LASER  (animation "attack1")
+# ============================================================================
+#  attack1 at 100% speed (ticks, 20 = 1 second):
+#     0 - 15   tilts back, the frame pulls in        -> charge-up sound
+#    44 - 52   snaps forward, the frame bursts open
+#    48 - 50   the beam appears                       -> BEAM ON at 50
+#    50 - 231  the beam is live
+#   223 - 234  the beam narrows and goes out          -> BEAM OFF at 231
+#   231 - 252  recoil, settles                        -> back to idle
+#  (later phases play it faster - see the PHASE TABLES in fv_soulcube_core.yml)
+#
+#  The beam leaves the eye side of the cube, perfectly horizontal, 8 px
+#  (half a block) above the boss' feet and ~10.4 blocks long. Nothing in the
+#  animation turns it: the patterns turn the WHOLE boss, and the model always
+#  faces exactly where the boss faces.
+#
+#  Height: the boss aims at 16 px above the floor.
+#     STRAIGHT / HUNTER  stay at 16 px -> beam at chest height: dodge sideways
+#     JUMP ROPE / CHAOS  sink to   9 px -> beam at hip height (its centre
+#                        17 px = 1.06 blocks up): jump it at the last moment
+#  (9 px is as low as it goes: attack1's frame reaches 9 px below the cube's
+#  origin, any lower and it sinks into the floor.)
+#
+#  PATTERNS
+#   STRAIGHT   Tracks you while it charges, a "ping" warns 8 ticks before it
+#              fires, then the beam creeps after you. Phase 2+: every few
+#              seconds it pings again and FLICKS onto where you stand.
+#   JUMP ROPE  Sweeps 360 degrees around itself at hip height. Jump it.
+#              Phase 3: reverses once mid-sweep (double click warns first).
+#   HUNTER     Follows you with a turn speed that rises every quarter of the
+#              beam. Circle it tightly or get out of its ~10 block reach.
+#   CHAOS      Hip height sweep that randomly reverses or changes speed.
+#              Every change is announced 8 ticks before it happens:
+#              high double click = it reverses, rising chime = new speed.
+#
+#  HIT DETECTION (fv_soulcube_beam_check) - exact geometry, every tick, per player:
+#     distance along the beam ......... 0.3 to 10.4 blocks
+#     distance from the beam's centre . 0.55 or less (half beam + half player)
+#     feet height relative to the boss  -1.5 to fv_soulcube_beam_top
+#                                       (+0.7 chest beam: no jumping it,
+#                                        +0.5 low beam: the beam's centre
+#                                        line - only the top of a jump,
+#                                        feet above 1.06 blocks, clears it)
+#   Spinning beams also hit everyone inside the slice they swept since the
+#   last tick, so a fast spin can never skip a player between two ticks.
+#   After a hit you are immune to the laser for 10 ticks (aura fv_soulcube_if_laser).
+# ============================================================================
+
+
+# ---- shared pieces ---------------------------------------------------------
+fv_soulcube_laser_begin:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_lasttype;type=STRING;value=LASER}
+  - setvariable{var=caster.fv_soulcube_mode;type=STRING;value=OPEN}
+  - setvariable{var=caster.fv_soulcube_alive;type=INTEGER;value=1;duration=440}
+  - setvariable{var=caster.fv_soulcube_beam_n;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_soulcube_spin_deg;type=FLOAT;value=0}
+  - setvariable{var=caster.fv_soulcube_spin_half;type=FLOAT;value=0}
+  # -1 switches the swept-area test off (only the spinning patterns use it)
+  - setvariable{var=caster.fv_soulcube_spin_thr;type=FLOAT;value=-1}
+  - setvariable{var=caster.fv_soulcube_spin_next;type=INTEGER;value=99999}
+  - setvariable{var=caster.fv_soulcube_spin_mode;type=STRING;value=NONE}
+  - setvariable{var=caster.fv_soulcube_beam_top;type=FLOAT;value=0.7}
+  - skill{s=fv_soulcube_anim_attack1} @self
+  - skill{s=fv_soulcube_sfx_laser_charge} @self
+
+fv_soulcube_laser_on:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_mode;type=STRING;value=ARMORED}
+  - setvariable{var=caster.fv_soulcube_beam_n;type=INTEGER;value=<caster.var.fv_soulcube_t_a1_dur>}
+  - setvariable{var=caster.fv_soulcube_beam_prev;type=FLOAT;value="<caster.l.yaw>"}
+  - skill{s=fv_soulcube_sfx_laser_fire} @self
+
+fv_soulcube_laser_off:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_beam_n;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_soulcube_mode;type=STRING;value=OPEN}
+  - skill{s=fv_soulcube_sfx_laser_end} @self
+  - skill{s=fv_soulcube_height_to_idle} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_a1_rec>}
+  - skill{s=fv_soulcube_play_idle} @self
+  - skill{s=fv_soulcube_after_attack} @self
+
+# Charge phase for the aimed patterns: turn onto the target quickly.
+fv_soulcube_l_aim_tick:
+  Skills:
+  - variableadd{var=caster.fv_soulcube_aim_n;amount=-1}
+  - rotatetowards{maxyaw=9} @NearestPlayer{r=48}
+  - skill{s=fv_soulcube_l_aim_tick;delay=1} @self ?variableinrange{var=caster.fv_soulcube_aim_n;value=1to99999} ?variableequals{var=caster.fv_soulcube_state;value=FIGHT}
+
+
+# ============================================================================
+#  STRAIGHT
+# ============================================================================
+fv_soulcube_laser_straight:
+  Skills:
+  - skill{s=fv_soulcube_laser_begin} @self
+  - skill{s=fv_soulcube_height_to_aim} @self
+  - setvariable{var=caster.fv_soulcube_aim_n;type=INTEGER;value=<caster.var.fv_soulcube_t_a1_lock>}
+  - skill{s=fv_soulcube_l_aim_tick} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_a1_lock>}
+  # locked - 8 ticks to step out of the line
+  - skill{s=fv_soulcube_sfx_laser_lock} @self
+  - delay 8
+  - skill{s=fv_soulcube_laser_on} @self
+  - setvariable{var=caster.fv_soulcube_flick_next;type=INTEGER;value=<caster.var.fv_soulcube_flick_every>}
+  - setvariable{var=caster.fv_soulcube_flick_t;type=INTEGER;value=0}
+  - skill{s=fv_soulcube_l_straight_tick} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_a1_dur>}
+  - skill{s=fv_soulcube_laser_off} @self
+
+fv_soulcube_l_straight_tick:
+  Skills:
+  - variableadd{var=caster.fv_soulcube_beam_n;amount=-1}
+  - variableadd{var=caster.fv_soulcube_flick_next;amount=-1}
+  - skill{s=fv_soulcube_sfx_laser_lock} @self ?variableequals{var=caster.fv_soulcube_flick_next;value=8}
+  - setvariable{var=caster.fv_soulcube_flick_t;type=INTEGER;value=5} ?variableequals{var=caster.fv_soulcube_flick_next;value=0}
+  - setvariable{var=caster.fv_soulcube_flick_next;type=INTEGER;value=<caster.var.fv_soulcube_flick_every>} ?variableequals{var=caster.fv_soulcube_flick_next;value=0}
+  - setvariable{var=skill.ft;type=INTEGER;value=<caster.var.fv_soulcube_flick_t>}
+  - skill{s=fv_soulcube_l_flick} @self ?variableinrange{var=skill.ft;value=1to99}
+  - skill{s=fv_soulcube_l_creep} @self ?variableequals{var=skill.ft;value=0}
+  - skill{s=fv_soulcube_beam_tick} @self
+  - skill{s=fv_soulcube_l_straight_tick;delay=1} @self ?variableinrange{var=caster.fv_soulcube_beam_n;value=1to99999} ?variableequals{var=caster.fv_soulcube_state;value=FIGHT}
+
+# Slow creep after the target (degrees per tick by phase).
+fv_soulcube_l_creep:
+  Skills:
+  - rotatetowards{maxyaw=0.6} @NearestPlayer{r=48} ?variableequals{var=caster.fv_soulcube_phase;value=1}
+  - rotatetowards{maxyaw=0.8} @NearestPlayer{r=48} ?variableequals{var=caster.fv_soulcube_phase;value=2}
+  - rotatetowards{maxyaw=1.0} @NearestPlayer{r=48} ?variableequals{var=caster.fv_soulcube_phase;value=3}
+
+# 5 ticks of very fast turning onto the target.
+fv_soulcube_l_flick:
+  Skills:
+  - skill{s=fv_soulcube_sfx_flick} @self ?variableequals{var=caster.fv_soulcube_flick_t;value=5}
+  - variableadd{var=caster.fv_soulcube_flick_t;amount=-1}
+  - rotatetowards{maxyaw=9} @NearestPlayer{r=48}
+
+
+# ============================================================================
+#  JUMP ROPE
+# ============================================================================
+fv_soulcube_laser_jumprope:
+  Skills:
+  - skill{s=fv_soulcube_laser_begin} @self
+  - skill{s=fv_soulcube_height_to_low} @self
+  - setvariable{var=caster.fv_soulcube_beam_top;type=FLOAT;value=0.5}
+  - setvariable{var=caster.fv_soulcube_spin_mode;type=STRING;value=FLIPONLY}
+  # spin speed in degrees per tick: 5 / 6 / 7
+  - setvariable{var=caster.fv_soulcube_spin_deg;type=FLOAT;value=5} ?variableequals{var=caster.fv_soulcube_phase;value=1}
+  - setvariable{var=caster.fv_soulcube_spin_deg;type=FLOAT;value=6} ?variableequals{var=caster.fv_soulcube_phase;value=2}
+  - setvariable{var=caster.fv_soulcube_spin_deg;type=FLOAT;value=7} ?variableequals{var=caster.fv_soulcube_phase;value=3}
+  # phase 3 reverses once, half way through
+  - setvariable{var=caster.fv_soulcube_spin_next;type=INTEGER;value="floor(<caster.var.fv_soulcube_t_a1_dur>/2)"} ?variableequals{var=caster.fv_soulcube_phase;value=3}
+  - skill{s=fv_soulcube_spin_start} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_a1_lock>}
+  - skill{s=fv_soulcube_sfx_laser_lock} @self
+  - delay 8
+  - skill{s=fv_soulcube_laser_on} @self
+  - skill{s=fv_soulcube_l_spin_tick} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_a1_dur>}
+  - skill{s=fv_soulcube_laser_off} @self
+
+
+# ============================================================================
+#  CHAOS
+# ============================================================================
+fv_soulcube_laser_chaos:
+  Skills:
+  - skill{s=fv_soulcube_laser_begin} @self
+  - skill{s=fv_soulcube_height_to_low} @self
+  - setvariable{var=caster.fv_soulcube_beam_top;type=FLOAT;value=0.5}
+  - setvariable{var=caster.fv_soulcube_spin_mode;type=STRING;value=CHAOS}
+  - setvariable{var=caster.fv_soulcube_spin_deg;type=FLOAT;value="floor(random(<caster.var.fv_soulcube_chaos_lo>,<caster.var.fv_soulcube_chaos_hi>+1))"}
+  # ticks until the first change (counted from the moment the beam fires)
+  - setvariable{var=caster.fv_soulcube_spin_next;type=INTEGER;value="floor(random(<caster.var.fv_soulcube_chaos_min>,<caster.var.fv_soulcube_chaos_max>))"}
+  - skill{s=fv_soulcube_spin_start} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_a1_lock>}
+  - skill{s=fv_soulcube_sfx_laser_lock} @self
+  - delay 8
+  - skill{s=fv_soulcube_laser_on} @self
+  - skill{s=fv_soulcube_l_spin_tick} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_a1_dur>}
+  - skill{s=fv_soulcube_laser_off} @self
+
+
+# ---- shared by JUMP ROPE and CHAOS ----------------------------------------
+# Random direction, then start the sweep 70 degrees away from the player so
+# the first pass arrives a moment after the beam appears, not instantly.
+fv_soulcube_spin_start:
+  Skills:
+  - randomskill{skills=fv_soulcube_spin_flip,fv_soulcube_noop} @self
+  - skill{s=fv_soulcube_spin_derive} @self
+  - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
+  - setrotation{relative=true;yaw=-70} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=0to99}
+  - setrotation{relative=true;yaw=70} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=-99to0}
+  - skill{s=fv_soulcube_vfx_low_beam_warning} @self
+
+fv_soulcube_l_spin_tick:
+  Skills:
+  - variableadd{var=caster.fv_soulcube_beam_n;amount=-1}
+  - skill{s=fv_soulcube_spin_countdown} @self
+  - skill{s=fv_soulcube_spin_rotate} @self
+  - skill{s=fv_soulcube_beam_tick} @self
+  - skill{s=fv_soulcube_l_spin_tick;delay=1} @self ?variableinrange{var=caster.fv_soulcube_beam_n;value=1to99999} ?variableequals{var=caster.fv_soulcube_state;value=FIGHT}
+
+# fv_soulcube_spin_next counts down every tick while the beam is live; at 8 the
+# coming change is decided and announced, at 0 it happens.
+fv_soulcube_spin_countdown:
+  Skills:
+  - variableadd{var=caster.fv_soulcube_spin_next;amount=-1}
+  - setvariable{var=skill.n;type=INTEGER;value=<caster.var.fv_soulcube_spin_next>}
+  - skill{s=fv_soulcube_spin_warn} @self ?variableequals{var=skill.n;value=8}
+  - skill{s=fv_soulcube_spin_change} @self ?variableequals{var=skill.n;value=0}
+
+fv_soulcube_spin_warn:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_spin_pending;type=STRING;value=FLIP}
+  # chaos: 60% reverse, 40% new speed
+  - randomskill{skills=fv_soulcube_pend_flip,fv_soulcube_pend_flip,fv_soulcube_pend_flip,fv_soulcube_pend_speed,fv_soulcube_pend_speed} @self ?variableequals{var=caster.fv_soulcube_spin_mode;value=CHAOS}
+  - skill{s=fv_soulcube_sfx_warn_flip} @self ?variableequals{var=caster.fv_soulcube_spin_pending;value=FLIP}
+  - skill{s=fv_soulcube_sfx_warn_speed} @self ?variableequals{var=caster.fv_soulcube_spin_pending;value=SPEED}
+
+fv_soulcube_pend_flip:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_spin_pending;type=STRING;value=FLIP}
+fv_soulcube_pend_speed:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_spin_pending;type=STRING;value=SPEED}
+
+fv_soulcube_spin_change:
+  Skills:
+  - setvariable{var=skill.p;type=STRING;value=<caster.var.fv_soulcube_spin_pending>}
+  - skill{s=fv_soulcube_spin_flip} @self ?variableequals{var=skill.p;value=FLIP}
+  - skill{s=fv_soulcube_spin_speed} @self ?variableequals{var=skill.p;value=SPEED}
+  - setvariable{var=caster.fv_soulcube_spin_next;type=INTEGER;value=99999}
+  - setvariable{var=caster.fv_soulcube_spin_next;type=INTEGER;value="floor(random(<caster.var.fv_soulcube_chaos_min>,<caster.var.fv_soulcube_chaos_max>))"} ?variableequals{var=caster.fv_soulcube_spin_mode;value=CHAOS}
+
+fv_soulcube_spin_flip:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_spin_deg;type=FLOAT;value="0-(<caster.var.fv_soulcube_spin_deg>)"}
+  - skill{s=fv_soulcube_spin_derive} @self
+
+# New speed, same direction. Never picks the speed it already has.
+fv_soulcube_spin_speed:
+  Skills:
+  - setvariable{var=skill.old;type=FLOAT;value="abs(<caster.var.fv_soulcube_spin_deg>)"}
+  - setvariable{var=skill.m0;type=FLOAT;value="floor(random(<caster.var.fv_soulcube_chaos_lo>,<caster.var.fv_soulcube_chaos_hi>+1))"}
+  # rolled the same speed? step one up (or down from the fast end)
+  - setvariable{var=skill.mag;type=FLOAT;value="(<skill.var.m0>)+((<skill.var.m0>)==(<skill.var.old>))*(((<skill.var.m0>)<6.5)*2-1)"}
+  - setvariable{var=caster.fv_soulcube_spin_deg;type=FLOAT;value="signum(<caster.var.fv_soulcube_spin_deg>)*(<skill.var.mag>)"}
+  - skill{s=fv_soulcube_spin_derive} @self
+
+# Values the swept-area test needs: centre offset and half width (degrees).
+fv_soulcube_spin_derive:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_spin_half;type=FLOAT;value="(<caster.var.fv_soulcube_spin_deg>)/2"}
+  - setvariable{var=caster.fv_soulcube_spin_thr;type=FLOAT;value="abs(<caster.var.fv_soulcube_spin_deg>)/2+2.5"}
+
+# setrotation needs fixed numbers, so every possible speed has its own line.
+fv_soulcube_spin_rotate:
+  Skills:
+  - setrotation{relative=true;yaw=3} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=2.5to3.5}
+  - setrotation{relative=true;yaw=4} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=3.5to4.5}
+  - setrotation{relative=true;yaw=5} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=4.5to5.5}
+  - setrotation{relative=true;yaw=6} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=5.5to6.5}
+  - setrotation{relative=true;yaw=7} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=6.5to7.5}
+  - setrotation{relative=true;yaw=8} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=7.5to8.5}
+  - setrotation{relative=true;yaw=9} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=8.5to9.5}
+  - setrotation{relative=true;yaw=-3} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=-3.5to-2.5}
+  - setrotation{relative=true;yaw=-4} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=-4.5to-3.5}
+  - setrotation{relative=true;yaw=-5} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=-5.5to-4.5}
+  - setrotation{relative=true;yaw=-6} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=-6.5to-5.5}
+  - setrotation{relative=true;yaw=-7} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=-7.5to-6.5}
+  - setrotation{relative=true;yaw=-8} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=-8.5to-7.5}
+  - setrotation{relative=true;yaw=-9} @self ?variableinrange{var=caster.fv_soulcube_spin_deg;value=-9.5to-8.5}
+
+
+# ============================================================================
+#  HUNTER
+# ============================================================================
+fv_soulcube_laser_hunter:
+  Skills:
+  - skill{s=fv_soulcube_laser_begin} @self
+  - skill{s=fv_soulcube_height_to_aim} @self
+  - setvariable{var=caster.fv_soulcube_aim_n;type=INTEGER;value=<caster.var.fv_soulcube_t_a1_lock>}
+  - skill{s=fv_soulcube_l_aim_tick} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_a1_lock>}
+  - skill{s=fv_soulcube_sfx_laser_lock} @self
+  - delay 8
+  - skill{s=fv_soulcube_laser_on} @self
+  - setvariable{var=caster.fv_soulcube_hunt_t;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_soulcube_hunt_q;type=INTEGER;value="floor(<caster.var.fv_soulcube_t_a1_dur>/4)"}
+  - skill{s=fv_soulcube_l_hunter_tick} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_a1_dur>}
+  - skill{s=fv_soulcube_laser_off} @self
+
+# Turn speed rises every quarter of the beam (degrees per tick):
+#   phase 1/2: 1.6  2.0  2.4  2.8        phase 3: 1.9  2.4  2.9  3.4
+# A sprinting player 6 blocks away circles at ~2.7 degrees per tick.
+fv_soulcube_l_hunter_tick:
+  Skills:
+  - variableadd{var=caster.fv_soulcube_beam_n;amount=-1}
+  - variableadd{var=caster.fv_soulcube_hunt_t;amount=1}
+  - setvariable{var=caster.fv_soulcube_hunt_lvl;type=INTEGER;value="min(4,1+floor(<caster.var.fv_soulcube_hunt_t>/<caster.var.fv_soulcube_hunt_q>))"}
+  - setvariable{var=skill.up;type=FLOAT;value="((<caster.var.fv_soulcube_hunt_t>)%(<caster.var.fv_soulcube_hunt_q>))==0"}
+  - skill{s=fv_soulcube_sfx_hunt_up} @self ?variableinrange{var=skill.up;value=0.5to2}
+  - rotatetowards{maxyaw=1.6} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_soulcube_phase;value=1to2} ?variableequals{var=caster.fv_soulcube_hunt_lvl;value=1}
+  - rotatetowards{maxyaw=2.0} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_soulcube_phase;value=1to2} ?variableequals{var=caster.fv_soulcube_hunt_lvl;value=2}
+  - rotatetowards{maxyaw=2.4} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_soulcube_phase;value=1to2} ?variableequals{var=caster.fv_soulcube_hunt_lvl;value=3}
+  - rotatetowards{maxyaw=2.8} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_soulcube_phase;value=1to2} ?variableequals{var=caster.fv_soulcube_hunt_lvl;value=4}
+  - rotatetowards{maxyaw=1.9} @NearestPlayer{r=48} ?variableequals{var=caster.fv_soulcube_phase;value=3} ?variableequals{var=caster.fv_soulcube_hunt_lvl;value=1}
+  - rotatetowards{maxyaw=2.4} @NearestPlayer{r=48} ?variableequals{var=caster.fv_soulcube_phase;value=3} ?variableequals{var=caster.fv_soulcube_hunt_lvl;value=2}
+  - rotatetowards{maxyaw=2.9} @NearestPlayer{r=48} ?variableequals{var=caster.fv_soulcube_phase;value=3} ?variableequals{var=caster.fv_soulcube_hunt_lvl;value=3}
+  - rotatetowards{maxyaw=3.4} @NearestPlayer{r=48} ?variableequals{var=caster.fv_soulcube_phase;value=3} ?variableequals{var=caster.fv_soulcube_hunt_lvl;value=4}
+  - skill{s=fv_soulcube_beam_tick} @self
+  - skill{s=fv_soulcube_l_hunter_tick;delay=1} @self ?variableinrange{var=caster.fv_soulcube_beam_n;value=1to99999} ?variableequals{var=caster.fv_soulcube_state;value=FIGHT}
+
+
+# ============================================================================
+#  THE BEAM - every tick while it is live
+# ============================================================================
+fv_soulcube_beam_tick:
+  Skills:
+  - skill{s=fv_soulcube_beam_check} @PlayersInRadius{r=11}
+  - skill{s=fv_soulcube_vfx_beam} @self
+  - skill{s=fv_soulcube_sfx_laser_hum} @self
+  # where the beam pointed this tick - next tick's sweep test starts here
+  - setvariable{var=caster.fv_soulcube_beam_prev;type=FLOAT;value="<caster.l.yaw>"}
+
+# Runs once per player within 11 blocks; every value is stored on that
+# player (target scope), so several players are tested independently.
+# Only + - * / sin cos abs min signum are used - no comparisons inside the
+# math; the actual decision is made by TargetConditions on the two hit
+# skills below.
+#   beam direction for yaw a = (-sin a, cos a)
+#   along  how far along the beam the player stands
+#   perp   how far beside the beam's centre line
+#   sect   >= 0 when the player is inside the slice the beam swept since
+#          last tick (spinning patterns only, -99 otherwise)
+#   dyrel  feet height relative to the beam's top limit (<= 0 = low enough
+#          to be hit)
+fv_soulcube_beam_check:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  - hasaura{auraName=fv_soulcube_if_laser} false
+  Skills:
+  - setvariable{var=target.fv_soulcube_dx;type=FLOAT;value="(<target.l.x.double>)-(<caster.l.x.double>)"}
+  - setvariable{var=target.fv_soulcube_dz;type=FLOAT;value="(<target.l.z.double>)-(<caster.l.z.double>)"}
+  - setvariable{var=target.fv_soulcube_dy;type=FLOAT;value="(<target.l.y.double>)-(<caster.l.y.double>)"}
+  - setvariable{var=target.fv_soulcube_dyrel;type=FLOAT;value="(<target.var.fv_soulcube_dy>)-(<caster.var.fv_soulcube_beam_top>)"}
+  - setvariable{var=target.fv_soulcube_ya;type=FLOAT;value="(<caster.l.yaw>)*0.0174532925"}
+  - setvariable{var=target.fv_soulcube_yb;type=FLOAT;value="(<caster.var.fv_soulcube_beam_prev>)*0.0174532925"}
+  - setvariable{var=target.fv_soulcube_along;type=FLOAT;value="(<target.var.fv_soulcube_dz>)*cos(<target.var.fv_soulcube_ya>)-(<target.var.fv_soulcube_dx>)*sin(<target.var.fv_soulcube_ya>)"}
+  - setvariable{var=target.fv_soulcube_perp;type=FLOAT;value="abs((<target.var.fv_soulcube_dx>)*cos(<target.var.fv_soulcube_ya>)+(<target.var.fv_soulcube_dz>)*sin(<target.var.fv_soulcube_ya>))"}
+  - setvariable{var=target.fv_soulcube_sect;type=FLOAT;value="min((0-sin(<target.var.fv_soulcube_yb>)*(<target.var.fv_soulcube_dz>)-cos(<target.var.fv_soulcube_yb>)*(<target.var.fv_soulcube_dx>))*signum(<caster.var.fv_soulcube_spin_deg>),((<target.var.fv_soulcube_dx>)*cos(<target.var.fv_soulcube_ya>)+(<target.var.fv_soulcube_dz>)*sin(<target.var.fv_soulcube_ya>))*signum(<caster.var.fv_soulcube_spin_deg>))-99*(1-abs(signum(<caster.var.fv_soulcube_spin_deg>)))"}
+  - skill{s=fv_soulcube_beam_hit}
+  - skill{s=fv_soulcube_beam_hit_swept}
+
+# standing in the beam
+fv_soulcube_beam_hit:
+  TargetConditions:
+  - hasaura{auraName=fv_soulcube_if_laser} false
+  - variableinrange{var=target.fv_soulcube_along;value=0.3to10.4} true
+  - variableinrange{var=target.fv_soulcube_perp;value=0to0.55} true
+  - variableinrange{var=target.fv_soulcube_dy;value=-1.5to99} true
+  - variableinrange{var=target.fv_soulcube_dyrel;value=-99to0} true
+  Skills:
+  - damage{amount=14;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - aura{auraName=fv_soulcube_if_laser;duration=10;maxStacks=1;refreshDuration=true}
+  - skill{s=fv_soulcube_sfx_laser_hit}
+
+# a fast sweep passed over the player between two ticks
+fv_soulcube_beam_hit_swept:
+  TargetConditions:
+  - hasaura{auraName=fv_soulcube_if_laser} false
+  - variableinrange{var=target.fv_soulcube_along;value=0.3to10.4} true
+  - variableinrange{var=target.fv_soulcube_sect;value=0to999} true
+  - variableinrange{var=target.fv_soulcube_dy;value=-1.5to99} true
+  - variableinrange{var=target.fv_soulcube_dyrel;value=-99to0} true
+  Skills:
+  - damage{amount=14;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - aura{auraName=fv_soulcube_if_laser;duration=10;maxStacks=1;refreshDuration=true}
+  - skill{s=fv_soulcube_sfx_laser_hit}

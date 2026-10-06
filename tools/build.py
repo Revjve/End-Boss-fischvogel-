@@ -6,8 +6,8 @@ Builds "Fischvogel's End Boss.zip" from the folder of the same name.
 
   1. converts the original .bbmodel files (Source Files) for ModelEngine and
      verifies the result (convert_models.py / verify_models.py):
-       plugins/ModelEngine/blueprints/soul_cube*.bbmodel  (legacy 4.10)
-       Source Files/soul_cube* (Blockbench 5).bbmodel     (editable)
+       plugins/ModelEngine/blueprints/fv_soulcube*.bbmodel  (legacy 4.10)
+       Source Files/fv_soulcube* (Blockbench 5).bbmodel     (editable)
   2. runs the static checker against the vanilla data in tools/vanilla_data
   3. --sim N: plays N simulated fights per scenario (simulate_fight.py)
   4. writes the zip: one top folder, directory entries, CRLF guide, fixed
@@ -41,9 +41,9 @@ def main():
         run(os.path.join(HERE, 'verify_models.py'), tmp)
         bp = os.path.join(PLUGINS, 'ModelEngine', 'blueprints')
         os.makedirs(bp, exist_ok=True)
-        for f in ('soul_cube.bbmodel', 'soul_cube_projectile.bbmodel'):
+        for f in ('fv_soulcube.bbmodel', 'fv_soulcube_projectile.bbmodel'):
             shutil.copyfile(os.path.join(tmp, f), os.path.join(bp, f))
-        for f in ('soul_cube (Blockbench 5).bbmodel', 'soul_cube_projectile (Blockbench 5).bbmodel'):
+        for f in ('fv_soulcube (Blockbench 5).bbmodel', 'fv_soulcube_projectile (Blockbench 5).bbmodel'):
             shutil.copyfile(os.path.join(tmp, f), os.path.join(PACK, 'Source Files', f))
     # 2. checks
     run(os.path.join(HERE, 'check_pack.py'), PLUGINS, os.path.join(HERE, 'vanilla_data'))

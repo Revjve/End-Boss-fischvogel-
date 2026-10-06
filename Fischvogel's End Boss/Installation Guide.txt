@@ -31,26 +31,27 @@ automatically - just make sure your players accept the pack. Every sound is
 a vanilla Minecraft sound, so there are no sound files to install.
 
 The pack only adds its own files:
-  plugins/ModelEngine/blueprints/soul_cube.bbmodel             the boss model
-  plugins/ModelEngine/blueprints/soul_cube_projectile.bbmodel  its projectile
-  plugins/MythicMobs/packs/soul_cube/                          mobs and skills
+  plugins/ModelEngine/blueprints/fv_soulcube.bbmodel  (the boss model)
+  plugins/ModelEngine/blueprints/fv_soulcube_projectile.bbmodel
+  plugins/MythicMobs/packs/fv_soulcube/  (mobs and skills)
 
 
 --------------------------------------------------------------------------
 THE MOBS - WHICH ONE DO I SPAWN?
 --------------------------------------------------------------------------
 
-  soul_cube_block   THE BLOCK. This is the one you spawn. It sits in your
-                    arena looking like a normal block and cannot be hurt.
-                    When a player LEFT or RIGHT clicks it, it wakes up and
-                    turns into the boss right where it stands.
+  fv_soulcube_block   THE BLOCK. This is the one you spawn. It sits in your
+                      arena looking like a normal block and cannot be hurt.
+                      When a player LEFT or RIGHT clicks it, it wakes up
+                      and turns into the boss right where it stands.
 
-  soul_cube         THE BOSS ("Soul Cube", with boss bar). Never spawn it by
-                    hand - the block summons it and keeps track of it.
+  fv_soulcube         THE BOSS ("Soul Cube", with boss bar). Never spawn it
+                      by hand - the block summons it and keeps track of it.
 
-  soul_cube_bullet, soul_cube_burst, soul_cube_deathfx, soul_cube_fx_base
-                    Invisible effect helpers (projectile, explosion, death
-                    animation). Used by the skills - never spawn them.
+  fv_soulcube_bullet, fv_soulcube_burst, fv_soulcube_deathfx,
+  fv_soulcube_fx_base
+                      Invisible effect helpers (projectile, explosion, death
+                      animation). Used by the skills - never spawn them.
 
 
 --------------------------------------------------------------------------
@@ -59,13 +60,13 @@ PLACING THE BOSS
 
 Stand in the middle of your arena, on the floor, and spawn the block once:
 
-    /mm mobs spawn soul_cube_block
+    /mm mobs spawn fv_soulcube_block
 
 For a perfect fit on the block grid, spawn it from the console at the
 centre of a block (X and Z + 0.5, Y = the TOP of the floor block, e.g. 64
 for a floor block at Y 63):
 
-    mm mobs spawn soul_cube_block 1 world,100.5,64,200.5
+    mm mobs spawn fv_soulcube_block 1 world,100.5,64,200.5
 
 That is all. The block is persistent: it survives restarts, remembers
 whether a fight is running, and re-forms by itself after the boss is
@@ -74,10 +75,10 @@ sit ON the floor, not inside it.
 
 The arena: an open, flat floor with at least 20 blocks of room around the
 block. The boss never moves further than 18 blocks from the block (change
-it in soul_cube_boss_settings); it moves by teleporting, so pillars inside
+it in fv_soulcube_boss_settings); it moves by teleporting, so pillars inside
 that radius are passed straight through.
 
-To remove it:  /mm mobs kill soul_cube_block  (and /mm mobs kill soul_cube
+To remove it:  /mm mobs kill fv_soulcube_block  (and /mm mobs kill fv_soulcube
 if a fight is running).
 
 
@@ -162,10 +163,11 @@ DEATH
   shatters. The souls drift away. 1500 xp.
 
 AFTERWARDS
-  The block re-forms after 5 minutes (soul_cube_block_settings; -1 = the
+  The block re-forms after 5 minutes (fv_soulcube_block_settings; -1 = the
   boss can only be killed once). If everybody leaves (nobody within 40
-  blocks for 15 seconds) the boss gives up and turns back into the block. After a restart
-  or a chunk unload during a fight, the block simply re-forms.
+  blocks for 15 seconds) the boss gives up and turns back into the block.
+  After a restart or a chunk unload during a fight, the block simply
+  re-forms.
 
 
 
@@ -174,25 +176,26 @@ TUNING
 --------------------------------------------------------------------------
 
 Everything worth balancing is listed in the "TUNING CHEAT SHEET" at the top
-of plugins/MythicMobs/packs/soul_cube/skills/soul_cube_core.yml.
+of plugins/MythicMobs/packs/fv_soulcube/skills/fv_soulcube_core.yml.
 
 The most common changes:
-  - boss health ............. Health: in mobs/soul_cube_mobs.yml (750 suits
+  - boss health ............. Health: in mobs/fv_soulcube_mobs.yml (750 suits
                               1-3 players; add ~250 per extra player)
-  - respawn time ............ soul_cube_block_settings (seconds, -1 = once)
-  - arena radius ............ soul_cube_boss_settings
+  - respawn time ............ fv_soulcube_block_settings (seconds, -1 = once)
+  - arena radius ............ fv_soulcube_boss_settings
   - damage numbers .......... the damage{amount=..} lines (listed in the
                               cheat sheet)
   - idle time, openings, how
-    many shots, gaps ........ the PHASE TABLES (soul_cube_phase_1/2/3)
+    many shots, gaps ........ the PHASE TABLES (fv_soulcube_phase_1/2/3)
   - which patterns a phase
-    may use ................. soul_cube_type_* in soul_cube_core.yml
-  - projectile speeds ....... v= in the soul_cube_fire_* skills (shooting file)
-  - sounds .................. skills/soul_cube_fx.yml, one skill per moment
-                              of the fight (soul_cube_sfx_...)
+    may use ................. fv_soulcube_type_* in fv_soulcube_core.yml
+  - projectile speeds ....... v= in the fv_soulcube_fire_* skills
+                              (shooting file)
+  - sounds .................. skills/fv_soulcube_fx.yml, one skill per moment
+                              of the fight (fv_soulcube_sfx_...)
 
 The animation speeds (speed=1.0/1.1/1.2 on the state{} lines in
-soul_cube_anim_*) drive the tick numbers in the phase tables. If you change
+fv_soulcube_anim_*) drive the tick numbers in the phase tables. If you change
 a speed, redo the division written next to the table.
 
 The boss bar is BLUE on purpose: no vanilla boss uses that colour, so a
@@ -223,7 +226,7 @@ The block / boss is invisible
   in plugins/ModelEngine/blueprints. Players must accept the Nexo pack.
 
 Projectiles or the explosion are invisible
-  Set "Marker: false" in soul_cube_fx_base (mobs file) - a few ModelEngine
+  Set "Marker: false" in fv_soulcube_fx_base (mobs file) - a few ModelEngine
   builds will not render models on marker armour stands.
 
 The boss sits too low, or the low laser sweep never hits
@@ -242,7 +245,7 @@ The boss vanished / the block came back on its own
   Nobody was within 40 blocks for 15 seconds, the chunk unloaded, or the
   server restarted - in all three cases the fight resets on purpose.
 
-Errors in the console mentioning soul_cube_...
+Errors in the console mentioning fv_soulcube_...
   Please send me the lines; each skill is named after what it does.
 
 

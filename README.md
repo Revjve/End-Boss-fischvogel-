@@ -1,7 +1,7 @@
 # Soul Cube - FischVogel's End Boss
 
 A MythicMobs + ModelEngine + Nexo boss: a soul trapped in a block.
-Spawn `soul_cube_block` (the block); a left or right click wakes it into `soul_cube` (the boss).
+Spawn `fv_soulcube_block` (the block); a left or right click wakes it into `fv_soulcube` (the boss).
 
 **Download:** [`Fischvogel's End Boss.zip`](Fischvogel's%20End%20Boss.zip) - drag the contents of its
 `plugins` folder into the server's `plugins` folder. Everything else is in the
@@ -12,7 +12,7 @@ Spawn `soul_cube_block` (the block); a left or right click wakes it into `soul_c
 | Path | What it is |
 |---|---|
 | `Fischvogel's End Boss/` | Exactly what goes into the zip (the hand-over pack) - the source of truth. Nothing from `tools/` or `docs/` ships. |
-| `Fischvogel's End Boss/plugins/MythicMobs/packs/soul_cube/` | Mobs and skills: `core` (block, wake-up, loop, phases, damage rules, height, death), `laser`, `downbeam`, `shooting`, `fx` (every sound / particle cue). |
+| `Fischvogel's End Boss/plugins/MythicMobs/packs/fv_soulcube/` | Mobs and skills: `core` (block, wake-up, loop, phases, damage rules, height, death), `laser`, `downbeam`, `shooting`, `fx` (every sound / particle cue). |
 | `Fischvogel's End Boss/plugins/ModelEngine/blueprints/` | The two blueprints, generated from the originals by `tools/convert_models.py`. |
 | `Fischvogel's End Boss/Source Files/` | The converted models in Blockbench 5 format, for editing. |
 | `tools/originals/` | The `.bbmodel` files as originally delivered - the converter's input. |

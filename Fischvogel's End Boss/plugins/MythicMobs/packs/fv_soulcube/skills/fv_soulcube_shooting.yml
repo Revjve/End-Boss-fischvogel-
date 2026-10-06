@@ -1,0 +1,465 @@
+# ============================================================================
+#  Soul Cube (FischVogel) - SHOOTING  (animation "shooting")
+# ============================================================================
+#  "shooting" is a 50 tick recoil (100% speed). It is restarted for every
+#  shot, so a fast volley reads as rapid fire. The projectile is its own
+#  blueprint (fv_soulcube_projectile): a tumbling star that leaves the eye
+#  half a block above the boss' feet and plays "explosion" wherever it ends.
+#
+#  Every shot flies straight and level, exactly the way the cube faces at
+#  the moment it fires - what you see is what comes at you.
+#     direct hit ...... 7 damage, hit radius 0.5
+#     burst splash .... 3 damage within 1.6 blocks of where a shot ends
+#                       (not on top of a direct hit)
+#
+#  PATTERNS
+#   AIMED   (phases 1-2) tracks you, a sharp PING locks its aim, a very fast
+#           shot follows a moment later. Move on the ping. 2 / 3 shots.
+#   BURST   (phase 2+) a stream of shots in a row, each one aimed at you -
+#           keep moving. Every 3rd shot (phase 3: every 2nd) is aimed where
+#           you are GOING (a lower "tick" sound plays with it): change
+#           direction to beat it.
+#   RING    (all phases) spins on the spot and sprays shots all around it.
+#           Phase 2+: a second ring follows, turned half a step, so its shots
+#           fly through the gaps of the first - step sideways between rings.
+#           Phase 3: the second ring spins the other way.
+#   FAN     (phase 2+) spread volleys aimed at you: 5 wide, then 4 that fly
+#           exactly between the first 5. Stand in a gap, then step over.
+#   SPIRAL  (phase 3) two streams sweep around it like the hands of a clock,
+#           with a gap every few shots. Halfway it reverses (high double
+#           click). Run around it close up, or slip through a gap.
+#
+#  Speeds (blocks per second)       phase 1   phase 2   phase 3
+#     aimed ........................... 22        24        26
+#     burst ........................... 14        15        16
+#     ring / spiral ................... 10        11        12
+#     fan ............................. 12        13        14
+#  Change them in the fv_soulcube_fire_* skills at the bottom (v=). If you change
+#  the burst speed, change fv_soulcube_v_burst in the PHASE TABLES too (it is the
+#  same speed in blocks per tick, used to aim the lead shots).
+# ============================================================================
+
+
+# ---- shared pieces ---------------------------------------------------------
+fv_soulcube_shoot_begin:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_lasttype;type=STRING;value=SHOOT}
+  - setvariable{var=caster.fv_soulcube_mode;type=STRING;value=OPEN}
+  - setvariable{var=caster.fv_soulcube_alive;type=INTEGER;value=1;duration=440}
+  - setvariable{var=caster.fv_soulcube_shots;type=INTEGER;value=0}
+  # shots leave the eye at chest height
+  - skill{s=fv_soulcube_height_to_aim} @self
+  - skill{s=fv_soulcube_sfx_shoot_charge} @self
+  - skill{s=fv_soulcube_vfx_shoot_charge} @self
+
+# The last shot is out: let the recoil play out, then back to idle. Idle
+# takes over 6 ticks before "shooting" ends so the two blend.
+fv_soulcube_shoot_end:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_shots;type=INTEGER;value=0}
+  - delay{ticks=<caster.var.fv_soulcube_t_sh_settle>}
+  - skill{s=fv_soulcube_play_idle} @self ?variableequals{var=caster.fv_soulcube_state;value=FIGHT}
+  - skill{s=fv_soulcube_height_to_idle} @self ?variableequals{var=caster.fv_soulcube_state;value=FIGHT}
+  - skill{s=fv_soulcube_after_attack} @self ?variableequals{var=caster.fv_soulcube_state;value=FIGHT}
+
+# One shot's recoil + sound. Every pattern calls this right before it fires.
+fv_soulcube_s_kick:
+  Skills:
+  - skill{s=fv_soulcube_anim_shoot} @self
+  - skill{s=fv_soulcube_sfx_shoot} @self
+
+
+# ============================================================================
+#  AIMED  - track, PING, fast shot
+# ============================================================================
+fv_soulcube_shoot_aimed:
+  Skills:
+  - skill{s=fv_soulcube_shoot_begin} @self
+  - setvariable{var=caster.fv_soulcube_shots;type=INTEGER;value=<caster.var.fv_soulcube_n_aimed>}
+  - skill{s=fv_soulcube_s_aimed_track} @self
+
+# Follows the target for t_aimed_gap ticks.
+fv_soulcube_s_aimed_track:
+  Conditions:
+  - variableinrange{var=caster.fv_soulcube_shots;value=1to999} true
+  - variableequals{var=caster.fv_soulcube_state;value=FIGHT} true
+  Skills:
+  - setvariable{var=caster.fv_soulcube_aim_n;type=INTEGER;value=<caster.var.fv_soulcube_t_aimed_gap>}
+  - skill{s=fv_soulcube_l_aim_tick} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_aimed_gap>}
+  - skill{s=fv_soulcube_s_aimed_lock} @self
+
+# Snaps onto the target and holds still: the shot goes exactly where the
+# target stood at the ping.
+fv_soulcube_s_aimed_lock:
+  Conditions:
+  - variableinrange{var=caster.fv_soulcube_shots;value=1to999} true
+  - variableequals{var=caster.fv_soulcube_state;value=FIGHT} true
+  Skills:
+  - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
+  - skill{s=fv_soulcube_sfx_shoot_lock} @self
+  - skill{s=fv_soulcube_vfx_shoot_lock} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_aimed_lock>}
+  - skill{s=fv_soulcube_s_aimed_fire} @self
+
+fv_soulcube_s_aimed_fire:
+  Conditions:
+  - variableinrange{var=caster.fv_soulcube_shots;value=1to999} true
+  - variableequals{var=caster.fv_soulcube_state;value=FIGHT} true
+  Skills:
+  - variableadd{var=caster.fv_soulcube_shots;amount=-1}
+  - setvariable{var=skill.left;type=INTEGER;value=<caster.var.fv_soulcube_shots>}
+  - skill{s=fv_soulcube_s_kick} @self
+  - skill{s=fv_soulcube_sfx_shoot_big} @self
+  - skill{s=fv_soulcube_fire_aimed} @Forward{f=16;lockpitch=true;uel=false}
+  - skill{s=fv_soulcube_s_aimed_track} @self ?variableinrange{var=skill.left;value=1to999}
+  - skill{s=fv_soulcube_shoot_end} @self ?variableinrange{var=skill.left;value=-999to0}
+
+
+# ============================================================================
+#  BURST  - a stream of shots aimed at you, some of them leading you
+# ============================================================================
+fv_soulcube_shoot_burst:
+  Skills:
+  - skill{s=fv_soulcube_shoot_begin} @self
+  - setvariable{var=caster.fv_soulcube_shots;type=INTEGER;value=<caster.var.fv_soulcube_n_burst>}
+  - setvariable{var=caster.fv_soulcube_shot_k;type=INTEGER;value=0}
+  # wind-up: turn onto the target
+  - setvariable{var=caster.fv_soulcube_aim_n;type=INTEGER;value=16}
+  - skill{s=fv_soulcube_l_aim_tick} @self
+  - delay 16
+  - skill{s=fv_soulcube_s_track_init} @NearestPlayer{r=48}
+  - skill{s=fv_soulcube_s_burst_shot} @self
+
+fv_soulcube_s_burst_shot:
+  Conditions:
+  - variableinrange{var=caster.fv_soulcube_shots;value=1to999} true
+  - variableequals{var=caster.fv_soulcube_state;value=FIGHT} true
+  Skills:
+  - variableadd{var=caster.fv_soulcube_shots;amount=-1}
+  - variableadd{var=caster.fv_soulcube_shot_k;amount=1}
+  - setvariable{var=skill.left;type=INTEGER;value=<caster.var.fv_soulcube_shots>}
+  # every 3rd shot in phase 2, every 2nd shot in phase 3 leads the target
+  - setvariable{var=skill.lead;type=FLOAT;value="((<caster.var.fv_soulcube_phase>)==2)*(((<caster.var.fv_soulcube_shot_k>)%3)==0)+((<caster.var.fv_soulcube_phase>)==3)*(((<caster.var.fv_soulcube_shot_k>)%2)==0)"}
+  - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
+  - skill{s=fv_soulcube_s_track} @NearestPlayer{r=48}
+  - skill{s=fv_soulcube_s_lead_turn} @self ?variableinrange{var=skill.lead;value=0.5to2}
+  - skill{s=fv_soulcube_s_kick} @self
+  - skill{s=fv_soulcube_sfx_shoot_lead} @self ?variableinrange{var=skill.lead;value=0.5to2}
+  - skill{s=fv_soulcube_fire_burst} @Forward{f=16;lockpitch=true;uel=false}
+  - skill{s=fv_soulcube_s_burst_next} @self ?variableinrange{var=skill.left;value=1to999}
+  - skill{s=fv_soulcube_shoot_end} @self ?variableinrange{var=skill.left;value=-999to0}
+
+fv_soulcube_s_burst_next:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_aim_n;type=INTEGER;value=<caster.var.fv_soulcube_t_burst_gap>}
+  - skill{s=fv_soulcube_l_aim_tick} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_burst_gap>}
+  - skill{s=fv_soulcube_s_burst_shot} @self
+
+# ---- lead aiming -------------------------------------------------------------
+# Runs on the target. Angles are Minecraft yaw degrees around the boss, the
+# same convention setrotation uses, so the lead turn has the right sign.
+#   th    the target's direction from the boss right now
+#   dth   how far it moved around the boss since the last shot
+#   lead  dth per tick x flight time in ticks = how far ahead to aim
+fv_soulcube_s_track_init:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_th_prev;type=FLOAT;value="todegree(atan2(0-((<target.l.x.double>)-(<caster.l.x.double>)),(<target.l.z.double>)-(<caster.l.z.double>)))"}
+
+fv_soulcube_s_track:
+  Skills:
+  - setvariable{var=skill.dx;type=FLOAT;value="(<target.l.x.double>)-(<caster.l.x.double>)"}
+  - setvariable{var=skill.dz;type=FLOAT;value="(<target.l.z.double>)-(<caster.l.z.double>)"}
+  - setvariable{var=skill.th;type=FLOAT;value="todegree(atan2(0-(<skill.var.dx>),<skill.var.dz>))"}
+  - setvariable{var=skill.dth;type=FLOAT;value="(((<skill.var.th>)-(<caster.var.fv_soulcube_th_prev>))%360+540)%360-180"}
+  - setvariable{var=caster.fv_soulcube_th_prev;type=FLOAT;value=<skill.var.th>}
+  - setvariable{var=caster.fv_soulcube_lead;type=FLOAT;value="(<skill.var.dth>)/(<caster.var.fv_soulcube_t_burst_gap>)*sqrt((<skill.var.dx>)^2+(<skill.var.dz>)^2)/(<caster.var.fv_soulcube_v_burst>)"}
+
+# setrotation needs fixed numbers: the lead is rounded to 10 or 20 degrees.
+# Anything above 40 is not a real movement (target switched) - ignored.
+fv_soulcube_s_lead_turn:
+  Skills:
+  - setrotation{relative=true;yaw=20} @self ?variableinrange{var=caster.fv_soulcube_lead;value=15to40}
+  - setrotation{relative=true;yaw=10} @self ?variableinrange{var=caster.fv_soulcube_lead;value=5to14.999}
+  - setrotation{relative=true;yaw=-10} @self ?variableinrange{var=caster.fv_soulcube_lead;value=-14.999to-5}
+  - setrotation{relative=true;yaw=-20} @self ?variableinrange{var=caster.fv_soulcube_lead;value=-40to-15}
+
+
+# ============================================================================
+#  RING  - spins on the spot, one shot every 2 ticks
+#            phase 1:  1 ring of 12 (30 degrees apart),  15 degrees per tick
+#            phase 2:  2 rings of 16 (22.5 apart),       11.25 per tick
+#            phase 3:  2 rings of 20 (18 apart),         9 per tick,
+#                      the second one spinning the other way
+#  Between two rings it turns one extra tick without firing: the second
+#  ring's shots fly exactly between the first ring's.
+# ============================================================================
+fv_soulcube_shoot_ring:
+  Skills:
+  - skill{s=fv_soulcube_shoot_begin} @self
+  - setvariable{var=caster.fv_soulcube_shots;type=INTEGER;value=<caster.var.fv_soulcube_n_ring>}
+  # shots per ring
+  - setvariable{var=caster.fv_soulcube_ring_rev;type=INTEGER;value=<caster.var.fv_soulcube_n_ring>}
+  - setvariable{var=caster.fv_soulcube_ring_rev;type=INTEGER;value="floor(<caster.var.fv_soulcube_n_ring>/2)"} ?variableinrange{var=caster.fv_soulcube_phase;value=2to3}
+  - setvariable{var=caster.fv_soulcube_ring_k;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_soulcube_ring_cd;type=INTEGER;value=1}
+  - randomskill{skills=fv_soulcube_ring_dir_left,fv_soulcube_ring_dir_right} @self
+  - setvariable{var=caster.fv_soulcube_aim_n;type=INTEGER;value=16}
+  - skill{s=fv_soulcube_l_aim_tick} @self
+  - skill{s=fv_soulcube_vfx_ring_warning} @self
+  - delay 16
+  - skill{s=fv_soulcube_s_ring_tick} @self
+
+fv_soulcube_ring_dir_left:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_ring_dir;type=INTEGER;value=1}
+fv_soulcube_ring_dir_right:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_ring_dir;type=INTEGER;value=-1}
+
+fv_soulcube_s_ring_tick:
+  Conditions:
+  - variableinrange{var=caster.fv_soulcube_shots;value=1to999} true
+  - variableequals{var=caster.fv_soulcube_state;value=FIGHT} true
+  Skills:
+  - skill{s=fv_soulcube_s_ring_turn} @self
+  - variableadd{var=caster.fv_soulcube_ring_cd;amount=-1}
+  - setvariable{var=skill.cd;type=INTEGER;value=<caster.var.fv_soulcube_ring_cd>}
+  - skill{s=fv_soulcube_s_ring_fire} @self ?variableinrange{var=skill.cd;value=-99to0}
+  - skill{s=fv_soulcube_s_ring_tick;delay=1} @self
+
+fv_soulcube_s_ring_turn:
+  Skills:
+  - setvariable{var=skill.d;type=INTEGER;value=<caster.var.fv_soulcube_ring_dir>}
+  - setrotation{relative=true;yaw=15} @self ?variableequals{var=caster.fv_soulcube_phase;value=1} ?variableequals{var=skill.d;value=1}
+  - setrotation{relative=true;yaw=-15} @self ?variableequals{var=caster.fv_soulcube_phase;value=1} ?variableequals{var=skill.d;value=-1}
+  - setrotation{relative=true;yaw=11.25} @self ?variableequals{var=caster.fv_soulcube_phase;value=2} ?variableequals{var=skill.d;value=1}
+  - setrotation{relative=true;yaw=-11.25} @self ?variableequals{var=caster.fv_soulcube_phase;value=2} ?variableequals{var=skill.d;value=-1}
+  - setrotation{relative=true;yaw=9} @self ?variableequals{var=caster.fv_soulcube_phase;value=3} ?variableequals{var=skill.d;value=1}
+  - setrotation{relative=true;yaw=-9} @self ?variableequals{var=caster.fv_soulcube_phase;value=3} ?variableequals{var=skill.d;value=-1}
+
+fv_soulcube_s_ring_fire:
+  Skills:
+  - variableadd{var=caster.fv_soulcube_shots;amount=-1}
+  - variableadd{var=caster.fv_soulcube_ring_k;amount=1}
+  - setvariable{var=caster.fv_soulcube_ring_cd;type=INTEGER;value=2}
+  - setvariable{var=skill.left;type=INTEGER;value=<caster.var.fv_soulcube_shots>}
+  # a ring is complete and another one follows
+  - setvariable{var=skill.newring;type=FLOAT;value="((<caster.var.fv_soulcube_ring_k>)==(<caster.var.fv_soulcube_ring_rev>))*((<caster.var.fv_soulcube_shots>)>0)"}
+  - skill{s=fv_soulcube_s_kick} @self
+  - skill{s=fv_soulcube_fire_ring} @Forward{f=16;lockpitch=true;uel=false}
+  - skill{s=fv_soulcube_s_ring_next} @self ?variableinrange{var=skill.newring;value=0.5to2}
+  - skill{s=fv_soulcube_shoot_end} @self ?variableinrange{var=skill.left;value=-999to0}
+
+# Half a step out of line: one extra tick of turning before the next shot.
+# Phase 3 also reverses, so the half step is kept the other way round.
+fv_soulcube_s_ring_next:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_ring_k;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_soulcube_ring_cd;type=INTEGER;value=3}
+  - skill{s=fv_soulcube_s_ring_reverse} @self ?variableequals{var=caster.fv_soulcube_phase;value=3}
+
+# Spinning back, the 3 turns before the next shot (3 x 9 = 27 degrees) put
+# it 9 degrees short of the last-but-one shot of the first ring - exactly
+# between two of its shots, just like in phase 2.
+fv_soulcube_s_ring_reverse:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_ring_dir;type=INTEGER;value="0-(<caster.var.fv_soulcube_ring_dir>)"}
+  - skill{s=fv_soulcube_sfx_warn_flip} @self
+
+
+# ============================================================================
+#  FAN  - spread volleys aimed at you
+#           volley A: 5 shots, 20 degrees apart (-40 .. +40)
+#           volley B: 4 shots that fly between them (-30, -10, +10, +30)
+#           A, B, A, B ... (2 / 3 / 4 volleys)
+# ============================================================================
+fv_soulcube_shoot_fan:
+  Skills:
+  - skill{s=fv_soulcube_shoot_begin} @self
+  - setvariable{var=caster.fv_soulcube_shots;type=INTEGER;value=<caster.var.fv_soulcube_n_fan>}
+  - setvariable{var=caster.fv_soulcube_shot_k;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_soulcube_aim_n;type=INTEGER;value=16}
+  - skill{s=fv_soulcube_l_aim_tick} @self
+  - delay 16
+  - skill{s=fv_soulcube_s_fan_volley} @self
+
+fv_soulcube_s_fan_volley:
+  Conditions:
+  - variableinrange{var=caster.fv_soulcube_shots;value=1to999} true
+  - variableequals{var=caster.fv_soulcube_state;value=FIGHT} true
+  Skills:
+  - variableadd{var=caster.fv_soulcube_shots;amount=-1}
+  - variableadd{var=caster.fv_soulcube_shot_k;amount=1}
+  - setvariable{var=skill.left;type=INTEGER;value=<caster.var.fv_soulcube_shots>}
+  - setvariable{var=skill.odd;type=FLOAT;value="((<caster.var.fv_soulcube_shot_k>)%2)==1"}
+  - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
+  - skill{s=fv_soulcube_s_kick} @self
+  - skill{s=fv_soulcube_sfx_shoot_big} @self
+  - skill{s=fv_soulcube_s_fan_a} @self ?variableinrange{var=skill.odd;value=0.5to2}
+  - skill{s=fv_soulcube_s_fan_b} @self ?variableinrange{var=skill.odd;value=-1to0.5}
+  - skill{s=fv_soulcube_s_fan_next} @self ?variableinrange{var=skill.left;value=1to999}
+  - skill{s=fv_soulcube_shoot_end} @self ?variableinrange{var=skill.left;value=-999to0}
+
+# The boss turns between the shots inside a single tick, so it looks like
+# one volley; it ends facing the target again.
+fv_soulcube_s_fan_a:
+  Skills:
+  - setrotation{relative=true;yaw=-40} @self
+  - skill{s=fv_soulcube_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_soulcube_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_soulcube_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_soulcube_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_soulcube_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=-40} @self
+
+fv_soulcube_s_fan_b:
+  Skills:
+  - setrotation{relative=true;yaw=-30} @self
+  - skill{s=fv_soulcube_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_soulcube_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_soulcube_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_soulcube_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=-30} @self
+
+fv_soulcube_s_fan_next:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_aim_n;type=INTEGER;value=<caster.var.fv_soulcube_t_fan_gap>}
+  - skill{s=fv_soulcube_l_aim_tick} @self
+  - delay{ticks=<caster.var.fv_soulcube_t_fan_gap>}
+  - skill{s=fv_soulcube_s_fan_volley} @self
+
+
+# ============================================================================
+#  SPIRAL  (phase 3)  two streams, front and back, sweeping 3 degrees per
+#          tick. Every 2 ticks there is a volley slot: 4 slots fire, the next
+#          2 stay empty - an 18 degree gap in each stream that a player can
+#          slip through (~1 block wide at 8 blocks away). Reverses halfway.
+#          fv_soulcube_n_spiral volleys are actually fired (30 = 45 slots = 4.5 s).
+# ============================================================================
+fv_soulcube_shoot_spiral:
+  Skills:
+  - skill{s=fv_soulcube_shoot_begin} @self
+  - setvariable{var=caster.fv_soulcube_shots;type=INTEGER;value=<caster.var.fv_soulcube_n_spiral>}
+  - setvariable{var=caster.fv_soulcube_spiral_half;type=INTEGER;value="floor(<caster.var.fv_soulcube_n_spiral>/2)"}
+  - setvariable{var=caster.fv_soulcube_spiral_k;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_soulcube_ring_cd;type=INTEGER;value=1}
+  - randomskill{skills=fv_soulcube_ring_dir_left,fv_soulcube_ring_dir_right} @self
+  # start a quarter turn away from the target, so the first stream reaches
+  # it after a moment instead of firing straight at it
+  - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
+  - setrotation{relative=true;yaw=-90} @self ?variableequals{var=caster.fv_soulcube_ring_dir;value=1}
+  - setrotation{relative=true;yaw=90} @self ?variableequals{var=caster.fv_soulcube_ring_dir;value=-1}
+  - skill{s=fv_soulcube_vfx_ring_warning} @self
+  - delay 16
+  - skill{s=fv_soulcube_s_spiral_tick} @self
+
+fv_soulcube_s_spiral_tick:
+  Conditions:
+  - variableinrange{var=caster.fv_soulcube_shots;value=1to999} true
+  - variableequals{var=caster.fv_soulcube_state;value=FIGHT} true
+  Skills:
+  - setrotation{relative=true;yaw=3} @self ?variableequals{var=caster.fv_soulcube_ring_dir;value=1}
+  - setrotation{relative=true;yaw=-3} @self ?variableequals{var=caster.fv_soulcube_ring_dir;value=-1}
+  - variableadd{var=caster.fv_soulcube_ring_cd;amount=-1}
+  - setvariable{var=skill.cd;type=INTEGER;value=<caster.var.fv_soulcube_ring_cd>}
+  - skill{s=fv_soulcube_s_spiral_slot} @self ?variableinrange{var=skill.cd;value=-99to0}
+  - skill{s=fv_soulcube_s_spiral_tick;delay=1} @self
+
+# Every 2 ticks: a volley, or a gap (slots 5 and 6 of every 6).
+fv_soulcube_s_spiral_slot:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_ring_cd;type=INTEGER;value=2}
+  - variableadd{var=caster.fv_soulcube_spiral_k;amount=1}
+  - setvariable{var=skill.gap;type=FLOAT;value="(((<caster.var.fv_soulcube_spiral_k>)%6)==5)+(((<caster.var.fv_soulcube_spiral_k>)%6)==0)"}
+  - skill{s=fv_soulcube_s_spiral_fire} @self ?variableinrange{var=skill.gap;value=-1to0.5}
+
+fv_soulcube_s_spiral_fire:
+  Skills:
+  - variableadd{var=caster.fv_soulcube_shots;amount=-1}
+  - setvariable{var=skill.left;type=INTEGER;value=<caster.var.fv_soulcube_shots>}
+  - skill{s=fv_soulcube_s_kick} @self
+  # front stream, then turn round inside the tick for the back stream
+  - skill{s=fv_soulcube_fire_ring} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=180} @self
+  - skill{s=fv_soulcube_fire_ring} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=180} @self
+  # 4 volleys before halfway: warn; at halfway: reverse
+  - setvariable{var=skill.warn;type=FLOAT;value="(<caster.var.fv_soulcube_shots>)==((<caster.var.fv_soulcube_spiral_half>)+3)"}
+  - setvariable{var=skill.flip;type=FLOAT;value="(<caster.var.fv_soulcube_shots>)==(<caster.var.fv_soulcube_spiral_half>)"}
+  - skill{s=fv_soulcube_sfx_warn_flip} @self ?variableinrange{var=skill.warn;value=0.5to2}
+  - setvariable{var=caster.fv_soulcube_ring_dir;type=INTEGER;value="0-(<caster.var.fv_soulcube_ring_dir>)"} ?variableinrange{var=skill.flip;value=0.5to2}
+  - skill{s=fv_soulcube_shoot_end} @self ?variableinrange{var=skill.left;value=-999to0}
+
+
+# ============================================================================
+#  THE PROJECTILES
+# ============================================================================
+#  Every shot is fired at a point 16 blocks straight ahead of the cube
+#  (@Forward), starting from the eye: syo 0.5 = eye height, sfo 0.45 = the
+#  front face. tyo is the same 0.5, so the shot flies dead level.
+#  The bullet model's star sits 0.5 above its own origin, byo=-0.5 centres
+#  it on the projectile's real position (= its hit box).
+#  Players only (hnp=false): shots never hit the boss, the hidden block or
+#  any other mob.
+# ============================================================================
+fv_soulcube_fire_aimed:
+  Skills:
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=22;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=24;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=26;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=3}
+
+fv_soulcube_fire_burst:
+  Skills:
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=14;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=15;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=16;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=3}
+
+fv_soulcube_fire_ring:
+  Skills:
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=10;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=11;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=12;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=3}
+
+fv_soulcube_fire_fan:
+  Skills:
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=12;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=13;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_soulcube_bullet;byo=-0.5;onTick=fv_soulcube_proj_tick;onHit=fv_soulcube_proj_hit;onEnd=fv_soulcube_proj_end;v=14;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_soulcube_phase;value=3}
+
+# A faint trail behind every shot.
+fv_soulcube_proj_tick:
+  Skills:
+  - particles{particle=dust;color=#9FFCFF;size=0.9;amount=1;hs=0.06;vs=0.06;speed=0} @origin
+
+fv_soulcube_proj_hit:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  Skills:
+  - damage{amount=7;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - aura{auraName=fv_soulcube_if_proj;duration=10;maxStacks=1;refreshDuration=true}
+  - skill{s=fv_soulcube_sfx_proj_hit}
+
+# Wherever a shot ends (player, wall, out of range): it bursts.
+fv_soulcube_proj_end:
+  Skills:
+  - summon{type=fv_soulcube_burst;amount=1;radius=0} @origin
+  - skill{s=fv_soulcube_sfx_proj_burst} @origin
+  - particles{particle=dust;color=#BFFFFF;size=1.1;amount=6;hs=0.35;vs=0.35;speed=0} @origin
+  - skill{s=fv_soulcube_proj_splash} @PlayersNearOrigin{r=1.6}
+
+fv_soulcube_proj_splash:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  - hasaura{auraName=fv_soulcube_if_proj} false
+  Skills:
+  - damage{amount=3;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - aura{auraName=fv_soulcube_if_proj;duration=10;maxStacks=1;refreshDuration=true}
