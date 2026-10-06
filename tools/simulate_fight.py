@@ -17,9 +17,15 @@ invariants is checked:
   * the boss' height in pixels (fv_soulcube_hpx) always matches its real height
   * no variable is ever read before it was set
   * phases 2 / 3 start at 66% / 33% health, each roar plays once
-  * death hands the model to the effect carrier, the block cools down and
-    re-forms; "everyone left" resets the fight; a chunk unload / restart
-    makes the block re-form
+  * death hands the model to the effect carrier, which lives through the
+    whole death animation; the block cools down and re-forms; "everyone
+    left" resets the fight; a chunk unload / restart makes the block re-form
+  * the block stays hidden while its boss is waking up or fighting
+  * only the caster's own position / variables are read through
+    placeholders (everything else goes through the sudoskill probe)
+
+~onTimer skills run on a global clock (random phase per fight), as in
+MythicMobs - not counted from the mob's spawn.
 
 Semantics that MythicMobs does not document precisely are simulated BOTH
 ways (skill-scope variables shared with or copied into sub-skills); the
@@ -123,6 +129,7 @@ class Sim:
         self.verbose = verbose
         self.scenario = scenario
         self.tick = 0
+        self.clock0 = self.rng.randint(0, 9999)
         self.queue, self.seq = [], 0
         self.ents, self.projs = [], []
         self.errors, self.log = [], []
@@ -196,6 +203,8 @@ class Sim:
     def remove(self, e):
         if e.removed:
             return
+        if e.mtype.endswith('_deathfx') and self.tick - e.spawn_tick < 150:
+            self.error(f'death effect removed after {self.tick - e.spawn_tick} ticks - the death animation is cut short')
         e.removed = True
         e.alive = False
         e.model = None
@@ -215,6 +224,10 @@ class Sim:
                     return '0'
                 return str(meta.svars[parts[2]])
             ent = meta.caster if parts[0] == 'caster' else target
+            if parts[0] != 'caster' and parts[1] in ('l', 'var'):
+                # MythicMobs only documents exact coordinates (and reliable
+                # variable placeholders) for the caster of a skill
+                self.error(f'<{key}> - only caster placeholders are reliable, use the probe (sudoskill)', meta)
             if not isinstance(ent, Ent):
                 self.error(f'<{key}> has no entity', meta)
                 return '0'
@@ -414,6 +427,13 @@ class Sim:
             else:
                 s = self.rng.choice((a.get('skills') or a.get('s')).split(','))
             self.run_skill(s, meta.child(targets, s, self.share))
+        elif m == 'sudoskill':
+            for t in targets:
+                if not isinstance(t, Ent) or t.removed:
+                    continue
+                trig = c if a.get('cat', a.get('setcasterastrigger')) == 'true' else meta.trigger
+                self.run_skill(a['s'], Meta(t, [], trigger=trig, origin=t.loc, event=None,
+                                            svars={} , chain=(meta.chain + ['sudo:' + a['s']])[-12:]))
         elif m in ('setvariable', 'variableadd', 'variableunset', 'setvarloc'):
             sc, vn = a['var'].split('.', 1)
             tlist = targets if sc == 'target' else (targets[:1] or [c])
@@ -790,7 +810,8 @@ class Sim:
                     t = p['trigger'].lower()
                     if t.startswith('ontimer:'):
                         n = int(t.split(':')[1])
-                        if (self.tick - e.spawn_tick) % n == 0 and self.tick > e.spawn_tick:
+                        # global clock, not counted from the mob's spawn
+                        if (self.tick + self.clock0) % n == 0 and self.tick > e.spawn_tick:
                             self.exec_line(p, Meta(e, [e], chain=[f'{e.mtype}~timer']), e.mtype)
             # projectiles
             self.step_projectiles()
@@ -835,6 +856,12 @@ class Sim:
                 self.fire(block, 'onload')
                 unload_at = None
             self.coverage()
+            # the block must stay hidden while its boss is up
+            if boss is not None and boss.alive and not boss.removed and \
+                    boss.var('fv_soulcube_state') in ('WAKING', 'FIGHT') and \
+                    block.var('fv_soulcube_block') != 'AWAKE' and not self.stats.get('reformed_early'):
+                self.stats['reformed_early'] = True
+                self.error(f'block is {block.var("fv_soulcube_block")} while its boss is still fighting')
             # end conditions
             if boss is not None and not boss.alive and died_at is None:
                 died_at = self.tick

@@ -112,14 +112,16 @@ fv_soulcube_downbeam_tick:
   - skill{s=fv_soulcube_downbeam_tick;delay=1} @self ?variableinrange{var=caster.fv_soulcube_db_n;value=1to99999} ?variableequals{var=caster.fv_soulcube_state;value=FIGHT}
 
 # Turns towards the nearest player by at most fv_soulcube_db_maxturn degrees.
-# The angle is worked out here (always the short way round, whatever the
-# boss' yaw has wound up to after a spinning laser) instead of with
-# rotatetowards, then applied in whole-degree steps.
+# The probe (fv_soulcube_core.yml) hands back where that player is; the turn
+# is worked out here (always the short way round, whatever the boss' yaw
+# has wound up to after a spinning laser) and applied in whole degrees.
 fv_soulcube_downbeam_steer:
   Skills:
-  - setvariable{var=caster.fv_soulcube_db_turn;type=FLOAT;value=0}
-  - setvariable{var=caster.fv_soulcube_db_dist;type=FLOAT;value=99}
-  - skill{s=fv_soulcube_downbeam_aim} @NearestPlayer{r=48}
+  - setvariable{var=caster.fv_soulcube_pth;type=FLOAT;value=<caster.l.yaw>}
+  - setvariable{var=caster.fv_soulcube_phd;type=FLOAT;value=99}
+  - skill{s=fv_soulcube_probe_back} @NearestPlayer{r=48}
+  - setvariable{var=caster.fv_soulcube_db_turn;type=FLOAT;value="(((<caster.var.fv_soulcube_pth>)-(<caster.l.yaw>))%360+540)%360-180"}
+  - setvariable{var=caster.fv_soulcube_db_dist;type=FLOAT;value=<caster.var.fv_soulcube_phd>}
   - setvariable{var=skill.step;type=FLOAT;value="signum(<caster.var.fv_soulcube_db_turn>)*min(abs(<caster.var.fv_soulcube_db_turn>),<caster.var.fv_soulcube_db_maxturn>)"}
   - setrotation{relative=true;yaw=10} @self ?variableinrange{var=skill.step;value=9.5to10.5}
   - setrotation{relative=true;yaw=9} @self ?variableinrange{var=skill.step;value=8.5to9.5}
@@ -141,14 +143,6 @@ fv_soulcube_downbeam_steer:
   - setrotation{relative=true;yaw=-8} @self ?variableinrange{var=skill.step;value=-8.5to-7.5}
   - setrotation{relative=true;yaw=-9} @self ?variableinrange{var=skill.step;value=-9.5to-8.5}
   - setrotation{relative=true;yaw=-10} @self ?variableinrange{var=skill.step;value=-10.5to-9.5}
-
-# Runs on the nearest player: how far (degrees, -180 to 180) the boss has
-# to turn to face them, and how far away they are along the floor (the
-# boss floats 12 px up, so a 3D distance would never get close to 0).
-fv_soulcube_downbeam_aim:
-  Skills:
-  - setvariable{var=caster.fv_soulcube_db_dist;type=FLOAT;value="sqrt(((<target.l.x.double>)-(<caster.l.x.double>))^2+((<target.l.z.double>)-(<caster.l.z.double>))^2)"}
-  - setvariable{var=caster.fv_soulcube_db_turn;type=FLOAT;value="((todegree(atan2(0-((<target.l.x.double>)-(<caster.l.x.double>)),(<target.l.z.double>)-(<caster.l.z.double>)))-(<caster.l.yaw>))%360+540)%360-180"}
 
 # Turns 20 degrees per tick towards home (worked out from the stored home
 # coordinates, so it needs nothing else).
@@ -208,19 +202,17 @@ fv_soulcube_downbeam_dazed:
 # ============================================================================
 #  DAMAGE
 # ============================================================================
-# hd = horizontal distance from the beam's centre (the boss' own spot),
-# dy = feet height relative to the boss gliding 12 px above the floor.
-# The values are stored on each player (target scope) and the _hit skill
-# checks them with TargetConditions, so every player is judged on their own
-# position. (An inline ?condition would test the boss, not the player.)
+# The probe (fv_soulcube_core.yml) leaves on each player:
+#   hd = distance along the floor from the beam's centre (the boss' spot)
+#   dy = feet height relative to the boss gliding 12 px above the floor
+# and the _hit skill checks them with TargetConditions, so every player is
+# judged on their own position. (An inline ?condition would test the boss.)
 fv_soulcube_downbeam_check:
   TargetConditions:
   - gamemode{m=SURVIVAL,ADVENTURE} true
   - hasaura{auraName=fv_soulcube_if_laser} false
   Skills:
-  - setvariable{var=target.fv_soulcube_hd;type=FLOAT;value=99}
-  - setvariable{var=target.fv_soulcube_dy;type=FLOAT;value="(<target.l.y.double>)-(<caster.l.y.double>)"}
-  - setvariable{var=target.fv_soulcube_hd;type=FLOAT;value="sqrt(((<target.l.x.double>)-(<caster.l.x.double>))^2+((<target.l.z.double>)-(<caster.l.z.double>))^2)"}
+  - skill{s=fv_soulcube_probe}
   - skill{s=fv_soulcube_downbeam_hit}
 
 # Inside the impact ring, anywhere between the floor and the cube.
@@ -238,9 +230,7 @@ fv_soulcube_land_check:
   TargetConditions:
   - gamemode{m=SURVIVAL,ADVENTURE} true
   Skills:
-  - setvariable{var=target.fv_soulcube_hd;type=FLOAT;value=99}
-  - setvariable{var=target.fv_soulcube_dy;type=FLOAT;value="(<target.l.y.double>)-(<caster.l.y.double>)"}
-  - setvariable{var=target.fv_soulcube_hd;type=FLOAT;value="sqrt(((<target.l.x.double>)-(<caster.l.x.double>))^2+((<target.l.z.double>)-(<caster.l.z.double>))^2)"}
+  - skill{s=fv_soulcube_probe}
   - skill{s=fv_soulcube_land_hit}
 
 fv_soulcube_land_hit:

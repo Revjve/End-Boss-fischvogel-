@@ -672,42 +672,96 @@ fv_soulcube_boss_second:
 # dormant block at (or hidden right under) the boss's home x / z - within
 # 2 blocks, in case summoning nudged the boss onto the block's surface.
 # A second arena's block (keep arenas 5+ blocks apart) is never touched.
-fv_soulcube_link_measure:
+# The boss hands its home spot to every block nearby; each block then
+# checks it against its OWN position (sudoskill: the block casts the
+# check, so its position is <caster.l.x.double> - see THE PROBE below).
+fv_soulcube_link_send:
   Skills:
-  - setvariable{var=target.fv_soulcube_link_d;type=FLOAT;value="abs((<target.l.x.double>)-(<caster.var.fv_soulcube_home_x>))+abs((<target.l.z.double>)-(<caster.var.fv_soulcube_home_z>))"}
+  - setvariable{var=target.fv_soulcube_hx;type=FLOAT;value=<caster.var.fv_soulcube_home_x>}
+  - setvariable{var=target.fv_soulcube_hz;type=FLOAT;value=<caster.var.fv_soulcube_home_z>}
 
 fv_soulcube_link_alive:
   Skills:
-  - skill{s=fv_soulcube_link_measure}
-  - skill{s=fv_soulcube_link_alive_mine}
-
-fv_soulcube_link_alive_mine:
-  TargetConditions:
-  - variableinrange{var=target.fv_soulcube_link_d;value=0to2} true
-  Skills:
-  - setvariable{var=target.fv_soulcube_boss_alive;type=INTEGER;value=1;duration=100}
+  - skill{s=fv_soulcube_link_send}
+  - sudoskill{s=fv_soulcube_link_alive_mine;cat=true}
 
 fv_soulcube_link_reset:
   Skills:
-  - skill{s=fv_soulcube_link_measure}
-  - skill{s=fv_soulcube_link_reset_mine}
-
-fv_soulcube_link_reset_mine:
-  TargetConditions:
-  - variableinrange{var=target.fv_soulcube_link_d;value=0to2} true
-  Skills:
-  - signal{s=FV_SOULCUBE_RESET}
+  - skill{s=fv_soulcube_link_send}
+  - sudoskill{s=fv_soulcube_link_reset_mine;cat=true}
 
 fv_soulcube_link_defeated:
   Skills:
-  - skill{s=fv_soulcube_link_measure}
-  - skill{s=fv_soulcube_link_defeated_mine}
+  - skill{s=fv_soulcube_link_send}
+  - sudoskill{s=fv_soulcube_link_defeated_mine;cat=true}
+
+# ---- cast by the block ----
+fv_soulcube_link_measure:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_link_d;type=FLOAT;value="abs((<caster.l.x.double>)-(<caster.var.fv_soulcube_hx>))+abs((<caster.l.z.double>)-(<caster.var.fv_soulcube_hz>))"} @self
+
+fv_soulcube_link_alive_mine:
+  Skills:
+  - skill{s=fv_soulcube_link_measure} @self
+  - setvariable{var=caster.fv_soulcube_boss_alive;type=INTEGER;value=1;duration=100} @self ?variableinrange{var=caster.fv_soulcube_link_d;value=0to2}
+
+fv_soulcube_link_reset_mine:
+  Skills:
+  - skill{s=fv_soulcube_link_measure} @self
+  - skill{s=fv_soulcube_block_restore} @self ?variableinrange{var=caster.fv_soulcube_link_d;value=0to2} ?variableequals{var=caster.fv_soulcube_block;value=AWAKE}
 
 fv_soulcube_link_defeated_mine:
-  TargetConditions:
-  - variableinrange{var=target.fv_soulcube_link_d;value=0to2} true
   Skills:
-  - signal{s=FV_SOULCUBE_DEFEATED}
+  - skill{s=fv_soulcube_link_measure} @self
+  - skill{s=fv_soulcube_block_on_defeat} @self ?variableinrange{var=caster.fv_soulcube_link_d;value=0to2} ?variableequals{var=caster.fv_soulcube_block;value=AWAKE}
+
+# ============================================================================
+#  THE PROBE - where is a player (or block) relative to the boss?
+# ============================================================================
+#  MythicMobs only documents exact coordinates for the CASTER of a skill
+#  (<caster.l.x.double>). So the boss never reads a target's position.
+#  Instead it writes its own position into the target's variables, and
+#  sudoskill makes the target cast fv_soulcube_probe_rel itself - there the
+#  target's position is <caster.l.*.double>. The results stay on the target,
+#  where the boss's TargetConditions read them:
+#     fv_soulcube_dx / _dy / _dz   target minus boss, in blocks (dy = feet
+#                                  height relative to the boss's feet)
+#     fv_soulcube_hd               distance along the floor
+#     fv_soulcube_th               direction from the boss to the target
+#                                  (Minecraft yaw degrees)
+#  fv_soulcube_probe_back also writes th / hd back onto the boss
+#  (fv_soulcube_pth / _phd) for the skills that steer by them.
+# ============================================================================
+fv_soulcube_probe:
+  Skills:
+  - setvariable{var=target.fv_soulcube_hd;type=FLOAT;value=99}
+  - setvariable{var=target.fv_soulcube_dy;type=FLOAT;value=99}
+  - setvariable{var=target.fv_soulcube_bx;type=FLOAT;value=<caster.l.x.double>}
+  - setvariable{var=target.fv_soulcube_by;type=FLOAT;value=<caster.l.y.double>}
+  - setvariable{var=target.fv_soulcube_bz;type=FLOAT;value=<caster.l.z.double>}
+  - sudoskill{s=fv_soulcube_probe_rel;cat=true}
+
+# ---- cast by the target ----
+fv_soulcube_probe_rel:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_dx;type=FLOAT;value="(<caster.l.x.double>)-(<caster.var.fv_soulcube_bx>)"} @self
+  - setvariable{var=caster.fv_soulcube_dy;type=FLOAT;value="(<caster.l.y.double>)-(<caster.var.fv_soulcube_by>)"} @self
+  - setvariable{var=caster.fv_soulcube_dz;type=FLOAT;value="(<caster.l.z.double>)-(<caster.var.fv_soulcube_bz>)"} @self
+  - setvariable{var=caster.fv_soulcube_hd;type=FLOAT;value="sqrt((<caster.var.fv_soulcube_dx>)^2+(<caster.var.fv_soulcube_dz>)^2)"} @self
+  - setvariable{var=caster.fv_soulcube_th;type=FLOAT;value="todegree(atan2(0-(<caster.var.fv_soulcube_dx>),<caster.var.fv_soulcube_dz>))"} @self
+
+# Probe, then hand the direction and distance back to the boss (the boss is
+# the trigger of the sudoskill).
+fv_soulcube_probe_back:
+  Skills:
+  - skill{s=fv_soulcube_probe}
+  - sudoskill{s=fv_soulcube_probe_back_send;cat=true}
+
+fv_soulcube_probe_back_send:
+  Skills:
+  - setvariable{var=target.fv_soulcube_pth;type=FLOAT;value=<caster.var.fv_soulcube_th>} @trigger
+  - setvariable{var=target.fv_soulcube_phd;type=FLOAT;value=<caster.var.fv_soulcube_hd>} @trigger
+
 
 fv_soulcube_alone_check:
   Skills:

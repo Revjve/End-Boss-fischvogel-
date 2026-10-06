@@ -128,7 +128,7 @@ fv_soulcube_shoot_burst:
   - setvariable{var=caster.fv_soulcube_aim_n;type=INTEGER;value=16}
   - skill{s=fv_soulcube_l_aim_tick} @self
   - delay 16
-  - skill{s=fv_soulcube_s_track_init} @NearestPlayer{r=48}
+  - skill{s=fv_soulcube_s_track_init} @self
   - skill{s=fv_soulcube_s_burst_shot} @self
 
 fv_soulcube_s_burst_shot:
@@ -142,7 +142,7 @@ fv_soulcube_s_burst_shot:
   # every 3rd shot in phase 2, every 2nd shot in phase 3 leads the target
   - setvariable{var=skill.lead;type=FLOAT;value="((<caster.var.fv_soulcube_phase>)==2)*(((<caster.var.fv_soulcube_shot_k>)%3)==0)+((<caster.var.fv_soulcube_phase>)==3)*(((<caster.var.fv_soulcube_shot_k>)%2)==0)"}
   - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
-  - skill{s=fv_soulcube_s_track} @NearestPlayer{r=48}
+  - skill{s=fv_soulcube_s_track} @self
   - skill{s=fv_soulcube_s_lead_turn} @self ?variableinrange{var=skill.lead;value=0.5to2}
   - skill{s=fv_soulcube_s_kick} @self
   - skill{s=fv_soulcube_sfx_shoot_lead} @self ?variableinrange{var=skill.lead;value=0.5to2}
@@ -158,23 +158,29 @@ fv_soulcube_s_burst_next:
   - skill{s=fv_soulcube_s_burst_shot} @self
 
 # ---- lead aiming -------------------------------------------------------------
-# Runs on the target. Angles are Minecraft yaw degrees around the boss, the
-# same convention setrotation uses, so the lead turn has the right sign.
-#   th    the target's direction from the boss right now
+# The probe (fv_soulcube_core.yml) hands back the nearest player's direction
+# (pth) and distance (phd). Angles are Minecraft yaw degrees around the
+# boss, the same convention setrotation uses, so the lead turn has the
+# right sign.
+#   pth   the target's direction from the boss right now
 #   dth   how far it moved around the boss since the last shot
 #   lead  dth per tick x flight time in ticks = how far ahead to aim
+# With nobody in range pth stays where it was: no lead.
 fv_soulcube_s_track_init:
   Skills:
-  - setvariable{var=caster.fv_soulcube_th_prev;type=FLOAT;value="todegree(atan2(0-((<target.l.x.double>)-(<caster.l.x.double>)),(<target.l.z.double>)-(<caster.l.z.double>)))"}
+  - setvariable{var=caster.fv_soulcube_pth;type=FLOAT;value=<caster.l.yaw>}
+  - setvariable{var=caster.fv_soulcube_phd;type=FLOAT;value=0}
+  - skill{s=fv_soulcube_probe_back} @NearestPlayer{r=48}
+  - setvariable{var=caster.fv_soulcube_th_prev;type=FLOAT;value=<caster.var.fv_soulcube_pth>}
 
 fv_soulcube_s_track:
   Skills:
-  - setvariable{var=skill.dx;type=FLOAT;value="(<target.l.x.double>)-(<caster.l.x.double>)"}
-  - setvariable{var=skill.dz;type=FLOAT;value="(<target.l.z.double>)-(<caster.l.z.double>)"}
-  - setvariable{var=skill.th;type=FLOAT;value="todegree(atan2(0-(<skill.var.dx>),<skill.var.dz>))"}
-  - setvariable{var=skill.dth;type=FLOAT;value="(((<skill.var.th>)-(<caster.var.fv_soulcube_th_prev>))%360+540)%360-180"}
-  - setvariable{var=caster.fv_soulcube_th_prev;type=FLOAT;value=<skill.var.th>}
-  - setvariable{var=caster.fv_soulcube_lead;type=FLOAT;value="(<skill.var.dth>)/(<caster.var.fv_soulcube_t_burst_gap>)*sqrt((<skill.var.dx>)^2+(<skill.var.dz>)^2)/(<caster.var.fv_soulcube_v_burst>)"}
+  - setvariable{var=caster.fv_soulcube_pth;type=FLOAT;value=<caster.var.fv_soulcube_th_prev>}
+  - setvariable{var=caster.fv_soulcube_phd;type=FLOAT;value=0}
+  - skill{s=fv_soulcube_probe_back} @NearestPlayer{r=48}
+  - setvariable{var=skill.dth;type=FLOAT;value="(((<caster.var.fv_soulcube_pth>)-(<caster.var.fv_soulcube_th_prev>))%360+540)%360-180"}
+  - setvariable{var=caster.fv_soulcube_th_prev;type=FLOAT;value=<caster.var.fv_soulcube_pth>}
+  - setvariable{var=caster.fv_soulcube_lead;type=FLOAT;value="(<skill.var.dth>)/(<caster.var.fv_soulcube_t_burst_gap>)*(<caster.var.fv_soulcube_phd>)/(<caster.var.fv_soulcube_v_burst>)"}
 
 # setrotation needs fixed numbers: the lead is rounded to 10 or 20 degrees.
 # Anything above 40 is not a real movement (target switched) - ignored.

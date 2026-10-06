@@ -79,9 +79,6 @@ fv_soulcube_block:
   - skill{s=fv_soulcube_block_click;sync=true} @self ~onInteract
   # creepy ambience, the occasional peek, respawn countdown, boss watchdog
   - skill{s=fv_soulcube_block_second} @self ~onTimer:20
-  # the boss reports back
-  - skill{s=fv_soulcube_block_on_defeat} @self ~onSignal:FV_SOULCUBE_DEFEATED
-  - skill{s=fv_soulcube_block_restore} @self ~onSignal:FV_SOULCUBE_RESET
 
 
 # ============================================================================
@@ -160,8 +157,11 @@ fv_soulcube:
 # ============================================================================
 #  EFFECT CARRIERS - invisible marker armour stands, never real mobs
 # ============================================================================
-#  Despawn: CHUNK cleans them up on chunk unload, the ~onTimer:200 removal is
-#  a last safety net. Every effect here ends well inside 200 ticks.
+#  Despawn: CHUNK cleans them up on chunk unload. As a last safety net each
+#  one removes itself 15 seconds after it spawned (counted from its own
+#  spawn - an ~onTimer would run on MythicMobs' global clock and could fire
+#  at any moment, e.g. in the middle of the death animation). Every effect
+#  here ends well inside those 15 seconds (the death effect: 7.7 s).
 #  If your ModelEngine build refuses to render models on marker armour
 #  stands, set Marker: false - nothing here relies on them being markers.
 # ============================================================================
@@ -191,7 +191,7 @@ fv_soulcube_fx_base:
     PreventRenaming: true
     PreventLeashing: true
   Skills:
-  - remove @self ~onTimer:200
+  - remove{delay=300} @self ~onSpawn
 
 # The flying projectile. MythicMobs moves this along the projectile path
 # (bulletType=MOB in fv_soulcube_shooting.yml) and removes it when the

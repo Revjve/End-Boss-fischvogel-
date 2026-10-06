@@ -34,7 +34,8 @@
 #              Every change is announced 8 ticks before it happens:
 #              high double click = it reverses, rising chime = new speed.
 #
-#  HIT DETECTION (fv_soulcube_beam_check) - exact geometry, every tick, per player:
+#  HIT DETECTION (fv_soulcube_beam_check) - exact geometry, every tick, per
+#  player (each player works out its own position, see THE PROBE in core):
 #     distance along the beam ......... 0.3 to 10.4 blocks
 #     distance from the beam's centre . 0.55 or less (half beam + half player)
 #     feet height relative to the boss  -1.5 to fv_soulcube_beam_top
@@ -329,11 +330,13 @@ fv_soulcube_beam_tick:
   # where the beam pointed this tick - next tick's sweep test starts here
   - setvariable{var=caster.fv_soulcube_beam_prev;type=FLOAT;value="<caster.l.yaw>"}
 
-# Runs once per player within 11 blocks; every value is stored on that
-# player (target scope), so several players are tested independently.
-# Only + - * / sin cos abs min signum are used - no comparisons inside the
-# math; the actual decision is made by TargetConditions on the two hit
-# skills below.
+# Runs once per player within 11 blocks. The boss hands the player the
+# beam's state (yaw now and last tick, height limit, spin), the probe
+# (fv_soulcube_core.yml) gives the player's offset from the boss, and the
+# player works out the rest from its own variables (fv_soulcube_beam_math,
+# cast by the player). Every value stays on that player, so several
+# players are tested independently; the decision is made by
+# TargetConditions on the two hit skills below.
 #   beam direction for yaw a = (-sin a, cos a)
 #   along  how far along the beam the player stands
 #   perp   how far beside the beam's centre line
@@ -346,17 +349,27 @@ fv_soulcube_beam_check:
   - gamemode{m=SURVIVAL,ADVENTURE} true
   - hasaura{auraName=fv_soulcube_if_laser} false
   Skills:
-  - setvariable{var=target.fv_soulcube_dx;type=FLOAT;value="(<target.l.x.double>)-(<caster.l.x.double>)"}
-  - setvariable{var=target.fv_soulcube_dz;type=FLOAT;value="(<target.l.z.double>)-(<caster.l.z.double>)"}
-  - setvariable{var=target.fv_soulcube_dy;type=FLOAT;value="(<target.l.y.double>)-(<caster.l.y.double>)"}
-  - setvariable{var=target.fv_soulcube_dyrel;type=FLOAT;value="(<target.var.fv_soulcube_dy>)-(<caster.var.fv_soulcube_beam_top>)"}
-  - setvariable{var=target.fv_soulcube_ya;type=FLOAT;value="(<caster.l.yaw>)*0.0174532925"}
-  - setvariable{var=target.fv_soulcube_yb;type=FLOAT;value="(<caster.var.fv_soulcube_beam_prev>)*0.0174532925"}
-  - setvariable{var=target.fv_soulcube_along;type=FLOAT;value="(<target.var.fv_soulcube_dz>)*cos(<target.var.fv_soulcube_ya>)-(<target.var.fv_soulcube_dx>)*sin(<target.var.fv_soulcube_ya>)"}
-  - setvariable{var=target.fv_soulcube_perp;type=FLOAT;value="abs((<target.var.fv_soulcube_dx>)*cos(<target.var.fv_soulcube_ya>)+(<target.var.fv_soulcube_dz>)*sin(<target.var.fv_soulcube_ya>))"}
-  - setvariable{var=target.fv_soulcube_sect;type=FLOAT;value="min((0-sin(<target.var.fv_soulcube_yb>)*(<target.var.fv_soulcube_dz>)-cos(<target.var.fv_soulcube_yb>)*(<target.var.fv_soulcube_dx>))*signum(<caster.var.fv_soulcube_spin_deg>),((<target.var.fv_soulcube_dx>)*cos(<target.var.fv_soulcube_ya>)+(<target.var.fv_soulcube_dz>)*sin(<target.var.fv_soulcube_ya>))*signum(<caster.var.fv_soulcube_spin_deg>))-99*(1-abs(signum(<caster.var.fv_soulcube_spin_deg>)))"}
+  - setvariable{var=target.fv_soulcube_along;type=FLOAT;value=-99}
+  - setvariable{var=target.fv_soulcube_sect;type=FLOAT;value=-99}
+  - setvariable{var=target.fv_soulcube_byaw;type=FLOAT;value=<caster.l.yaw>}
+  - setvariable{var=target.fv_soulcube_bprev;type=FLOAT;value=<caster.var.fv_soulcube_beam_prev>}
+  - setvariable{var=target.fv_soulcube_btop;type=FLOAT;value=<caster.var.fv_soulcube_beam_top>}
+  - setvariable{var=target.fv_soulcube_bspin;type=FLOAT;value=<caster.var.fv_soulcube_spin_deg>}
+  - skill{s=fv_soulcube_probe}
+  - sudoskill{s=fv_soulcube_beam_math;cat=true}
   - skill{s=fv_soulcube_beam_hit}
   - skill{s=fv_soulcube_beam_hit_swept}
+
+# ---- cast by the player ----
+# Only + - * / sin cos abs min signum - no comparisons inside the math.
+fv_soulcube_beam_math:
+  Skills:
+  - setvariable{var=caster.fv_soulcube_dyrel;type=FLOAT;value="(<caster.var.fv_soulcube_dy>)-(<caster.var.fv_soulcube_btop>)"} @self
+  - setvariable{var=caster.fv_soulcube_ya;type=FLOAT;value="(<caster.var.fv_soulcube_byaw>)*0.0174532925"} @self
+  - setvariable{var=caster.fv_soulcube_yb;type=FLOAT;value="(<caster.var.fv_soulcube_bprev>)*0.0174532925"} @self
+  - setvariable{var=caster.fv_soulcube_along;type=FLOAT;value="(<caster.var.fv_soulcube_dz>)*cos(<caster.var.fv_soulcube_ya>)-(<caster.var.fv_soulcube_dx>)*sin(<caster.var.fv_soulcube_ya>)"} @self
+  - setvariable{var=caster.fv_soulcube_perp;type=FLOAT;value="abs((<caster.var.fv_soulcube_dx>)*cos(<caster.var.fv_soulcube_ya>)+(<caster.var.fv_soulcube_dz>)*sin(<caster.var.fv_soulcube_ya>))"} @self
+  - setvariable{var=caster.fv_soulcube_sect;type=FLOAT;value="min((0-sin(<caster.var.fv_soulcube_yb>)*(<caster.var.fv_soulcube_dz>)-cos(<caster.var.fv_soulcube_yb>)*(<caster.var.fv_soulcube_dx>))*signum(<caster.var.fv_soulcube_bspin>),((<caster.var.fv_soulcube_dx>)*cos(<caster.var.fv_soulcube_ya>)+(<caster.var.fv_soulcube_dz>)*sin(<caster.var.fv_soulcube_ya>))*signum(<caster.var.fv_soulcube_bspin>))-99*(1-abs(signum(<caster.var.fv_soulcube_bspin>)))"} @self
 
 # standing in the beam
 fv_soulcube_beam_hit:

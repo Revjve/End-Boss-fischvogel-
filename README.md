@@ -43,7 +43,9 @@ python3 tools/build.py --sim 20     # ... and play 20 simulated fights per scena
 * `check_pack.py` - every skill reference, animation, sound and particle name (against the
   1.21.1, 1.21.4 and 26.1 game data in `tools/vanilla_data`, from
   [PrismarineJS/minecraft-data](https://github.com/PrismarineJS/minecraft-data)), variable
-  reads vs. writes, math and bracket syntax.
+  reads vs. writes, math and bracket syntax, and that no skill reads another entity's
+  position through a placeholder (MythicMobs only documents exact coordinates for the
+  caster - other entities are measured with a `sudoskill` probe).
 * `simulate_fight.py` - interprets the real skill files tick by tick with scripted players
   and checks the fight's invariants (one attack chain at a time, no animation gaps, exact
   heights, phases, death / reset / chunk-unload flows) under both possible skill-variable

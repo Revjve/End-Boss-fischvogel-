@@ -18,9 +18,9 @@ Checks
   * sounds: vanilla only - every event exists in every given Minecraft
     version, no custom (namespaced) sounds
   * particles exist in every given Minecraft version
-  * variables: every variable that is read is also written somewhere, with
-    the same scope (caster / target / skill); INTEGER variables never get a
-    literal decimal; variableinrange ranges are well formed (low <= high)
+  * variables: every variable that is read is also written somewhere (skill
+    scope separately; caster and target scope both live on an entity);
+    INTEGER variables never get a literal decimal; variableinrange ranges are well formed (low <= high)
   * math in quoted values: balanced parentheses, known functions only
   * auras tested with hasaura are applied somewhere
   * skills that nothing references (warnings)
@@ -38,7 +38,7 @@ MECHANICS = {
     'model', 'bodyrotation', 'brightness', 'renderinit', 'teleport', 'rotatetowards',
     'setrotation', 'summon', 'remove', 'signal', 'cancelevent', 'modifydamage', 'damage',
     'throw', 'aura', 'sound', 'particles', 'particlering', 'particleline', 'projectile',
-    'sendactionmessage', 'setvarloc', 'defaultstate',
+    'sendactionmessage', 'setvarloc', 'defaultstate', 'sudoskill',
 }
 TARGETERS = {
     'self', 'selflocation', 'nearestplayer', 'playersinradius', 'forward', 'variablelocation',
@@ -204,7 +204,10 @@ def check_math(where, expr):
 
 VAR_READ = re.compile(r'<(caster|target|skill)\.var\.([A-Za-z0-9_]+)>')
 PLACEHOLDER = re.compile(r'<([^<>]+)>')
-KNOWN_PH = re.compile(r'^(caster|target)\.(l\.(x|y|z)\.double|l\.yaw|hp|mhp)$|^(caster|target|skill)\.var\.[A-Za-z0-9_]+$|^#[0-9a-fA-F]{6}$|^/?(gray|dark_gray|red|white|gradient:[^>]*|/gradient)$')
+# Only the caster's own position / variables: MythicMobs documents exact
+# coordinates for the caster only, so other entities are measured with the
+# probe (sudoskill) instead of <target.l.*> / <target.var.*> placeholders.
+KNOWN_PH = re.compile(r'^caster\.(l\.(x|y|z)\.double|l\.yaw|hp|mhp)$|^(caster|skill)\.var\.[A-Za-z0-9_]+$|^#[0-9a-fA-F]{6}$|^/?(gray|dark_gray|red|white|gradient:[^>]*|/gradient)$')
 
 
 def main():
@@ -274,7 +277,10 @@ def main():
                 note_read(sc, nm, where)
             for ph in PLACEHOLDER.findall(v):
                 if not KNOWN_PH.match(ph):
-                    err(where, f'unknown placeholder <{ph}>')
+                    if re.match(r'^(target|trigger)\.', ph):
+                        err(where, f'<{ph}> - only caster placeholders are reliable, use the probe (sudoskill)')
+                    else:
+                        err(where, f'unknown placeholder <{ph}>')
 
     def check_var_attr(where, args, writing=False, typ=None):
         v = args.get('var') or args.get('variable')
@@ -349,7 +355,7 @@ def main():
                 err(where, 'inline ?condition reads a target variable - it is tested on the caster')
         scan_values(where, a)
         # ---- mechanic specifics
-        if mech == 'skill':
+        if mech in ('skill', 'sudoskill'):
             s = a.get('s') or a.get('skill')
             add_ref(s, where)
         elif mech == 'randomskill':
@@ -456,8 +462,12 @@ def main():
     for name in defs:
         if name not in used:
             warn(name, 'skill is never used')
+    # caster and target variables both live on an entity: the boss writes
+    # target.x on a player and the player (casting via sudoskill) reads it as
+    # caster.x, and the other way round
+    ent_writes = {nm for (sc, nm) in writes if sc in ('caster', 'target')}
     for (sc, nm), w in reads.items():
-        if (sc, nm) not in writes:
+        if (sc, nm) not in writes and not (sc in ('caster', 'target') and nm in ent_writes):
             err(w[0], f'variable {sc}.{nm} is read but never set')
     for a, w in aura_read.items():
         if a not in aura_set:
