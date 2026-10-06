@@ -4,7 +4,7 @@ Static checker for FischVogel's End Boss.
 
     python3 check_pack.py <plugins_dir> [vanilla_data_dir]
 
-<plugins_dir> is the folder that holds MythicMobs/, ModelEngine/ and Nexo/.
+<plugins_dir> is the folder that holds MythicMobs/ and ModelEngine/.
 [vanilla_data_dir] (optional) holds minecraft-data sounds_<ver>.json and
 particles_<ver>.json files (PrismarineJS format) to validate vanilla names.
 
@@ -15,8 +15,8 @@ Checks
   * references: skill{s=}, randomskill{skills=}, projectile onTick/onHit/onEnd,
     summon{type=}, projectile mob= -> must exist
   * ModelEngine: model{mid=} blueprint exists, state{s=} animation exists in it
-  * sounds: fv_endboss:* events exist in sounds.json (and their .ogg files);
-    vanilla events exist in every given Minecraft version
+  * sounds: vanilla only - every event exists in every given Minecraft
+    version, no custom (namespaced) sounds
   * particles exist in every given Minecraft version
   * variables: every variable that is read is also written somewhere, with
     the same scope (caster / target / skill); INTEGER variables never get a
@@ -212,7 +212,6 @@ def main():
     vdir = sys.argv[2] if len(sys.argv) > 2 else None
     mm = os.path.join(plugins, 'MythicMobs', 'packs', 'fv_endboss')
     me = os.path.join(plugins, 'ModelEngine', 'blueprints')
-    nexo = os.path.join(plugins, 'Nexo', 'pack', 'assets', 'fv_endboss')
 
     # ---- vanilla data ----
     vsounds, vparts = [], []
@@ -233,21 +232,6 @@ def main():
         anims[mid] = {a['name'] for a in d.get('animations', [])}
         if d['meta'].get('format_version') != '4.10' or 'groups' in d:
             err(f, 'blueprint is not in the legacy 4.10 layout')
-
-    # ---- sounds.json ----
-    sj = json.load(open(os.path.join(nexo, 'sounds.json')))
-    lang = json.load(open(os.path.join(nexo, 'lang', 'en_us.json')))
-    for ev, e in sj.items():
-        if e.get('subtitle') and e['subtitle'] not in lang:
-            err('sounds.json', f'{ev}: subtitle key missing from lang/en_us.json')
-        for s in e['sounds']:
-            name = s['name'] if isinstance(s, dict) else s
-            if isinstance(s, dict) and s.get('type') == 'event':
-                continue
-            ns, path = name.split(':', 1)
-            f = os.path.join(plugins, 'Nexo', 'pack', 'assets', ns, 'sounds', path + '.ogg')
-            if not os.path.isfile(f):
-                err('sounds.json', f'{ev}: missing file {f}')
 
     # ---- yaml ----
     defs, mobs, origin = {}, {}, {}
@@ -416,9 +400,7 @@ def main():
         elif mech == 'sound':
             s = a.get('s') or a.get('sound')
             if ':' in s and not s.startswith('minecraft:'):
-                ns, ev = s.split(':', 1)
-                if ns != 'fv_endboss' or ev not in sj:
-                    err(where, f'custom sound {s} not in sounds.json')
+                err(where, f'custom sound {s} - the pack uses vanilla sounds only')
             else:
                 s2 = s.replace('minecraft:', '')
                 for vn, vs in vsounds:
@@ -486,7 +468,7 @@ def main():
     for e in errors:
         print('ERROR', e)
     print(f'{len(defs)} skills, {len(mobs)} mobs, {len(anims)} blueprints, '
-          f'{len(sj)} custom sound events checked against {len(vsounds)} sound lists / '
+          f'vanilla sounds checked against {len(vsounds)} sound lists / '
           f'{len(vparts)} particle lists: {len(errors)} errors, {len(warnings)} warnings')
     return 1 if errors else 0
 

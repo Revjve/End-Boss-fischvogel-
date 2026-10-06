@@ -15,9 +15,10 @@
 #  animation turns it: the patterns turn the WHOLE boss, and the model always
 #  faces exactly where the boss faces.
 #
-#  Height: between attacks the boss hovers 16 px above the floor.
+#  Height: the boss aims at 16 px above the floor.
 #     STRAIGHT / HUNTER  stay at 16 px -> beam at chest height: dodge sideways
-#     JUMP ROPE / CHAOS  sink to   9 px -> beam at knee height: jump over it
+#     JUMP ROPE / CHAOS  sink to   9 px -> beam at hip height (its centre
+#                        17 px = 1.06 blocks up): jump it at the last moment
 #  (9 px is as low as it goes: attack1's frame reaches 9 px below the cube's
 #  origin, any lower and it sinks into the floor.)
 #
@@ -25,11 +26,11 @@
 #   STRAIGHT   Tracks you while it charges, a "ping" warns 8 ticks before it
 #              fires, then the beam creeps after you. Phase 2+: every few
 #              seconds it pings again and FLICKS onto where you stand.
-#   JUMP ROPE  Sweeps 360 degrees around itself at knee height. Jump it.
+#   JUMP ROPE  Sweeps 360 degrees around itself at hip height. Jump it.
 #              Phase 3: reverses once mid-sweep (double click warns first).
 #   HUNTER     Follows you with a turn speed that rises every quarter of the
 #              beam. Circle it tightly or get out of its ~10 block reach.
-#   CHAOS      Knee height sweep that randomly reverses or changes speed.
+#   CHAOS      Hip height sweep that randomly reverses or changes speed.
 #              Every change is announced 8 ticks before it happens:
 #              high double click = it reverses, rising chime = new speed.
 #
@@ -38,7 +39,9 @@
 #     distance from the beam's centre . 0.55 or less (half beam + half player)
 #     feet height relative to the boss  -1.5 to fv_eb_beam_top
 #                                       (+0.7 chest beam: no jumping it,
-#                                        +0.03 low beam: a jump clears it)
+#                                        +0.5 low beam: the beam's centre
+#                                        line - only the top of a jump,
+#                                        feet above 1.06 blocks, clears it)
 #   Spinning beams also hit everyone inside the slice they swept since the
 #   last tick, so a fast spin can never skip a player between two ticks.
 #   After a hit you are immune to the laser for 10 ticks (aura fv_eb_if_laser).
@@ -142,7 +145,7 @@ fv_eb_laser_jumprope:
   Skills:
   - skill{s=fv_eb_laser_begin} @self
   - skill{s=fv_eb_height_to_low} @self
-  - setvariable{var=caster.fv_eb_beam_top;type=FLOAT;value=0.03}
+  - setvariable{var=caster.fv_eb_beam_top;type=FLOAT;value=0.5}
   - setvariable{var=caster.fv_eb_spin_mode;type=STRING;value=FLIPONLY}
   # spin speed in degrees per tick: 5 / 6 / 7
   - setvariable{var=caster.fv_eb_spin_deg;type=FLOAT;value=5} ?variableequals{var=caster.fv_eb_phase;value=1}
@@ -167,7 +170,7 @@ fv_eb_laser_chaos:
   Skills:
   - skill{s=fv_eb_laser_begin} @self
   - skill{s=fv_eb_height_to_low} @self
-  - setvariable{var=caster.fv_eb_beam_top;type=FLOAT;value=0.03}
+  - setvariable{var=caster.fv_eb_beam_top;type=FLOAT;value=0.5}
   - setvariable{var=caster.fv_eb_spin_mode;type=STRING;value=CHAOS}
   - setvariable{var=caster.fv_eb_spin_deg;type=FLOAT;value="floor(random(<caster.var.fv_eb_chaos_lo>,<caster.var.fv_eb_chaos_hi>+1))"}
   # ticks until the first change (counted from the moment the beam fires)

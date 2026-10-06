@@ -10,14 +10,15 @@ keeping the exact structure it comes in. Then restart the server and run:
     /mm reload
     /nexo reload all
 
-Nexo builds the resource pack for you and merges ModelEngine's pack into it
-automatically, so there is no separate resource pack to install - just make
-sure your players accept the pack Nexo sends them. The boss's voice (its
-custom sounds) is part of that pack too.
+Nexo builds the resource pack for you and merges ModelEngine's pack (the
+models) into it automatically, so there is no separate resource pack to
+install - just make sure your players accept the pack Nexo sends them.
+Every sound in the fight is a vanilla Minecraft sound, so the pack adds no
+sound files.
 
-Nothing in the pack touches your existing configs: the sounds live in their
-own namespace (plugins/Nexo/pack/assets/fv_endboss), the MythicMobs files in
-their own pack (plugins/MythicMobs/packs/fv_endboss).
+Nothing in the pack touches your existing configs: the MythicMobs files live
+in their own pack (plugins/MythicMobs/packs/fv_endboss), the models in
+ModelEngine's blueprints folder.
 
 
 --------------------------------------------------------------------------
@@ -83,25 +84,27 @@ ATTACK 1 - LASER (attack1)
   STRAIGHT   tracks you while charging, then the beam creeps after you at
              chest height - step sideways. Phase 2+: it pings again and
              FLICKS onto where you stand.
-  JUMP ROPE  sinks low and sweeps 360 degrees at knee height - JUMP.
-             A red ring on the floor shows the beam's reach. Phase 3: it
-             reverses once halfway (high double click warns you).
+  JUMP ROPE  sinks low and sweeps 360 degrees at hip height - JUMP just as
+             it reaches you: only the top of a jump clears it (easier the
+             further away you stand). A red ring on the floor shows the
+             beam's reach. Phase 3: it reverses once halfway (high double
+             click warns you).
   HUNTER     (phase 2+) follows you, turning faster every quarter of the
              beam. Circle it tightly or get out of its reach.
-  CHAOS      (phase 2+) knee-height sweep that randomly reverses (high double
+  CHAOS      (phase 2+) hip-height sweep that randomly reverses (high double
              click) or changes speed (rising chime). Both are announced.
 
 ATTACK 2 - DOWN BEAM (attack2)
   The cube rises 4 blocks, turns its eye to the floor and charges - a red
   ring marks the spot under it. Then the beam fires straight down into a
-  glowing ring on the floor and the boss slowly drifts after the closest
-  player for about 5 seconds. Standing in the ring burns like the laser
-  (14). The beam reaches from the floor up to the cube, so jumping does not
-  help - walk out of the ring and keep moving. It is slower than walking
+  glowing ring hovering just above the floor, and the boss slowly drifts
+  after the closest player for 4 to 5 seconds. Standing in the ring burns
+  like the laser (14). The beam reaches from the ring up to the cube, so
+  jumping does not help - walk out of the ring and keep moving. It is slower than walking
   (phase 1 / 2 / 3: 2.2 / 2.8 / 3.4 blocks a second, players walk 4.3) and
   turns faster every phase. It cannot be hit while it is up there. Then it
-  comes back down (a small shockwave when it lands) and sits dazed on the
-  floor: the big damage window.
+  comes back down (a small shockwave when it lands) and hovers low, dazed:
+  the big damage window.
 
 ATTACK 3 - SHOOTING (shooting + the projectile model)
   Shots fly straight and level and burst where they end (direct hit 7,
@@ -133,22 +136,14 @@ AFTERWARDS
 SOUND DESIGN - "A SOUL TRAPPED IN A BLOCK"
 --------------------------------------------------------------------------
 
-The soul's voice is 18 custom sounds, all synthesised from scratch (no
-samples, nothing licensed): whispers that almost form words ("let me out",
-"help me", "so cold inside", "free us"), wails, short shrieks, gasps, a chant
-("we are still here", "let us go"), a heartbeat inside crystal, the laser's
-charge-up and hum with a voice screaming inside it, a death choir and the
-freed souls.
+Only vanilla Minecraft sounds, layered and pitched: its voice is ghasts,
+vexes and the soul sand valley (wails, shrieks, whispers), its body is
+breaking amethyst, glass, deepslate and chains, its heartbeat is the
+warden's, its beams are beacons and conduits. Nothing to download, nothing
+for players to miss if they decline the resource pack.
 
-Every cue layers vanilla sounds on top - breaking amethyst, glass and
-deepslate, chains, sculk shriekers, the warden's heartbeat - so players who
-decline the resource pack still hear a complete fight (minus the voice).
-
-Want to swap in your own recordings? Replace the .ogg files in
-plugins/Nexo/pack/assets/fv_endboss/sounds/ (mono .ogg - Minecraft only
-places mono sounds in the world - same names) and run /nexo reload all. The
-events are listed in sounds.json, the subtitles in lang/en_us.json, and
-which cue plays what in skills/fv_endboss_fx.yml.
+Which cue plays what is in skills/fv_endboss_fx.yml - one skill per moment
+of the fight (fv_eb_sfx_...), so a sound is easy to swap.
 
 
 --------------------------------------------------------------------------
@@ -236,7 +231,9 @@ Updating from an older version of this pack
   Replace BOTH .bbmodel files in plugins/ModelEngine/blueprints and the
   whole plugins/MythicMobs/packs/fv_endboss folder, run /meg reload,
   /mm reload and /nexo reload all, then kill the old block
-  (/mm mobs kill fv_endboss_dormant) and place a new one.
+  (/mm mobs kill fv_endboss_dormant) and place a new one. Older versions
+  had custom sounds in plugins/Nexo/pack/assets/fv_endboss - that folder
+  is not used any more and can be deleted.
 
 The block / boss is invisible
   Check /meg reload printed no errors and that both .bbmodel files are in
@@ -263,9 +260,10 @@ It glides through my arena's pillars
   The down beam moves by teleporting. Keep the floor within
   fv_eb_boss_settings' radius open and flat.
 
-No custom voice, only vanilla sounds
-  The player declined the resource pack, or Nexo has not rebuilt it - run
-  /nexo reload all after installing.
+The boss sits too low / the low sweep never hits
+  Every height in the fight is measured from the block's Y. Spawn the block
+  standing on the floor, or from the console with Y = the TOP of the floor
+  block (64 for a floor block at Y 63) - not inside the floor.
 
 Errors in the console mentioning fv_eb_...
   Please send me the lines; each skill is named after what it does.

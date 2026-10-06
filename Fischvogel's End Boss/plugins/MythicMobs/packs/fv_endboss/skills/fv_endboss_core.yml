@@ -53,13 +53,14 @@
 #   9 px below the cube's origin in attack1):
 #      between attacks .......... 20 px  (floats 1.25 blocks up)
 #      chest laser / shooting ... 16 px  (beam and shots at chest height)
-#      low laser sweep ..........  9 px  (beam at knee height - jump it)
-#      landed / dazed ...........  8 px
-#      down beam (attack2) ......  4 px  (the animation lifts the cube 4
-#                                         blocks; its beam ends 2.6 px
-#                                         below the boss, so 4 px puts the
-#                                         tip and the impact ring just on
-#                                         top of the floor)
+#      low laser sweep ..........  9 px  (beam at hip height - jump it)
+#      landed / dazed ........... 16 px  (1 block; the frame hangs half a
+#                                         block above the floor)
+#      down beam (attack2) ...... 12 px  (the animation lifts the cube 4
+#                                         more blocks; the beam ends 2.6 px
+#                                         below the boss, so its tip and the
+#                                         impact ring float just over half
+#                                         a block above the floor)
 #   Moves are done in exact pixel steps by fv_eb_height_step, so the height
 #   can never drift over a long fight. Use a flat arena floor.
 # ============================================================================
@@ -617,7 +618,6 @@ fv_eb_on_damaged:
   Skills:
   # still waking up (or already gone): nothing gets through
   - cancelevent ?!variableequals{var=caster.fv_eb_state;value=FIGHT}
-  - skill{s=fv_eb_tip_waking} @self ?variableequals{var=caster.fv_eb_state;value=WAKING}
   # high up in the air during the down beam / mid phase-roar
   - cancelevent ?variableequals{var=caster.fv_eb_mode;value=IMMUNE}
   - skill{s=fv_eb_hit_immune} @self ?variableequals{var=caster.fv_eb_state;value=FIGHT} ?variableequals{var=caster.fv_eb_mode;value=IMMUNE}
@@ -648,28 +648,11 @@ fv_eb_hit_armored:
   Cooldown: 0.25
   Skills:
   - skill{s=fv_eb_sfx_armored} @self
-  - skill{s=fv_eb_tip_armored} @trigger
 
 fv_eb_hit_immune:
   Cooldown: 0.3
   Skills:
   - skill{s=fv_eb_sfx_immune} @self
-  - skill{s=fv_eb_tip_immune} @trigger
-
-fv_eb_tip_waking:
-  Cooldown: 2
-  Skills:
-  - sendactionmessage{m="<#9ffcff>The soul is still waking up..."} @trigger
-
-fv_eb_tip_armored:
-  Cooldown: 5
-  Skills:
-  - sendactionmessage{m="<#9ffcff>Its shell hardens while it fires <dark_gray>- <gray>hit it while it recovers"} @trigger
-
-fv_eb_tip_immune:
-  Cooldown: 3
-  Skills:
-  - sendactionmessage{m="<#9ffcff>It is out of reach <dark_gray>- <gray>wait for it to come down"} @trigger
 
 
 # ============================================================================
@@ -785,13 +768,13 @@ fv_eb_height_to_low:
 # landed after the down beam (attack2's landing and "damage" while dazed)
 fv_eb_height_to_landed:
   Skills:
-  - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=8}
+  - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=16}
   - skill{s=fv_eb_height_start} @self
 
-# down beam: the beam's tip and the impact ring just on top of the floor
+# down beam: the beam's tip and the impact ring float above the floor
 fv_eb_height_to_beam:
   Skills:
-  - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=4}
+  - setvariable{var=caster.fv_eb_hpx_target;type=INTEGER;value=12}
   - skill{s=fv_eb_height_start} @self
 
 fv_eb_height_start:

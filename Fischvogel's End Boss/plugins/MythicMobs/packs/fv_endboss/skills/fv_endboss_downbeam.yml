@@ -9,9 +9,10 @@
 #              pulse at 67, 87 and 107
 #   147        beam and ring off
 #   180 - 201  the cube comes back down and lands
-#  The model stays on the boss, so the boss itself glides just above the
-#  floor while the cube is drawn 4 blocks above it: the beam always comes
-#  down right under the cube and ends on the floor, inside the ring.
+#  The model stays on the boss, so the boss itself glides 12 px (3/4 of a
+#  block) above the floor while the cube is drawn 4 blocks above that: the
+#  beam always comes down right under the cube and ends in the glowing ring,
+#  which floats just over half a block above the floor.
 #
 #  While it is up there it cannot be hit (IMMUNE). After landing it is dazed
 #  ("damage" animation) on the floor for a few seconds and takes x1.35
@@ -44,9 +45,8 @@ fv_eb_downbeam:
   - skill{s=fv_eb_anim_attack2} @self
   - skill{s=fv_eb_sfx_downbeam_rise} @self
   # the animation lifts the cube 4 blocks; at the same time the boss sinks
-  # to 4 px above the floor - from there the beam ends right on the floor
-  # and the impact ring lies flat on it (16 px in 8 ticks, so the cube
-  # still rises on screen)
+  # from 20 to 12 px above the floor (8 px in 4 ticks, so the cube still
+  # rises on screen)
   - skill{s=fv_eb_height_to_beam} @self
   # the beam fires t_a2_ign ticks after the animation started; 8 of them
   # are spent here, the rest is waited out below
@@ -66,7 +66,7 @@ fv_eb_downbeam:
   - skill{s=fv_eb_sfx_downbeam_off} @self
   - delay{ticks=<caster.var.fv_eb_t_a2_hover>}
   # ---- COMING DOWN ----
-  # lands 8 px up: the landing pose and "damage" hang 6-8 px below the origin
+  # lands 16 px (1 block) up: the frame hangs half a block above the floor
   - skill{s=fv_eb_height_to_landed} @self
   - skill{s=fv_eb_sfx_downbeam_descend} @self
   - delay{ticks=<caster.var.fv_eb_t_a2_desc>}
@@ -160,7 +160,7 @@ fv_eb_downbeam_dazed:
 #  DAMAGE
 # ============================================================================
 # hd = horizontal distance from the beam's centre (the boss' own spot),
-# dy = feet height relative to the boss gliding 4 px above the floor.
+# dy = feet height relative to the boss gliding 12 px above the floor.
 # The values are stored on each player (target scope) and the _hit skill
 # checks them with TargetConditions, so every player is judged on their own
 # position. (An inline ?condition would test the boss, not the player.)

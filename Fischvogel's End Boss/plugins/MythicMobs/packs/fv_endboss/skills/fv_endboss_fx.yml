@@ -1,22 +1,14 @@
 # ============================================================================
 #  FischVogel's End Boss - Sounds and particles
 # ============================================================================
-#  Theme: a soul trapped inside a block. Its voice - whispers that almost
-#  form words, wails, shrieks, gasps, a heartbeat - comes from the custom
-#  sounds in the resource pack (namespace fv_endboss, files in
-#  plugins/Nexo/pack/assets/fv_endboss/). Every cue also layers vanilla
-#  sounds on top - breaking amethyst, glass and deepslate, chains, sculk
-#  shriekers, the warden's heartbeat - so the fight still sounds right for a
-#  player who declined the resource pack (they just miss the voice).
+#  Theme: a soul trapped inside a block. Only vanilla Minecraft sounds, so
+#  nothing extra goes into the resource pack: its voice is ghasts, vexes and
+#  the soul sand valley (wails, shrieks, whispers), its body is amethyst,
+#  glass, deepslate and chains, its heartbeat is the warden's, its beams are
+#  beacons and conduits.
 #
 #  Sound volume above 1 does not make a sound louder, it makes it carry
 #  further (16 blocks x volume). Pitch is clamped by Minecraft to 0.5 - 2.
-#
-#  Custom sound events (see sounds.json):
-#     fv_endboss:soul.whisper    fv_endboss:soul.wail     fv_endboss:soul.shriek
-#     fv_endboss:soul.gasp       fv_endboss:soul.chant    fv_endboss:soul.heartbeat
-#     fv_endboss:laser.charge    fv_endboss:laser.hum
-#     fv_endboss:death.chorus    fv_endboss:death.souls
 #
 #  Colours: #9FFCFF cube glow, #BFFFFF beam, #FF3B3B danger marks.
 # ============================================================================
@@ -34,14 +26,14 @@ fv_eb_sfx_block_heartbeat:
 fv_eb_sfx_block_whisper:
   Cooldown: 4
   Skills:
-  - sound{s=fv_endboss:soul.whisper;v=0.7;p=1} @self
+  - sound{s=ambient.soul_sand_valley.additions;v=0.8;p=0.9} @self
   - sound{s=particle.soul_escape;v=0.6;p=0.6} @self
   - particles{particle=soul;amount=2;hs=0.3;vs=0.2;speed=0.01;y=0.6} @self
 
 # The eye opens and looks at you.
 fv_eb_sfx_block_peek:
   Skills:
-  - sound{s=fv_endboss:soul.gasp;v=0.8;p=1} @self
+  - sound{s=entity.vex.ambient;v=0.7;p=0.6} @self
   - sound{s=block.amethyst_block.resonate;v=0.7;p=0.6} @self
   - sound{s=entity.allay.ambient_without_item;v=0.5;p=0.5} @self
 
@@ -51,7 +43,7 @@ fv_eb_sfx_block_reform:
   - sound{s=block.respawn_anchor.charge;v=1;p=0.6} @self
   - sound{s=block.amethyst_block.place;v=1;p=0.5} @self
   - sound{s=block.deepslate.place;v=1;p=0.6} @self
-  - sound{s=fv_endboss:soul.whisper;v=0.8;p=0.85} @self
+  - sound{s=ambient.soul_sand_valley.additions;v=1;p=0.8} @self
   - particles{particle=reverse_portal;amount=40;hs=0.8;vs=0.8;speed=0.05;y=0.5} @self
   - particles{particle=dust;color=#9FFCFF;size=1;amount=16;hs=0.45;vs=0.45;speed=0;y=0.5} @self
 
@@ -62,7 +54,7 @@ fv_eb_sfx_block_reform:
 # 0: light rays burst out of the block - the soul screams.
 fv_eb_sfx_wake_burst:
   Skills:
-  - sound{s=fv_endboss:soul.wail;v=2;p=1} @self
+  - sound{s=entity.ghast.scream;v=2;p=0.8} @self
   - sound{s=block.beacon.activate;v=1.5;p=0.6} @self
   - sound{s=block.amethyst_block.break;v=1.5;p=0.5} @self
   - sound{s=block.glass.break;v=1.2;p=0.7} @self
@@ -76,13 +68,13 @@ fv_eb_sfx_wake_tremble:
   - sound{s=block.deepslate.break;v=1.2;p=0.75;delay=5} @self
   - sound{s=block.deepslate.break;v=1.2;p=0.55;delay=11} @self
   - sound{s=block.sculk.spread;v=1.2;p=0.6} @self
-  - sound{s=fv_endboss:soul.whisper;v=1.2;p=0.9;delay=8} @self
+  - sound{s=ambient.soul_sand_valley.additions;v=1.2;p=0.9;delay=8} @self
   - particles{particle=white_ash;amount=30;hs=1.2;vs=0.4;speed=0.02;y=0.3} @self
 
 # 51: it lifts off the ground and starts to speak.
 fv_eb_sfx_wake_lift:
   Skills:
-  - sound{s=fv_endboss:soul.chant;v=1.5;p=1} @self
+  - sound{s=entity.evoker.prepare_summon;v=1.5;p=0.7} @self
   - sound{s=block.respawn_anchor.charge;v=1.5;p=0.6} @self
   - sound{s=entity.breeze.inhale;v=1.2;p=0.6} @self
   - particles{particle=reverse_portal;amount=50;hs=1.4;vs=0.6;speed=0.1;y=1} @self
@@ -94,7 +86,7 @@ fv_eb_sfx_wake_strain:
   - sound{s=block.chain.break;v=1.2;p=0.5} @self
   - sound{s=block.chain.break;v=1.2;p=0.6;delay=6} @self
   - sound{s=block.amethyst_block.resonate;v=1.2;p=0.5} @self
-  - sound{s=fv_endboss:soul.shriek;v=1;p=0.8;delay=10} @self
+  - sound{s=entity.ghast.hurt;v=1;p=0.8;delay=10} @self
 
 # 117: violent shaking.
 fv_eb_sfx_wake_shake:
@@ -108,7 +100,7 @@ fv_eb_sfx_wake_shake:
 fv_eb_sfx_wake_eye:
   Skills:
   - sound{s=block.sculk_shrieker.shriek;v=2;p=1.3} @self
-  - sound{s=fv_endboss:soul.wail;v=2;p=1.1} @self
+  - sound{s=entity.ghast.scream;v=2;p=1.1} @self
 
 # 123: the frame bursts open.
 fv_eb_sfx_wake_frame:
@@ -154,7 +146,7 @@ fv_eb_sfx_hurt_big:
   Skills:
   - sound{s=block.amethyst_cluster.break;v=1.2;p=0.8} @self
   - sound{s=block.deepslate.break;v=1;p=0.8} @self
-  - sound{s=fv_endboss:soul.shriek;v=0.6;p=1.2} @self
+  - sound{s=entity.vex.hurt;v=0.8;p=0.7} @self
   - particles{particle=crit;amount=10;hs=0.3;vs=0.3;speed=0.2;y=0.5} @self
   - particles{particle=dust;color=#FFFFFF;size=1;amount=8;hs=0.35;vs=0.35;speed=0;y=0.5} @self
 
@@ -185,7 +177,7 @@ fv_eb_sfx_body_hit:
 # Phase 3: straight into the next attack.
 fv_eb_sfx_combo:
   Skills:
-  - sound{s=fv_endboss:soul.gasp;v=1.2;p=1.2} @self
+  - sound{s=entity.vex.ambient;v=1.2;p=1.2} @self
   - sound{s=entity.warden.sonic_charge;v=0.6;p=2} @self
   - sound{s=entity.vex.charge;v=1;p=0.8} @self
 
@@ -199,7 +191,7 @@ fv_eb_sfx_blink:
 # Everyone left - it gives up and sinks back into its block.
 fv_eb_sfx_reset:
   Skills:
-  - sound{s=fv_endboss:soul.whisper;v=1.2;p=0.75} @self
+  - sound{s=ambient.soul_sand_valley.additions;v=1.2;p=0.7} @self
   - sound{s=block.beacon.deactivate;v=1.2;p=0.6} @self
   - particles{particle=reverse_portal;amount=60;hs=0.6;vs=0.6;speed=0.08;y=0.6} @self
 
@@ -210,14 +202,14 @@ fv_eb_sfx_phase_crack:
   - sound{s=block.amethyst_cluster.break;v=1.5;p=0.5} @self
   - sound{s=block.glass.break;v=1.5;p=0.5} @self
   - sound{s=entity.zombie.break_wooden_door;v=0.7;p=1.3} @self
-  - sound{s=fv_endboss:soul.shriek;v=1.2;p=0.9} @self
+  - sound{s=entity.ghast.hurt;v=1.2;p=0.9} @self
   - particles{particle=dust;color=#FFFFFF;size=1.2;amount=20;hs=0.4;vs=0.4;speed=0;y=0.5} @self
   - particles{particle=white_ash;amount=30;hs=0.5;vs=0.5;speed=0.05;y=0.5} @self
 
 # The phase roar.
 fv_eb_sfx_phase_roar:
   Skills:
-  - sound{s=fv_endboss:soul.wail;v=2.5;p=0.85} @self
+  - sound{s=entity.ghast.scream;v=2.5;p=0.7} @self
   - sound{s=block.sculk_shrieker.shriek;v=2;p=0.9} @self
   - sound{s=entity.elder_guardian.curse;v=1.5;p=1.2} @self
   - sound{s=entity.ender_dragon.growl;v=1.5;p=1.6} @self
@@ -242,7 +234,7 @@ fv_eb_vfx_shockwave:
 # Start of attack1: the eye gathers light (about 2.5 s before the beam).
 fv_eb_sfx_laser_charge:
   Skills:
-  - sound{s=fv_endboss:laser.charge;v=1.6;p=1} @self
+  - sound{s=block.conduit.activate;v=1.4;p=1.2} @self
   - sound{s=entity.guardian.attack;v=1.5;p=0.8} @self
   - sound{s=block.beacon.power_select;v=1.2;p=0.6} @self
   - particles{particle=reverse_portal;amount=30;hs=0.8;vs=0.5;speed=0.06;y=0.5} @self
@@ -260,21 +252,21 @@ fv_eb_sfx_laser_fire:
   Skills:
   - sound{s=entity.warden.sonic_boom;v=1.5;p=0.8} @self
   - sound{s=block.beacon.activate;v=1.5;p=1.4} @self
-  - sound{s=fv_endboss:soul.wail;v=2;p=1.3} @self
+  - sound{s=entity.ghast.scream;v=2;p=1.3} @self
   - particles{particle=end_rod;amount=20;hs=0.2;vs=0.2;speed=0.2;y=0.5} @self
 
 # Every tick while the beam is live; the cooldown lets each hum play out.
 fv_eb_sfx_laser_hum:
   Cooldown: 1.5
   Skills:
-  - sound{s=fv_endboss:laser.hum;v=1.6;p=1} @self
+  - sound{s=block.conduit.ambient;v=1.5;p=1.4} @self
   - sound{s=block.beacon.ambient;v=1.5;p=1.5} @self
 
 fv_eb_sfx_laser_end:
   Skills:
   - sound{s=block.beacon.deactivate;v=1.5;p=1.2} @self
   - sound{s=block.respawn_anchor.deplete;v=1.2;p=1.4} @self
-  - sound{s=fv_endboss:soul.gasp;v=1;p=0.8} @self
+  - sound{s=entity.vex.hurt;v=1;p=0.5} @self
 
 # A player standing in the beam (runs on the player).
 fv_eb_sfx_laser_hit:
@@ -323,7 +315,6 @@ fv_eb_vfx_beam:
 # until the beam fires (the boss is down on the floor from tick 8 on).
 fv_eb_vfx_low_beam_warning:
   Skills:
-  - skill{s=fv_eb_tip_low_beam} @PlayersInRadius{r=24}
   - skill{s=fv_eb_vfx_low_ring;delay=9} @self
   - skill{s=fv_eb_vfx_low_ring;delay=19} @self
   - skill{s=fv_eb_vfx_low_ring;delay=29} @self
@@ -337,11 +328,6 @@ fv_eb_vfx_low_ring:
   - particlering{particle=dust;color=#FF3B3B;size=1.1;radius=5.2;points=36;amount=1;hs=0;vs=0;speed=0;y=0.2} @SelfLocation
   - sound{s=block.note_block.basedrum;v=1.5;p=0.6} @self
 
-fv_eb_tip_low_beam:
-  Cooldown: 40
-  Skills:
-  - sendactionmessage{m="<#ff8080>Low sweep <dark_gray>- <gray>jump over the beam"}
-
 
 # ============================================================================
 #  DOWN BEAM  (attack2)
@@ -351,7 +337,7 @@ fv_eb_sfx_downbeam_rise:
   Skills:
   - sound{s=entity.breeze.inhale;v=1.5;p=0.6} @self
   - sound{s=block.respawn_anchor.charge;v=1.5;p=0.8} @self
-  - sound{s=fv_endboss:soul.chant;v=1.2;p=1.15} @self
+  - sound{s=entity.illusioner.prepare_mirror;v=1.2;p=0.7} @self
   - particles{particle=gust;amount=3;hs=0.8;vs=0.1;speed=0;y=0.2} @self
 
 # Hovering up high, the beam charges.
@@ -361,7 +347,7 @@ fv_eb_sfx_downbeam_charge:
   - sound{s=block.conduit.activate;v=1.2;p=0.8} @self
 
 # The spot it is about to burn: a red ring the size of the impact ring,
-# pulsing on the floor under the cube until the beam fires.
+# pulsing where the impact ring will appear until the beam fires.
 fv_eb_vfx_downbeam_mark:
   Skills:
   - skill{s=fv_eb_vfx_downbeam_mark_pulse}
@@ -373,7 +359,7 @@ fv_eb_vfx_downbeam_mark_pulse:
   Conditions:
   - variableequals{var=caster.fv_eb_state;value=FIGHT} true
   Skills:
-  - particlering{particle=dust;color=#FF3B3B;size=1.2;radius=0.65;points=14;amount=1;hs=0;vs=0;speed=0;y=-0.2} @SelfLocation
+  - particlering{particle=dust;color=#FF3B3B;size=1.2;radius=0.65;points=14;amount=1;hs=0;vs=0;speed=0;y=0.05} @SelfLocation
   - particles{particle=dust;color=#FF3B3B;size=1;amount=6;hs=0.15;vs=0.9;speed=0;y=1} @self
   - sound{s=block.note_block.basedrum;v=1;p=0.8} @self
 
@@ -383,7 +369,7 @@ fv_eb_sfx_downbeam_ignite:
   - sound{s=entity.firework_rocket.launch;v=1.5;p=0.6} @self
   - sound{s=entity.generic.explode;v=1;p=1.4} @self
   - sound{s=entity.ender_dragon.growl;v=1.5;p=1.8} @self
-  - sound{s=fv_endboss:soul.shriek;v=1.2;p=1} @self
+  - sound{s=entity.ghast.hurt;v=1.2;p=1} @self
   - particles{particle=explosion;amount=1;hs=0;vs=0;speed=0;y=0} @self
   - particles{particle=end_rod;amount=10;hs=0.2;vs=0.2;speed=0.12;y=3.9} @self
 
@@ -393,14 +379,14 @@ fv_eb_sfx_downbeam_roar:
   Skills:
   - sound{s=entity.blaze.burn;v=1.5;p=0.6} @self
   - sound{s=block.beacon.ambient;v=1.5;p=0.8} @self
-  - sound{s=fv_endboss:laser.hum;v=1;p=0.8} @self
+  - sound{s=block.conduit.ambient;v=1.2;p=1.1} @self
 
-# Where the beam hits the floor: soul fire and sparks splashing out.
+# Where the beam ends, in the impact ring: soul fire and sparks splashing out.
 fv_eb_vfx_downbeam:
   Cooldown: 0.1
   Skills:
-  - particles{particle=soul_fire_flame;amount=3;hs=0.25;vs=0.02;speed=0.03;y=-0.15} @self
-  - particles{particle=dust;color=#BFFFFF;size=1.1;amount=2;hs=0.3;vs=0.05;speed=0;y=-0.1} @self
+  - particles{particle=soul_fire_flame;amount=3;hs=0.25;vs=0.02;speed=0.03;y=0.05} @self
+  - particles{particle=dust;color=#BFFFFF;size=1.1;amount=2;hs=0.3;vs=0.05;speed=0;y=0.05} @self
   - particles{particle=electric_spark;amount=1;hs=0.2;vs=0.2;speed=0.2;y=0} @self
 
 fv_eb_sfx_downbeam_off:
@@ -428,7 +414,7 @@ fv_eb_sfx_dazed:
   - particlering{particle=crit;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4;delay=10} @SelfLocation
   - particlering{particle=crit;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4;delay=20} @SelfLocation
 
-# The impact ring's walls pulse: the ring flares on the floor.
+# The impact ring's walls pulse: the ring flares.
 fv_eb_sfx_pulse:
   Skills:
   - sound{s=entity.breeze.wind_burst;v=1.2;p=0.9} @self
@@ -436,14 +422,15 @@ fv_eb_sfx_pulse:
 
 fv_eb_vfx_pulse:
   Skills:
-  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=0.8;points=14;amount=1;hs=0;vs=0;speed=0;y=-0.1} @SelfLocation
-  - particlering{particle=dust;color=#9FFCFF;size=1.2;radius=1.2;points=20;amount=1;hs=0;vs=0;speed=0;y=-0.1;delay=1} @SelfLocation
+  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=0.8;points=14;amount=1;hs=0;vs=0;speed=0;y=0.05} @SelfLocation
+  - particlering{particle=dust;color=#9FFCFF;size=1.2;radius=1.2;points=20;amount=1;hs=0;vs=0;speed=0;y=0.05;delay=1} @SelfLocation
 
+# Landing (the boss is back at 16 px, 1 block up): the blast hits the floor.
 fv_eb_vfx_land:
   Skills:
-  - particles{particle=explosion;amount=2;hs=0.6;vs=0.1;speed=0;y=0.3} @self
-  - particlering{particle=cloud;radius=1.5;points=16;amount=1;hs=0;vs=0;speed=0.05;y=0.2} @SelfLocation
-  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=2.5;points=32;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=1} @SelfLocation
+  - particles{particle=explosion;amount=2;hs=0.6;vs=0.1;speed=0;y=-0.7} @self
+  - particlering{particle=cloud;radius=1.5;points=16;amount=1;hs=0;vs=0;speed=0.05;y=-0.8} @SelfLocation
+  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=2.5;points=32;amount=1;hs=0;vs=0;speed=0;y=-0.85;delay=1} @SelfLocation
 
 
 # ============================================================================
@@ -452,7 +439,7 @@ fv_eb_vfx_land:
 # A shooting attack begins: a sharp inhale, light drawn into the eye.
 fv_eb_sfx_shoot_charge:
   Skills:
-  - sound{s=fv_endboss:soul.gasp;v=1.2;p=1} @self
+  - sound{s=entity.vex.charge;v=1;p=1.2} @self
   - sound{s=entity.evoker.prepare_attack;v=1;p=1.4} @self
   - sound{s=block.beacon.power_select;v=0.8;p=1.4} @self
 
@@ -530,7 +517,7 @@ fv_eb_sfx_proj_burst:
 # ============================================================================
 fv_eb_sfx_death_scream:
   Skills:
-  - sound{s=fv_endboss:soul.wail;v=3;p=0.9} @self
+  - sound{s=entity.ghast.death;v=3;p=0.7} @self
   - sound{s=block.sculk_shrieker.shriek;v=2.5;p=0.7} @self
   - sound{s=entity.allay.death;v=2;p=0.5} @self
   - particles{particle=sculk_soul;amount=16;hs=0.5;vs=0.5;speed=0.05;y=1.5} @self
@@ -538,7 +525,7 @@ fv_eb_sfx_death_scream:
 # 7: the light rays spin out - a choir of every voice it ever trapped.
 fv_eb_sfx_death_rays:
   Skills:
-  - sound{s=fv_endboss:death.chorus;v=3;p=1} @self
+  - sound{s=entity.wither.spawn;v=1.5;p=1.6} @self
   - sound{s=block.beacon.activate;v=2;p=0.5} @self
   - sound{s=block.end_portal.spawn;v=0.8;p=1.6} @self
   - particles{particle=end_rod;amount=30;hs=0.4;vs=0.4;speed=0.3;y=3.4} @self
@@ -563,7 +550,7 @@ fv_eb_sfx_death_close:
 # 62 / 72: silence, and a heartbeat.
 fv_eb_sfx_death_heartbeat:
   Skills:
-  - sound{s=fv_endboss:soul.heartbeat;v=2;p=0.9} @self
+  - sound{s=entity.warden.heartbeat;v=2;p=0.9} @self
   - sound{s=entity.warden.heartbeat;v=2;p=0.6} @self
 
 # 82: the block shatters.
@@ -574,7 +561,7 @@ fv_eb_sfx_death_shatter:
   - sound{s=block.amethyst_block.break;v=2;p=0.7} @self
   - sound{s=block.deepslate.break;v=2;p=0.5} @self
   - sound{s=entity.generic.explode;v=1.5;p=1.4} @self
-  - sound{s=fv_endboss:soul.shriek;v=2;p=1.3} @self
+  - sound{s=entity.ghast.hurt;v=2;p=1.3} @self
   - particles{particle=explosion;amount=3;hs=0.5;vs=0.5;speed=0;y=3.4} @self
   - particles{particle=dust;color=#FFFFFF;size=1.4;amount=60;hs=1.2;vs=1.2;speed=0;y=3.4} @self
   - particles{particle=dust;color=#9FFCFF;size=1.2;amount=60;hs=1.6;vs=1.6;speed=0;y=3.4} @self
@@ -583,7 +570,7 @@ fv_eb_sfx_death_shatter:
 # 94 / 134: the freed souls drift away.
 fv_eb_sfx_death_souls:
   Skills:
-  - sound{s=fv_endboss:death.souls;v=2;p=1} @self
+  - sound{s=ambient.soul_sand_valley.additions;v=2;p=1} @self
   - sound{s=particle.soul_escape;v=2;p=0.6} @self
   - sound{s=particle.soul_escape;v=2;p=0.8;delay=6} @self
   - particles{particle=sculk_soul;amount=14;hs=1;vs=0.8;speed=0.04;y=3} @self

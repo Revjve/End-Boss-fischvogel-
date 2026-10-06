@@ -2,16 +2,15 @@
 """
 Builds "Fischvogel's End Boss.zip" from the folder of the same name.
 
-    python3 tools/build.py [--sounds] [--sim N]
+    python3 tools/build.py [--sim N]
 
   1. converts the original .bbmodel files (Source Files) for ModelEngine and
      verifies the result (convert_models.py / verify_models.py):
        plugins/ModelEngine/blueprints/fv_endboss*.bbmodel  (legacy 4.10)
        Source Files/fv_endboss* (Blockbench 5).bbmodel     (editable)
-  2. --sounds: re-synthesises the custom sounds (make_sounds.py, deterministic)
-  3. runs the static checker against the vanilla data in tools/vanilla_data
-  4. --sim N: plays N simulated fights per scenario (simulate_fight.py)
-  5. writes the zip: one top folder, directory entries, CRLF guide, fixed
+  2. runs the static checker against the vanilla data in tools/vanilla_data
+  3. --sim N: plays N simulated fights per scenario (simulate_fight.py)
+  4. writes the zip: one top folder, directory entries, CRLF guide, fixed
      timestamps - so the same sources always give the same zip.
 """
 import os
@@ -46,22 +45,19 @@ def main():
             shutil.copyfile(os.path.join(tmp, f), os.path.join(bp, f))
         for f in ('fv_endboss (Blockbench 5).bbmodel', 'fv_endboss_projectile (Blockbench 5).bbmodel'):
             shutil.copyfile(os.path.join(tmp, f), os.path.join(PACK, 'Source Files', f))
-    # 2. sounds
-    if '--sounds' in argv:
-        run(os.path.join(HERE, 'make_sounds.py'), os.path.join(PLUGINS, 'Nexo', 'pack'))
-    # 3. checks
+    # 2. checks
     run(os.path.join(HERE, 'check_pack.py'), PLUGINS, os.path.join(HERE, 'vanilla_data'))
-    # 4. simulation
+    # 3. simulation
     if '--sim' in argv:
         n = argv[argv.index('--sim') + 1]
         run(os.path.join(HERE, 'simulate_fight.py'), PLUGINS, n)
-    # 5. guide with CRLF line endings (Windows Notepad friendly)
+    # 4. guide with CRLF line endings (Windows Notepad friendly)
     guide = os.path.join(PACK, 'Installation Guide.txt')
     with open(guide, 'rb') as f:
         txt = f.read().replace(b'\r\n', b'\n')
     with open(guide, 'wb') as f:
         f.write(txt.replace(b'\n', b'\r\n'))
-    # 6. zip
+    # 5. zip
     out = os.path.join(ROOT, NAME + '.zip')
     entries = []
     for dp, dns, fns in os.walk(PACK):
