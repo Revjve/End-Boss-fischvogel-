@@ -29,8 +29,10 @@
 #  MOVEMENT  It turns towards the nearest player and slowly drifts after
 #            them - slower than walking, so keep moving:
 #               phase 1 / 2 / 3 ... 2.2 / 2.8 / 3.4 blocks a second
-#               turning ........... 6 / 8 / 10 degrees a tick
-#            It stops when it is right on top of you, and it never leaves
+#               turning ........... 6 / 8 / 10 degrees a tick (always the
+#                                   short way round)
+#            When it catches you it stops on top of you; if you get behind
+#            it, it turns round on the spot first. It never leaves
 #            fv_eb_arena_r (fv_eb_boss_settings, 18 blocks) around its block -
 #            past that it turns back home.
 # ============================================================================
@@ -42,6 +44,11 @@ fv_eb_downbeam:
   - setvariable{var=caster.fv_eb_mode;type=STRING;value=OPEN}
   - setvariable{var=caster.fv_eb_alive;type=INTEGER;value=1;duration=440}
   - setvariable{var=caster.fv_eb_db_n;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_eb_db_home;type=INTEGER;value=0}
+  # most it may turn per tick: 6 / 8 / 10 degrees
+  - setvariable{var=caster.fv_eb_db_maxturn;type=FLOAT;value=6}
+  - setvariable{var=caster.fv_eb_db_maxturn;type=FLOAT;value=8} ?variableequals{var=caster.fv_eb_phase;value=2}
+  - setvariable{var=caster.fv_eb_db_maxturn;type=FLOAT;value=10} ?variableequals{var=caster.fv_eb_phase;value=3}
   - skill{s=fv_eb_anim_attack2} @self
   - skill{s=fv_eb_sfx_downbeam_rise} @self
   # the animation lifts the cube 4 blocks; at the same time the boss sinks
@@ -82,31 +89,73 @@ fv_eb_downbeam_telegraph:
   - skill{s=fv_eb_vfx_downbeam_mark} @self
 
 # Every tick while the beam is on: 1. turn, 2. drift, 3. burn.
-# Outside the arena radius (fv_eb_boss_settings) it does not chase anyone -
-# it turns back towards its block instead.
+# Past the arena radius (fv_eb_boss_settings) it stops chasing and heads
+# back towards its block until it is 3 blocks inside again (so it never
+# flips between the two every tick at the edge).
 fv_eb_downbeam_tick:
   Skills:
   - variableadd{var=caster.fv_eb_db_n;amount=-1}
-  - setvariable{var=skill.out;type=FLOAT;value="sqrt(((<caster.l.x.double>)-(<caster.var.fv_eb_home_x>))^2+((<caster.l.z.double>)-(<caster.var.fv_eb_home_z>))^2)>(<caster.var.fv_eb_arena_r>)"}
-  - skill{s=fv_eb_downbeam_steer} @self ?variableinrange{var=skill.out;value=-1to0.5}
-  - skill{s=fv_eb_downbeam_leash} @self ?variableinrange{var=skill.out;value=0.5to2}
-  # right on top of someone already: stay put instead of overshooting
-  - skill{s=fv_eb_downbeam_drift} @self ?!playerwithin{d=0.5}
+  - setvariable{var=skill.d;type=FLOAT;value="sqrt(((<caster.l.x.double>)-(<caster.var.fv_eb_home_x>))^2+((<caster.l.z.double>)-(<caster.var.fv_eb_home_z>))^2)"}
+  - setvariable{var=skill.far;type=FLOAT;value="(<skill.var.d>)>(<caster.var.fv_eb_arena_r>)"}
+  - setvariable{var=skill.back;type=FLOAT;value="(<skill.var.d>)<(<caster.var.fv_eb_arena_r>)-3"}
+  - setvariable{var=caster.fv_eb_db_home;type=INTEGER;value=1} ?variableinrange{var=skill.far;value=0.5to2}
+  - setvariable{var=caster.fv_eb_db_home;type=INTEGER;value=0} ?variableinrange{var=skill.back;value=0.5to2}
+  - skill{s=fv_eb_downbeam_steer} @self ?variableequals{var=caster.fv_eb_db_home;value=0}
+  - skill{s=fv_eb_downbeam_leash} @self ?variableequals{var=caster.fv_eb_db_home;value=1}
+  # drifts only while it faces its target (within 90 degrees) and is not
+  # already right above them: when it catches you it stops on top of you
+  # and turns round on the spot instead of circling you
+  - skill{s=fv_eb_downbeam_drift} @self ?variableinrange{var=caster.fv_eb_db_dist;value=0.6to99999} ?variableinrange{var=caster.fv_eb_db_turn;value=-90to90}
   - skill{s=fv_eb_downbeam_check} @PlayersInRadius{r=6}
   - skill{s=fv_eb_vfx_downbeam} @self
   - skill{s=fv_eb_sfx_downbeam_roar} @self
   - skill{s=fv_eb_downbeam_tick;delay=1} @self ?variableinrange{var=caster.fv_eb_db_n;value=1to99999} ?variableequals{var=caster.fv_eb_state;value=FIGHT}
 
+# Turns towards the nearest player by at most fv_eb_db_maxturn degrees.
+# The angle is worked out here (always the short way round, whatever the
+# boss' yaw has wound up to after a spinning laser) instead of with
+# rotatetowards, then applied in whole-degree steps.
 fv_eb_downbeam_steer:
   Skills:
-  - rotatetowards{maxyaw=6} @NearestPlayer{r=48} ?variableequals{var=caster.fv_eb_phase;value=1}
-  - rotatetowards{maxyaw=8} @NearestPlayer{r=48} ?variableequals{var=caster.fv_eb_phase;value=2}
-  - rotatetowards{maxyaw=10} @NearestPlayer{r=48} ?variableequals{var=caster.fv_eb_phase;value=3}
+  - setvariable{var=caster.fv_eb_db_turn;type=FLOAT;value=0}
+  - setvariable{var=caster.fv_eb_db_dist;type=FLOAT;value=99}
+  - skill{s=fv_eb_downbeam_aim} @NearestPlayer{r=48}
+  - setvariable{var=skill.step;type=FLOAT;value="signum(<caster.var.fv_eb_db_turn>)*min(abs(<caster.var.fv_eb_db_turn>),<caster.var.fv_eb_db_maxturn>)"}
+  - setrotation{relative=true;yaw=10} @self ?variableinrange{var=skill.step;value=9.5to10.5}
+  - setrotation{relative=true;yaw=9} @self ?variableinrange{var=skill.step;value=8.5to9.5}
+  - setrotation{relative=true;yaw=8} @self ?variableinrange{var=skill.step;value=7.5to8.5}
+  - setrotation{relative=true;yaw=7} @self ?variableinrange{var=skill.step;value=6.5to7.5}
+  - setrotation{relative=true;yaw=6} @self ?variableinrange{var=skill.step;value=5.5to6.5}
+  - setrotation{relative=true;yaw=5} @self ?variableinrange{var=skill.step;value=4.5to5.5}
+  - setrotation{relative=true;yaw=4} @self ?variableinrange{var=skill.step;value=3.5to4.5}
+  - setrotation{relative=true;yaw=3} @self ?variableinrange{var=skill.step;value=2.5to3.5}
+  - setrotation{relative=true;yaw=2} @self ?variableinrange{var=skill.step;value=1.5to2.5}
+  - setrotation{relative=true;yaw=1} @self ?variableinrange{var=skill.step;value=0.5to1.5}
+  - setrotation{relative=true;yaw=-1} @self ?variableinrange{var=skill.step;value=-1.5to-0.5}
+  - setrotation{relative=true;yaw=-2} @self ?variableinrange{var=skill.step;value=-2.5to-1.5}
+  - setrotation{relative=true;yaw=-3} @self ?variableinrange{var=skill.step;value=-3.5to-2.5}
+  - setrotation{relative=true;yaw=-4} @self ?variableinrange{var=skill.step;value=-4.5to-3.5}
+  - setrotation{relative=true;yaw=-5} @self ?variableinrange{var=skill.step;value=-5.5to-4.5}
+  - setrotation{relative=true;yaw=-6} @self ?variableinrange{var=skill.step;value=-6.5to-5.5}
+  - setrotation{relative=true;yaw=-7} @self ?variableinrange{var=skill.step;value=-7.5to-6.5}
+  - setrotation{relative=true;yaw=-8} @self ?variableinrange{var=skill.step;value=-8.5to-7.5}
+  - setrotation{relative=true;yaw=-9} @self ?variableinrange{var=skill.step;value=-9.5to-8.5}
+  - setrotation{relative=true;yaw=-10} @self ?variableinrange{var=skill.step;value=-10.5to-9.5}
+
+# Runs on the nearest player: how far (degrees, -180 to 180) the boss has
+# to turn to face them, and how far away they are along the floor (the
+# boss floats 12 px up, so a 3D distance would never get close to 0).
+fv_eb_downbeam_aim:
+  Skills:
+  - setvariable{var=caster.fv_eb_db_dist;type=FLOAT;value="sqrt(((<target.l.x.double>)-(<caster.l.x.double>))^2+((<target.l.z.double>)-(<caster.l.z.double>))^2)"}
+  - setvariable{var=caster.fv_eb_db_turn;type=FLOAT;value="((todegree(atan2(0-((<target.l.x.double>)-(<caster.l.x.double>)),(<target.l.z.double>)-(<caster.l.z.double>)))-(<caster.l.yaw>))%360+540)%360-180"}
 
 # Turns 20 degrees per tick towards home (worked out from the stored home
 # coordinates, so it needs nothing else).
 fv_eb_downbeam_leash:
   Skills:
+  - setvariable{var=caster.fv_eb_db_turn;type=FLOAT;value=0}
+  - setvariable{var=caster.fv_eb_db_dist;type=FLOAT;value=99}
   - setvariable{var=skill.home;type=FLOAT;value="todegree(atan2(0-((<caster.var.fv_eb_home_x>)-(<caster.l.x.double>)),(<caster.var.fv_eb_home_z>)-(<caster.l.z.double>)))"}
   - setvariable{var=skill.turn;type=FLOAT;value="(((<skill.var.home>)-(<caster.l.yaw>))%360+540)%360-180"}
   - setrotation{relative=true;yaw=20} @self ?variableinrange{var=skill.turn;value=10to180}

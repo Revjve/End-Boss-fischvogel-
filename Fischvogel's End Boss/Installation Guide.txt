@@ -102,7 +102,8 @@ ATTACK 2 - DOWN BEAM (attack2)
   like the laser (14). The beam reaches from the ring up to the cube, so
   jumping does not help - walk out of the ring and keep moving. It is slower than walking
   (phase 1 / 2 / 3: 2.2 / 2.8 / 3.4 blocks a second, players walk 4.3) and
-  turns faster every phase. It cannot be hit while it is up there. Then it
+  turns faster every phase. If it catches you it stops right on top of you;
+  get behind it and it turns round on the spot before it follows again. It cannot be hit while it is up there. Then it
   comes back down (a small shockwave when it lands) and hovers low, dazed:
   the big damage window.
 
