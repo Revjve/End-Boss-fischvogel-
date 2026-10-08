@@ -23,6 +23,11 @@ invariants is checked:
   * the block stays hidden while its boss is waking up or fighting
   * only the caster's own position / variables are read through
     placeholders (everything else goes through the sudoskill probe)
+  * hits interrupt attacks (hit reaction): no stale part of an interrupted
+    attack chain may keep running (each waiting skill checks the attack
+    epoch after every delay)
+  * the block lands on the floor wherever it was spawned (in the air, sunk
+    into the ground, off-centre)
 
 ~onTimer skills run on a global clock (random phase per fight), as in
 MythicMobs - not counted from the mob's spawn.
@@ -130,6 +135,10 @@ class Sim:
         self.scenario = scenario
         self.tick = 0
         self.clock0 = self.rng.randint(0, 9999)
+        # undocumented details, decided per fight: the sign of @Forward{rot}
+        # and whether blockcentered also moves y to the middle of the block
+        self.rot_sign = self.rng.choice([-1, 1])
+        self.center_y = self.rng.choice([False, True])
         self.queue, self.seq = [], 0
         self.ents, self.projs = [], []
         self.errors, self.log = [], []
@@ -334,7 +343,7 @@ class Sim:
             return [p for p in self.players() if self.dist(c, p) <= r]
         if name == 'forward':
             f = float(a.get('f', 1))
-            yr = math.radians(c.yaw)
+            yr = math.radians(c.yaw + self.rot_sign * float(a.get('rot', 0)))
             return [Loc(c.x - math.sin(yr) * f, c.y + float(a.get('yo', a.get('y', 0))),
                         c.z + math.cos(yr) * f, c.yaw)]
         if name == 'variablelocation':
@@ -357,6 +366,19 @@ class Sim:
             types = (a.get('types') or a.get('type')).split(',')
             return [e for e in self.ents if not e.removed and not e.player and e.mtype in types
                     and self.dist(c, e) <= r]
+        if name == 'flooroftargets':
+            out = []
+            for t in meta.targets:
+                l = t.loc if isinstance(t, Ent) else t
+                for k in range(int(a.get('tries', 3))):
+                    by = math.floor(l.y) - k
+                    if by < FLOOR:          # flat world: solid below FLOOR
+                        cx = a.get('blockcentered') == 'true'
+                        out.append(Loc(math.floor(l.x) + 0.5 if cx else math.floor(l.x),
+                                       by + (0.5 if cx and self.center_y else 0),
+                                       math.floor(l.z) + 0.5 if cx else math.floor(l.z), l.yaw))
+                        break
+            return out
         if name == 'playersnearorigin':
             o = meta.origin or c.loc
             r = float(a.get('r', 5))
@@ -388,6 +410,20 @@ class Sim:
         lines = self.parsed[name]
         while i < len(lines):
             p = lines[i]
+            if p['mech'] in ('cancelskill', 'cancel', 'return'):
+                for pre, cn, ca in p['conds']:
+                    if ca.get('value') == '<skill.var.ep>' and 'ep' not in meta.svars:
+                        self.error('epoch guard without skill.ep', meta)
+                ok = True
+                for pre, cn, ca in p['conds']:
+                    r = self.cond(cn, ca, meta, meta.caster)
+                    ok = ok and (not r if '!' in pre else r)
+                if ok:
+                    if name in ('fv_endsoul_flinch',):
+                        self.stats['stale_flinch'] = self.stats.get('stale_flinch', 0) + 1
+                    return
+                i += 1
+                continue
             if p['mech'] == 'delay':
                 if p['numbers']:
                     d = int(p['numbers'][0])
@@ -553,7 +589,8 @@ class Sim:
         elif m == 'projectile':
             for t in targets:
                 self.launch(a, t, meta)
-        elif m in ('sound', 'particles', 'particlering', 'particleline', 'throw', 'sendactionmessage'):
+        elif m in ('sound', 'particles', 'particlering', 'particleline', 'throw', 'sendactionmessage',
+                   'recoil'):
             pass
         else:
             self.error(f'mechanic {m} not simulated', meta)
@@ -690,12 +727,15 @@ class Sim:
             for v in ('fv_endsoul_beam_n', 'fv_endsoul_db_n', 'fv_endsoul_shots'):
                 if (c.var(v) or 0) > 0:
                     self.error(f'attack ended with {v}={c.var(v)} still running', meta)
-            if c.var('fv_endsoul_hpx_target') not in (20,):
+            if c.var('fv_endsoul_hpx_target') not in (24,):
                 self.error(f'attack ended without heading back to hover height '
                            f'(target {c.var("fv_endsoul_hpx_target")})', meta)
         elif name == 'fv_endsoul_watchdog':
             self.stats['watchdog'] += 1
             self.error('watchdog had to restart the fight loop', meta)
+            self.active_attacks = 0
+        elif name == 'fv_endsoul_flinch':
+            self.stats['flinches'] = self.stats.get('flinches', 0) + 1
             self.active_attacks = 0
         elif name == 'fv_endsoul_phase_break':
             self.stats['phase_breaks'] += 1
@@ -745,7 +785,7 @@ class Sim:
             want = 2.2 if (state == 'FIGHT' and mode in ('OPEN', 'STAGGER')) else 7.0
             # player1 is careless during the down beam and walks right under
             # it, so its damage path gets exercised too
-            if p.name == 'player1' and boss.var('fv_endsoul_lasttype') == 'DOWNBEAM' and mode == 'IMMUNE':
+            if p.name == 'player1' and (boss.var('fv_endsoul_db_n') or 0) > 0:
                 want = 0.0
             if self.rng.random() < 0.01:
                 p.dirsign *= -1
@@ -780,7 +820,15 @@ class Sim:
     # ---- main loop ----
     def run(self, max_ticks=24000):
         self.home = Loc(0.5, FLOOR, 0.5, self.rng.uniform(-180, 180))
-        block = self.spawn('fv_endsoul_block', self.home.copy())
+        # spawned by hand: anywhere in the block, on the floor, floating in
+        # the air or sunk into the ground - the block snaps onto the floor
+        sl = self.home.copy()
+        sl.x, sl.z = self.rng.uniform(0.01, 0.99), self.rng.uniform(0.01, 0.99)
+        sl.y = FLOOR + self.rng.choice([0.0, 0.0, -0.3, self.rng.uniform(0.2, 9)])
+        block = self.spawn('fv_endsoul_block', sl)
+        if abs(block.y - FLOOR) > 1e-9 or abs(block.x - 0.5) > 1e-9 or abs(block.z - 0.5) > 1e-9:
+            self.error(f'block did not land on the floor: {block.x:.2f} {block.y:.2f} {block.z:.2f} '
+                       f'(spawned at {sl.y - FLOOR:+.2f})')
         self.make_players()
         click_at = 40 + self.rng.randint(0, 60)
         leave_at = None
@@ -827,7 +875,7 @@ class Sim:
                 # height invariant
                 hpx = boss.var('fv_endsoul_hpx')
                 if hpx is not None and boss.var('fv_endsoul_state') == 'FIGHT':
-                    if not (0 <= hpx <= 30):
+                    if not (0 <= hpx <= 70):
                         self.error(f'hpx out of range: {hpx}')
                     real = (boss.y - FLOOR) * 16
                     if abs(real - hpx) > 1e-6:

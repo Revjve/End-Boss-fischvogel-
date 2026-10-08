@@ -12,8 +12,10 @@ fv_endsoul_shoot_begin:
 
 fv_endsoul_shoot_end:
   Skills:
+  - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
   - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=0}
   - delay{ticks=<caster.var.fv_endsoul_t_sh_settle>}
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_play_idle} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT}
   - skill{s=fv_endsoul_height_to_idle} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT}
   - skill{s=fv_endsoul_after_attack} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT}
@@ -34,9 +36,11 @@ fv_endsoul_s_aimed_track:
   - variableinrange{var=caster.fv_endsoul_shots;value=1to999} true
   - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
   Skills:
+  - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
   - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=<caster.var.fv_endsoul_t_aimed_gap>}
   - skill{s=fv_endsoul_l_aim_tick} @self
   - delay{ticks=<caster.var.fv_endsoul_t_aimed_gap>}
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_aimed_lock} @self
 
 fv_endsoul_s_aimed_lock:
@@ -44,10 +48,12 @@ fv_endsoul_s_aimed_lock:
   - variableinrange{var=caster.fv_endsoul_shots;value=1to999} true
   - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
   Skills:
+  - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
   - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
   - skill{s=fv_endsoul_sfx_shoot_lock} @self
   - skill{s=fv_endsoul_vfx_shoot_lock} @self
   - delay{ticks=<caster.var.fv_endsoul_t_aimed_lock>}
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_aimed_fire} @self
 
 fv_endsoul_s_aimed_fire:
@@ -65,12 +71,14 @@ fv_endsoul_s_aimed_fire:
 
 fv_endsoul_shoot_burst:
   Skills:
+  - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
   - skill{s=fv_endsoul_shoot_begin} @self
   - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=<caster.var.fv_endsoul_n_burst>}
   - setvariable{var=caster.fv_endsoul_shot_k;type=INTEGER;value=0}
   - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=16}
   - skill{s=fv_endsoul_l_aim_tick} @self
   - delay 16
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_track_init} @self
   - skill{s=fv_endsoul_s_burst_shot} @self
 
@@ -94,9 +102,11 @@ fv_endsoul_s_burst_shot:
 
 fv_endsoul_s_burst_next:
   Skills:
+  - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
   - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=<caster.var.fv_endsoul_t_burst_gap>}
   - skill{s=fv_endsoul_l_aim_tick} @self
   - delay{ticks=<caster.var.fv_endsoul_t_burst_gap>}
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_burst_shot} @self
 
 fv_endsoul_s_track_init:
@@ -124,6 +134,7 @@ fv_endsoul_s_lead_turn:
 
 fv_endsoul_shoot_ring:
   Skills:
+  - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
   - skill{s=fv_endsoul_shoot_begin} @self
   - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=<caster.var.fv_endsoul_n_ring>}
   - setvariable{var=caster.fv_endsoul_ring_rev;type=INTEGER;value=<caster.var.fv_endsoul_n_ring>}
@@ -135,6 +146,7 @@ fv_endsoul_shoot_ring:
   - skill{s=fv_endsoul_l_aim_tick} @self
   - skill{s=fv_endsoul_vfx_ring_warning} @self
   - delay 16
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_ring_tick} @self
 
 fv_endsoul_ring_dir_left:
@@ -190,12 +202,14 @@ fv_endsoul_s_ring_reverse:
 
 fv_endsoul_shoot_fan:
   Skills:
+  - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
   - skill{s=fv_endsoul_shoot_begin} @self
   - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=<caster.var.fv_endsoul_n_fan>}
   - setvariable{var=caster.fv_endsoul_shot_k;type=INTEGER;value=0}
   - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=16}
   - skill{s=fv_endsoul_l_aim_tick} @self
   - delay 16
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_fan_volley} @self
 
 fv_endsoul_s_fan_volley:
@@ -243,13 +257,16 @@ fv_endsoul_s_fan_b:
 
 fv_endsoul_s_fan_next:
   Skills:
+  - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
   - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=<caster.var.fv_endsoul_t_fan_gap>}
   - skill{s=fv_endsoul_l_aim_tick} @self
   - delay{ticks=<caster.var.fv_endsoul_t_fan_gap>}
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_fan_volley} @self
 
 fv_endsoul_shoot_spiral:
   Skills:
+  - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
   - skill{s=fv_endsoul_shoot_begin} @self
   - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=<caster.var.fv_endsoul_n_spiral>}
   - setvariable{var=caster.fv_endsoul_spiral_half;type=INTEGER;value="floor(<caster.var.fv_endsoul_n_spiral>/2)"}
@@ -261,6 +278,7 @@ fv_endsoul_shoot_spiral:
   - setrotation{relative=true;yaw=90} @self ?variableequals{var=caster.fv_endsoul_ring_dir;value=-1}
   - skill{s=fv_endsoul_vfx_ring_warning} @self
   - delay 16
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_spiral_tick} @self
 
 fv_endsoul_s_spiral_tick:

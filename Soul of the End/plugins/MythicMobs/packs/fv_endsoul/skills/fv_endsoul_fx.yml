@@ -23,8 +23,8 @@ fv_endsoul_sfx_block_reform:
   - sound{s=block.amethyst_block.place;v=1;p=0.5} @self
   - sound{s=block.deepslate.place;v=1;p=0.6} @self
   - sound{s=ambient.soul_sand_valley.additions;v=1;p=0.8} @self
-  - particles{particle=reverse_portal;amount=40;hs=0.8;vs=0.8;speed=0.05;y=0.5} @self
-  - particles{particle=dust;color=#9FFCFF;size=1;amount=16;hs=0.45;vs=0.45;speed=0;y=0.5} @self
+  - particles{particle=end_rod;amount=16;hs=0.5;vs=0.5;speed=0.03;y=0.5} @self
+  - particles{particle=dust;color=#9FFCFF;size=1;amount=24;hs=0.5;vs=0.5;speed=0;y=0.5} @self
 
 fv_endsoul_sfx_wake_burst:
   Skills:
@@ -49,7 +49,8 @@ fv_endsoul_sfx_wake_lift:
   - sound{s=entity.evoker.prepare_summon;v=1.5;p=0.7} @self
   - sound{s=block.respawn_anchor.charge;v=1.5;p=0.6} @self
   - sound{s=entity.breeze.inhale;v=1.2;p=0.6} @self
-  - particles{particle=reverse_portal;amount=50;hs=1.4;vs=0.6;speed=0.1;y=1} @self
+  - particles{particle=dust;color=#BFFFFF;size=1;amount=30;hs=1.2;vs=0.6;speed=0;y=1} @self
+  - particles{particle=end_rod;amount=12;hs=1;vs=0.4;speed=0.04;y=0.6} @self
 
 fv_endsoul_sfx_wake_strain:
   Skills:
@@ -84,11 +85,11 @@ fv_endsoul_wake_shockwave:
   Skills:
   - sound{s=entity.breeze.wind_burst;v=1.5;p=0.7} @self
   - skill{s=fv_endsoul_wake_push} @PlayersInRadius{r=4.5}
-  - particlering{particle=dust;color=#9FFCFF;size=1.6;radius=1;points=16;amount=1;hs=0;vs=0;speed=0;y=0.15} @SelfLocation
-  - particlering{particle=dust;color=#9FFCFF;size=1.5;radius=2;points=26;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=1} @SelfLocation
-  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=3;points=36;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=2} @SelfLocation
-  - particlering{particle=dust;color=#9FFCFF;size=1.3;radius=4;points=46;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=3} @SelfLocation
-  - particlering{particle=gust;radius=3;points=10;amount=1;hs=0;vs=0;speed=0;y=0.3;delay=2} @SelfLocation
+  - particlering{particle=dust;color=#9FFCFF;size=1.6;radius=1;points=16;amount=1;hs=0;vs=0;speed=0;y=0.15} @VariableLocation{var=caster.fv_endsoul_home}
+  - particlering{particle=dust;color=#9FFCFF;size=1.5;radius=2;points=26;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=1} @VariableLocation{var=caster.fv_endsoul_home}
+  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=3;points=36;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=2} @VariableLocation{var=caster.fv_endsoul_home}
+  - particlering{particle=dust;color=#9FFCFF;size=1.3;radius=4;points=46;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=3} @VariableLocation{var=caster.fv_endsoul_home}
+  - particlering{particle=gust;radius=3;points=10;amount=1;hs=0;vs=0;speed=0;y=0.3;delay=2} @VariableLocation{var=caster.fv_endsoul_home}
 
 fv_endsoul_wake_push:
   TargetConditions:
@@ -108,7 +109,7 @@ fv_endsoul_sfx_hurt_big:
   - sound{s=block.amethyst_cluster.break;v=1.2;p=0.8} @self
   - sound{s=block.deepslate.break;v=1;p=0.8} @self
   - sound{s=entity.vex.hurt;v=0.8;p=0.7} @self
-  - particles{particle=crit;amount=10;hs=0.3;vs=0.3;speed=0.2;y=0.5} @self
+  - particles{particle=electric_spark;amount=10;hs=0.3;vs=0.3;speed=0.2;y=0.5} @self
   - particles{particle=dust;color=#FFFFFF;size=1;amount=8;hs=0.35;vs=0.35;speed=0;y=0.5} @self
 
 fv_endsoul_sfx_armored:
@@ -126,7 +127,7 @@ fv_endsoul_sfx_body_hit:
   Skills:
   - sound{s=entity.player.attack.strong;v=1;p=0.6}
   - sound{s=block.deepslate.break;v=1;p=1.2}
-  - particles{particle=crit;amount=8;hs=0.3;vs=0.4;speed=0.2;y=1}
+  - particles{particle=dust;color=#FFFFFF;size=1;amount=8;hs=0.3;vs=0.4;speed=0;y=1}
 
 fv_endsoul_sfx_combo:
   Skills:
@@ -138,13 +139,15 @@ fv_endsoul_sfx_blink:
   Skills:
   - sound{s=entity.enderman.teleport;v=1.2;p=0.7} @self
   - sound{s=entity.illusioner.mirror_move;v=1;p=0.8} @self
-  - particles{particle=reverse_portal;amount=40;hs=0.5;vs=0.6;speed=0.1;y=0.6} @self
+  - particles{particle=dust;color=#9FFCFF;size=1;amount=24;hs=0.5;vs=0.6;speed=0;y=0.6} @self
+  - particles{particle=end_rod;amount=10;hs=0.3;vs=0.4;speed=0.06;y=0.6} @self
 
 fv_endsoul_sfx_reset:
   Skills:
   - sound{s=ambient.soul_sand_valley.additions;v=1.2;p=0.7} @self
   - sound{s=block.beacon.deactivate;v=1.2;p=0.6} @self
-  - particles{particle=reverse_portal;amount=60;hs=0.6;vs=0.6;speed=0.08;y=0.6} @self
+  - particles{particle=dust;color=#9FFCFF;size=1;amount=30;hs=0.6;vs=0.6;speed=0;y=0.6} @self
+  - particles{particle=soul;amount=8;hs=0.5;vs=0.5;speed=0.03;y=0.6} @self
 
 fv_endsoul_sfx_phase_crack:
   Skills:
@@ -179,9 +182,9 @@ fv_endsoul_sfx_laser_charge:
   - sound{s=block.conduit.activate;v=1.4;p=1.2} @self
   - sound{s=entity.guardian.attack;v=1.5;p=0.8} @self
   - sound{s=block.beacon.power_select;v=1.2;p=0.6} @self
-  - particles{particle=reverse_portal;amount=30;hs=0.8;vs=0.5;speed=0.06;y=0.5} @self
-  - particles{particle=reverse_portal;amount=30;hs=0.8;vs=0.5;speed=0.06;y=0.5;delay=15} @self
-  - particles{particle=reverse_portal;amount=30;hs=0.8;vs=0.5;speed=0.06;y=0.5;delay=30} @self
+  - particles{particle=dust;color=#9FFCFF;size=0.9;amount=18;hs=0.8;vs=0.5;speed=0;y=0.5} @self
+  - particles{particle=dust;color=#9FFCFF;size=0.9;amount=18;hs=0.8;vs=0.5;speed=0;y=0.5;delay=15} @self
+  - particles{particle=dust;color=#9FFCFF;size=0.9;amount=18;hs=0.8;vs=0.5;speed=0;y=0.5;delay=30} @self
 
 fv_endsoul_sfx_laser_lock:
   Skills:
@@ -245,17 +248,26 @@ fv_endsoul_vfx_beam:
 
 fv_endsoul_vfx_low_beam_warning:
   Skills:
-  - skill{s=fv_endsoul_vfx_low_ring;delay=9} @self
-  - skill{s=fv_endsoul_vfx_low_ring;delay=19} @self
-  - skill{s=fv_endsoul_vfx_low_ring;delay=29} @self
-  - skill{s=fv_endsoul_vfx_low_ring;delay=39} @self
+  - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
+  - delay 9
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
+  - skill{s=fv_endsoul_vfx_low_ring} @self
+  - delay 10
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
+  - skill{s=fv_endsoul_vfx_low_ring} @self
+  - delay 10
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
+  - skill{s=fv_endsoul_vfx_low_ring} @self
+  - delay 10
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
+  - skill{s=fv_endsoul_vfx_low_ring} @self
 
 fv_endsoul_vfx_low_ring:
   Conditions:
   - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
   Skills:
-  - particlering{particle=dust;color=#FF3B3B;size=1.4;radius=10.4;points=72;amount=1;hs=0;vs=0;speed=0;y=0.2} @SelfLocation
-  - particlering{particle=dust;color=#FF3B3B;size=1.1;radius=5.2;points=36;amount=1;hs=0;vs=0;speed=0;y=0.2} @SelfLocation
+  - particlering{particle=dust;color=#4FE6FF;size=1.4;radius=10.4;points=72;amount=1;hs=0;vs=0;speed=0;y=-0.7} @SelfLocation
+  - particlering{particle=dust;color=#4FE6FF;size=1.1;radius=5.2;points=36;amount=1;hs=0;vs=0;speed=0;y=-0.7} @SelfLocation
   - sound{s=block.note_block.basedrum;v=1.5;p=0.6} @self
 
 fv_endsoul_sfx_downbeam_rise:
@@ -272,17 +284,24 @@ fv_endsoul_sfx_downbeam_charge:
 
 fv_endsoul_vfx_downbeam_mark:
   Skills:
+  - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
   - skill{s=fv_endsoul_vfx_downbeam_mark_pulse}
-  - skill{s=fv_endsoul_vfx_downbeam_mark_pulse;delay=10}
-  - skill{s=fv_endsoul_vfx_downbeam_mark_pulse;delay=20}
-  - skill{s=fv_endsoul_vfx_downbeam_mark_pulse;delay=30}
+  - delay 10
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
+  - skill{s=fv_endsoul_vfx_downbeam_mark_pulse}
+  - delay 10
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
+  - skill{s=fv_endsoul_vfx_downbeam_mark_pulse}
+  - delay 10
+  - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
+  - skill{s=fv_endsoul_vfx_downbeam_mark_pulse}
 
 fv_endsoul_vfx_downbeam_mark_pulse:
   Conditions:
   - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
   Skills:
-  - particlering{particle=dust;color=#FF3B3B;size=1.2;radius=0.65;points=14;amount=1;hs=0;vs=0;speed=0;y=0.05} @SelfLocation
-  - particles{particle=dust;color=#FF3B3B;size=1;amount=6;hs=0.15;vs=0.9;speed=0;y=1} @self
+  - particlering{particle=dust;color=#4FE6FF;size=1.2;radius=0.8;points=16;amount=1;hs=0;vs=0;speed=0;y=-0.7} @SelfLocation
+  - particles{particle=dust;color=#4FE6FF;size=1;amount=6;hs=0.15;vs=0.9;speed=0;y=1} @self
   - sound{s=block.note_block.basedrum;v=1;p=0.8} @self
 
 fv_endsoul_sfx_downbeam_ignite:
@@ -308,6 +327,45 @@ fv_endsoul_vfx_downbeam:
   - particles{particle=dust;color=#BFFFFF;size=1.1;amount=2;hs=0.3;vs=0.05;speed=0;y=0.05} @self
   - particles{particle=electric_spark;amount=1;hs=0.2;vs=0.2;speed=0.2;y=0} @self
 
+fv_endsoul_vfx_dash_aim:
+  Cooldown: 0.1
+  Skills:
+  - particleline{particle=dust;color=#9FFCFF;size=0.8;amount=1;distanceBetween=0.6;startYOffset=-0.7;targetYOffset=-0.7;fromOrigin=false} @Forward{f=10;lockpitch=true;uel=false}
+
+fv_endsoul_vfx_dash_locked:
+  Cooldown: 0.1
+  Skills:
+  - particleline{particle=dust;color=#FFFFFF;size=1.2;amount=1;distanceBetween=0.4;startYOffset=-0.7;targetYOffset=-0.7;fromOrigin=false} @Forward{f=10;lockpitch=true;uel=false}
+
+fv_endsoul_sfx_dash_locked:
+  Skills:
+  - sound{s=block.note_block.bell;v=1.5;p=1.8} @self
+  - sound{s=block.amethyst_block.chime;v=1.5;p=1.4} @self
+
+fv_endsoul_sfx_downbeam_dash:
+  Skills:
+  - sound{s=entity.breeze.wind_burst;v=1.5;p=1.2} @self
+  - sound{s=entity.phantom.swoop;v=1.2;p=1.6} @self
+  - sound{s=item.trident.riptide_1;v=1.2;p=1.2} @self
+
+fv_endsoul_vfx_dash_trail:
+  Skills:
+  - particles{particle=soul_fire_flame;amount=4;hs=0.35;vs=0.05;speed=0.02;y=-0.65} @self
+  - particles{particle=dust;color=#BFFFFF;size=1.2;amount=3;hs=0.3;vs=0.05;speed=0;y=-0.65} @self
+
+fv_endsoul_sfx_flinch:
+  Skills:
+  - sound{s=entity.player.attack.crit;v=1.2;p=0.8} @self
+  - sound{s=block.anvil.land;v=0.6;p=1.5} @self
+  - sound{s=block.amethyst_cluster.break;v=1.5;p=0.7} @self
+  - sound{s=block.glass.break;v=1.2;p=0.8} @self
+  - sound{s=entity.ghast.hurt;v=1;p=1.4} @self
+  - sound{s=entity.zombie.attack_iron_door;v=0.6;p=0.8} @self
+  - particles{particle=dust;color=#FFFFFF;size=1.4;amount=18;hs=0.4;vs=0.4;speed=0;y=0.5} @self
+  - particles{particle=dust;color=#9FFCFF;size=1.1;amount=14;hs=0.5;vs=0.5;speed=0;y=0.5} @self
+  - particles{particle=end_rod;amount=16;hs=0.2;vs=0.2;speed=0.25;y=0.5} @self
+  - particles{particle=electric_spark;amount=12;hs=0.3;vs=0.3;speed=0.3;y=0.5} @self
+
 fv_endsoul_sfx_downbeam_off:
   Skills:
   - sound{s=block.fire.extinguish;v=1.5;p=0.7} @self
@@ -328,9 +386,9 @@ fv_endsoul_sfx_dazed:
   Skills:
   - sound{s=block.bell.resonate;v=0.8;p=1.6} @self
   - sound{s=entity.allay.death;v=1;p=0.6} @self
-  - particlering{particle=crit;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4} @SelfLocation
-  - particlering{particle=crit;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4;delay=10} @SelfLocation
-  - particlering{particle=crit;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4;delay=20} @SelfLocation
+  - particlering{particle=electric_spark;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4} @SelfLocation
+  - particlering{particle=electric_spark;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4;delay=10} @SelfLocation
+  - particlering{particle=electric_spark;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4;delay=20} @SelfLocation
 
 fv_endsoul_sfx_pulse:
   Skills:
@@ -339,8 +397,8 @@ fv_endsoul_sfx_pulse:
 
 fv_endsoul_vfx_pulse:
   Skills:
-  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=0.8;points=14;amount=1;hs=0;vs=0;speed=0;y=0.05} @SelfLocation
-  - particlering{particle=dust;color=#9FFCFF;size=1.2;radius=1.2;points=20;amount=1;hs=0;vs=0;speed=0;y=0.05;delay=1} @SelfLocation
+  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=0.8;points=14;amount=1;hs=0;vs=0;speed=0;y=-0.7} @SelfLocation
+  - particlering{particle=dust;color=#9FFCFF;size=1.2;radius=1.2;points=20;amount=1;hs=0;vs=0;speed=0;y=-0.7;delay=1} @SelfLocation
 
 fv_endsoul_vfx_land:
   Skills:
@@ -356,8 +414,8 @@ fv_endsoul_sfx_shoot_charge:
 
 fv_endsoul_vfx_shoot_charge:
   Skills:
-  - particles{particle=reverse_portal;amount=24;hs=0.5;vs=0.4;speed=0.05;y=0.5} @self
-  - particles{particle=enchant;amount=20;hs=0.6;vs=0.5;speed=0.5;y=0.5} @self
+  - particles{particle=dust;color=#9FFCFF;size=0.9;amount=16;hs=0.5;vs=0.4;speed=0;y=0.5} @self
+  - particles{particle=end_rod;amount=8;hs=0.5;vs=0.4;speed=0.03;y=0.5} @self
 
 fv_endsoul_sfx_shoot:
   Cooldown: 0.1
@@ -385,7 +443,7 @@ fv_endsoul_vfx_shoot_lock:
 
 fv_endsoul_vfx_sight:
   Skills:
-  - particleline{particle=dust;color=#FF3B3B;size=0.7;amount=1;distanceBetween=0.6;startYOffset=0.5;targetYOffset=0.5;fromOrigin=false} @Forward{f=14;lockpitch=true;uel=false}
+  - particleline{particle=dust;color=#4FE6FF;size=0.7;amount=1;distanceBetween=0.6;startYOffset=0.5;targetYOffset=0.5;fromOrigin=false} @Forward{f=14;lockpitch=true;uel=false}
 
 fv_endsoul_sfx_shoot_lead:
   Skills:
@@ -433,7 +491,8 @@ fv_endsoul_sfx_death_implode:
   - sound{s=block.respawn_anchor.deplete;v=2;p=0.5} @self
   - sound{s=block.beacon.deactivate;v=2;p=0.6} @self
   - sound{s=entity.breeze.inhale;v=2;p=0.5} @self
-  - particles{particle=reverse_portal;amount=80;hs=1.5;vs=1.5;speed=0.15;y=3.4} @self
+  - particles{particle=dust;color=#9FFCFF;size=1.2;amount=50;hs=1.4;vs=1.4;speed=0;y=3.4} @self
+  - particles{particle=end_rod;amount=24;hs=1.2;vs=1.2;speed=0.05;y=3.4} @self
 
 fv_endsoul_sfx_death_close:
   Skills:

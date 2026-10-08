@@ -22,9 +22,11 @@ Spawn `fv_endsoul_block` (the block); a left or right click wakes it into `fv_en
 
 ![Side view of every state at its in-game height](docs/in-game-heights.png)
 
-Every height in the skills was measured against the blueprint (`tools/model_lowest.json`,
-the lowest point of the cube and frame per animation tick) so the frame never sinks into
-the floor; the fight simulator checks this every tick.
+Heights are in model pixels above the floor (16 px = 1 block). The boss floats at eye
+level (24 px) and only drops to 12 px for the jump-rope sweep and the down beam. Every
+height was measured against the blueprint (`tools/model_lowest.json`, the lowest point of
+the cube and frame per animation tick) so the frame never sinks into the floor; the fight
+simulator checks this every tick.
 
 ## Tools
 
@@ -48,7 +50,9 @@ python3 tools/build.py --sim 20     # ... and play 20 simulated fights per scena
   caster - other entities are measured with a `sudoskill` probe).
 * `simulate_fight.py` - interprets the real skill files tick by tick with scripted players
   and checks the fight's invariants (one attack chain at a time, no animation gaps, exact
-  heights, phases, death / reset / chunk-unload flows) under both possible skill-variable
-  semantics.
+  heights, phases, hit reactions that cancel the running attack, the block landing on the
+  floor, death / reset / chunk-unload flows) under both possible skill-variable semantics.
+  `check_pack.py` also requires every waiting skill to carry the epoch guard that lets a
+  hit reaction stop it.
 
 Python 3.10+ with `numpy` and `pyyaml`.

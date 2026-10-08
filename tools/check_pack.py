@@ -38,11 +38,11 @@ MECHANICS = {
     'model', 'bodyrotation', 'brightness', 'renderinit', 'teleport', 'rotatetowards',
     'setrotation', 'summon', 'remove', 'signal', 'cancelevent', 'modifydamage', 'damage',
     'throw', 'aura', 'sound', 'particles', 'particlering', 'particleline', 'projectile',
-    'sendactionmessage', 'setvarloc', 'defaultstate', 'sudoskill',
+    'sendactionmessage', 'setvarloc', 'defaultstate', 'sudoskill', 'cancelskill', 'recoil',
 }
 TARGETERS = {
     'self', 'selflocation', 'nearestplayer', 'playersinradius', 'forward', 'variablelocation',
-    'owner', 'trigger', 'origin', 'playersnearorigin', 'mobsinradius',
+    'owner', 'trigger', 'origin', 'playersnearorigin', 'mobsinradius', 'flooroftargets',
 }
 CONDITIONS = {
     'variableequals', 'variableinrange', 'variableisset', 'playerwithin', 'entitytype',
@@ -210,6 +210,29 @@ PLACEHOLDER = re.compile(r'<([^<>]+)>')
 KNOWN_PH = re.compile(r'^caster\.(l\.(x|y|z)\.double|l\.yaw|hp|mhp)$|^(caster|skill)\.var\.[A-Za-z0-9_]+$|^#[0-9a-fA-F]{6}$|^/?(gray|dark_gray|red|white|gradient:[^>]*|/gradient)$')
 
 
+# Interruptible chains: every metaskill that waits (delay) remembers the
+# attack epoch before its first delay and stops after each delay when the
+# boss was interrupted (hit reaction, reset, death) in the meantime.
+EPOCH_PH = '<skill.var.ep>'
+EPOCH_SET = 'setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}'
+EPOCH_GUARD = 'cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}'
+UNGUARDED = {'fv_endsoul_block_wake', 'fv_endsoul_block_peek', 'fv_endsoul_wake_timeline',
+             'fv_endsoul_wake_handover', 'fv_endsoul_death_timeline'}
+
+
+def check_guards(name, where, lines):
+    if name in UNGUARDED:
+        return
+    delays = [i for i, l in enumerate(lines) if re.match(r'delay\b', l.strip())]
+    if not delays:
+        return
+    if EPOCH_SET not in lines[:delays[0]]:
+        err(where, 'waits (delay) without remembering the attack epoch first (skill.ep)')
+    for i in delays:
+        if i + 1 >= len(lines) or lines[i + 1].strip() != EPOCH_GUARD:
+            err(where, f'no epoch guard right after "{lines[i]}"')
+
+
 def main():
     plugins = sys.argv[1]
     vdir = sys.argv[2] if len(sys.argv) > 2 else None
@@ -309,7 +332,8 @@ def main():
                 err(where, f'bad range {args.get("value")!r}')
             elif float(m.group(1)) > float(m.group(2)):
                 err(where, f'empty range {args.get("value")!r}')
-        if name == 'variableequals' and '<' in (args.get('value') or ''):
+        if name == 'variableequals' and '<' in (args.get('value') or '') and \
+                (args.get('value'), args.get('var')) != (EPOCH_PH, 'caster.fv_endsoul_epoch'):
             err(where, 'placeholder in a condition value - use a math variable instead')
         if name == 'hasaura':
             a = args.get('auraname') or args.get('aura')
@@ -443,6 +467,7 @@ def main():
                 err(where, str(e))
         for line in body['Skills']:
             check_line(where, line, in_mob=False)
+        check_guards(name, where, body['Skills'])
     for name, body in mobs.items():
         where = f'{os.path.basename(origin[name])}:{name}'
         if 'Template' in body:

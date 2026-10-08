@@ -89,7 +89,7 @@ fv_endsoul:
   - skill{s=fv_endsoul_boss_spawn} @self ~onSpawn
   - skill{s=fv_endsoul_on_damaged;sync=true} @self ~onDamaged
   - skill{s=fv_endsoul_on_interact;sync=true} @self ~onInteract
-  - skill{s=fv_endsoul_watch} @self ~onTimer:2
+  - skill{s=fv_endsoul_watch} @self ~onTimer:1
   - skill{s=fv_endsoul_boss_second} @self ~onTimer:20
   - skill{s=fv_endsoul_on_death} @self ~onDeath
 

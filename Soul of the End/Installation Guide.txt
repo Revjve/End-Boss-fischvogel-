@@ -59,25 +59,22 @@ THE MOBS - WHICH ONE DO I SPAWN?
 PLACING THE BOSS
 --------------------------------------------------------------------------
 
-Stand in the middle of your arena, on the floor, and spawn the block once:
+Stand in the middle of your arena and spawn the block once:
 
     /mm mobs spawn fv_endsoul_block
 
-For a perfect fit on the block grid, spawn it from the console at the
-centre of a block (X and Z + 0.5, Y = the TOP of the floor block, e.g. 64
-for a floor block at Y 63):
+The block drops onto the floor below the spot you spawn it at and centres
+itself on that block, so it does not matter if you were flying or standing
+half in the ground. Every height in the fight is measured from that floor.
 
-    mm mobs spawn fv_endsoul_block 1 world,100.5,64,200.5
-
-That is all. The block is persistent: it survives restarts, remembers
-and whether a fight is running. When the boss is killed it is gone for
-good (the block goes with it) - spawn a new block for another fight. Every height in the fight is measured from the block, so it has to
-sit ON the floor, not inside it.
+That is all. The block is persistent: it survives restarts and remembers
+whether a fight is running. When the boss is killed it is gone for good
+(the block goes with it) - spawn a new block for another fight.
 
 The arena: an open, flat floor with at least 20 blocks of room around the
 block. The boss never moves further than 18 blocks from the block (change
-it in fv_endsoul_boss_settings); it moves by teleporting, so pillars inside
-that radius are passed straight through.
+it in fv_endsoul_boss_settings); it glides by teleporting, so pillars
+inside that radius are passed straight through.
 
 To remove it:  /mm mobs kill fv_endsoul_block  (and /mm mobs kill fv_endsoul
 if a fight is running).
@@ -94,19 +91,34 @@ THE BLOCK
 
 WAKING UP (on_spawn, 7 seconds)
   The block turns into the boss in the same spot: light bursts out, it
-  trembles, lifts off, speaks, the frame strains and bursts open and shoves
-  everybody back. It cannot be damaged during the whole animation.
+  trembles, lifts off and keeps rising about two blocks into the air, the
+  frame strains and bursts open - the screens of everyone within 24 blocks
+  shake - and a shockwave shoves everybody back. Then it swoops down to eye
+  level. It cannot be damaged during the whole animation.
 
 THE LOOP
-  It floats in place and turns to face the closest player - this is when to
-  hit it. Then it picks an attack - never the same KIND (laser / down beam /
-  shooting) twice in a row - and a random pattern of that kind.
+  It floats at eye level and keeps its eye on the closest player, but it
+  does not sit still: between attacks it glides away from you, circles you
+  sideways, drifts to a spot nearby or closes in when you keep your
+  distance - starting slow, speeding up and easing out. If it strays too
+  far from its block it turns and floats back. Then it picks an attack -
+  never the same KIND (laser / down beam / shooting) twice in a row - and a
+  random pattern of that kind.
 
-  When it takes damage depends on what it is doing:
-    idle, winding up, shooting ......... full damage
-    laser beam live .................... half damage (its shell hardens)
-    up in the air for the down beam .... no damage (out of reach)
-    landed and dazed after it .......... x1.35 damage - the big opening
+  HIT REACTION: a hit while it is open (floating, moving, winding up an
+  attack, shooting) knocks it back - the attack it was doing is cancelled,
+  it plays its hurt animation, can do nothing for about 2.5 seconds, idles
+  for a second and then backs away from you. It cannot be knocked back
+  again until ~8 seconds after the hit (phase 2 / 3: ~9 / ~10), so you get
+  one big interrupt at a time.
+
+  Damage depends on what it is doing:
+    floating, moving, winding up, shooting ... full damage (and the hit
+                                                reaction above)
+    laser beam or down beam live ............. half damage (its shell
+                                                hardens, no hit reaction)
+    landed and dazed after the down beam ..... x1.35 damage - the big opening
+    screaming at a phase change .............. no damage (2 seconds)
 
   PHASE 2 at 66% health, PHASE 3 at 33%. When the current attack is done it
   screams and a shockwave throws everyone back. Every phase makes it faster:
@@ -120,34 +132,34 @@ ATTACK 1 - LASER (attack1)
   STRAIGHT   tracks you while charging, then the beam creeps after you at
              chest height - step sideways. Phase 2+: it pings again and
              FLICKS onto where you stand.
-  JUMP ROPE  sinks low and sweeps 360 degrees at hip height - JUMP just as
-             it reaches you: only the top of a jump clears it (easier the
-             further away you stand). A red ring on the floor shows the
-             beam's reach. Phase 3: it reverses once halfway (high double
-             click warns you).
+  JUMP ROPE  sinks low and sweeps 360 degrees - JUMP just as it reaches
+             you: the top half of a jump clears it. The spin starts slow,
+             speeds up and slows down again towards the end. A cyan ring
+             on the floor shows the beam's reach. Phase 3: it reverses once
+             halfway (high double click warns you).
   HUNTER     (phase 2+) follows you, turning faster every quarter of the
              beam. Circle it tightly or get out of its reach.
-  CHAOS      (phase 2+) hip-height sweep that randomly reverses (high double
+  CHAOS      (phase 2+) low sweep that randomly reverses (high double
              click) or changes speed (rising chime). Both are announced.
+             Like the jump rope it starts slow and winds down at the end.
 
 ATTACK 2 - DOWN BEAM (attack2)
-  The cube rises 4 blocks, turns its eye to the floor and charges - a red
-  ring marks the spot under it. Then the beam fires straight down into a
-  glowing ring hovering just above the floor, and the boss slowly drifts
-  after the closest player for 4 to 5 seconds. Standing in the ring burns
-  like the laser (14). The beam reaches from the ring up to the cube, so
-  jumping does not help - walk out of the ring and keep moving. It is
-  slower than walking (phase 1 / 2 / 3: 2.2 / 2.8 / 3.4 blocks a second,
-  players walk 4.3) and turns faster every phase. If it catches you it
-  stops right on top of you; get behind it and it turns round on the spot
-  before it follows again. It cannot be hit while it is up there. Then it
-  comes back down (a small shockwave when it lands) and hovers low, dazed:
-  the big damage window.
+  The cube rises, turns its eye to the floor and charges - a cyan ring
+  marks the spot under it - then the beam fires straight down. Now it
+  DASHES: it turns towards the closest player and draws a thin cyan line
+  on the floor where it is going to charge. The line turns WHITE with a
+  bell when the aim is locked - from then on it will not turn any more.
+  A moment later it shoots along that line very fast (about 10 blocks in
+  half a second) - jump or step to the SIDE. Three dashes per down beam;
+  every phase locks on quicker. Standing under the beam burns like the
+  laser (14). Its shell is hardened while the beam is on (half damage).
+  Then it comes back down (a small shockwave when it lands) and hovers
+  low, dazed: the big damage window.
 
 ATTACK 3 - SHOOTING (shooting + the projectile model)
   Shots fly straight and level and burst where they end (direct hit 7,
   burst splash 3).
-  AIMED      (phase 1-2) tracks you, PING + a thin red sight line, then a
+  AIMED      (phase 1-2) tracks you, PING + a thin cyan sight line, then a
              very fast shot.
   BURST      (phase 2+) a stream of shots aimed at you; every 3rd (phase 3:
              every 2nd) is aimed where you are GOING - change direction.
@@ -229,9 +241,9 @@ Projectiles or the explosion are invisible
   Set "Marker: false" in fv_endsoul_fx_base (mobs file) - a few ModelEngine
   builds will not render models on marker armour stands.
 
-The boss sits too low, or the low laser sweep never hits
-  The block was placed inside the floor. Kill it and spawn it again standing
-  on the floor (see PLACING THE BOSS).
+The boss sits too low / too high, or the low laser sweep never hits
+  The block was spawned before this version (older blocks did not drop onto
+  the floor). Kill it and spawn it again (see PLACING THE BOSS).
 
 Its attacks do not hurt me
   Creative and Spectator players are ignored by every attack - fight it in
