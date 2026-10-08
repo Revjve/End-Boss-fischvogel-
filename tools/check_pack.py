@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Static checker for FischVogel's End Boss.
+Static checker for Soul of the End.
 
     python3 check_pack.py <plugins_dir> [vanilla_data_dir]
 
@@ -213,7 +213,7 @@ KNOWN_PH = re.compile(r'^caster\.(l\.(x|y|z)\.double|l\.yaw|hp|mhp)$|^(caster|sk
 def main():
     plugins = sys.argv[1]
     vdir = sys.argv[2] if len(sys.argv) > 2 else None
-    mm = os.path.join(plugins, 'MythicMobs', 'packs', 'fv_soulcube')
+    mm = os.path.join(plugins, 'MythicMobs', 'packs', 'fv_endsoul')
     me = os.path.join(plugins, 'ModelEngine', 'blueprints')
 
     # ---- vanilla data ----

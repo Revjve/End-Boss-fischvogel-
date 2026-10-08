@@ -1,44 +1,23 @@
-# ============================================================================
-#  Soul Cube (FischVogel) - Sounds and particles
-# ============================================================================
-#  Theme: a soul trapped inside a block. Only vanilla Minecraft sounds, so
-#  nothing extra goes into the resource pack: its voice is ghasts, vexes and
-#  the soul sand valley (wails, shrieks, whispers), its body is amethyst,
-#  glass, deepslate and chains, its heartbeat is the warden's, its beams are
-#  beacons and conduits.
-#
-#  Sound volume above 1 does not make a sound louder, it makes it carry
-#  further (16 blocks x volume). Pitch is clamped by Minecraft to 0.5 - 2.
-#
-#  Colours: #9FFCFF cube glow, #BFFFFF beam, #FF3B3B danger marks.
-# ============================================================================
+# Made by revjve
 
-
-# ============================================================================
-#  THE BLOCK
-# ============================================================================
-# Every second while a player is within 14 blocks.
-fv_soulcube_sfx_block_heartbeat:
+fv_endsoul_sfx_block_heartbeat:
   Skills:
   - sound{s=entity.warden.heartbeat;v=0.45;p=0.8} @self
 
-# 1 in 3 seconds while a player is within 9 blocks.
-fv_soulcube_sfx_block_whisper:
+fv_endsoul_sfx_block_whisper:
   Cooldown: 4
   Skills:
   - sound{s=ambient.soul_sand_valley.additions;v=0.8;p=0.9} @self
   - sound{s=particle.soul_escape;v=0.6;p=0.6} @self
   - particles{particle=soul;amount=2;hs=0.3;vs=0.2;speed=0.01;y=0.6} @self
 
-# The eye opens and looks at you.
-fv_soulcube_sfx_block_peek:
+fv_endsoul_sfx_block_peek:
   Skills:
   - sound{s=entity.vex.ambient;v=0.7;p=0.6} @self
   - sound{s=block.amethyst_block.resonate;v=0.7;p=0.6} @self
   - sound{s=entity.allay.ambient_without_item;v=0.5;p=0.5} @self
 
-# Re-formed after a kill, a reset or a restart.
-fv_soulcube_sfx_block_reform:
+fv_endsoul_sfx_block_reform:
   Skills:
   - sound{s=block.respawn_anchor.charge;v=1;p=0.6} @self
   - sound{s=block.amethyst_block.place;v=1;p=0.5} @self
@@ -47,12 +26,7 @@ fv_soulcube_sfx_block_reform:
   - particles{particle=reverse_portal;amount=40;hs=0.8;vs=0.8;speed=0.05;y=0.5} @self
   - particles{particle=dust;color=#9FFCFF;size=1;amount=16;hs=0.45;vs=0.45;speed=0;y=0.5} @self
 
-
-# ============================================================================
-#  WAKING UP  (on_spawn - see fv_soulcube_wake_timeline for the tick numbers)
-# ============================================================================
-# 0: light rays burst out of the block - the soul screams.
-fv_soulcube_sfx_wake_burst:
+fv_endsoul_sfx_wake_burst:
   Skills:
   - sound{s=entity.ghast.scream;v=2;p=0.8} @self
   - sound{s=block.beacon.activate;v=1.5;p=0.6} @self
@@ -61,8 +35,7 @@ fv_soulcube_sfx_wake_burst:
   - particles{particle=end_rod;amount=40;hs=0.3;vs=0.3;speed=0.25;y=0.5} @self
   - particles{particle=dust;color=#9FFCFF;size=1.4;amount=24;hs=0.6;vs=0.6;speed=0;y=0.5} @self
 
-# 17: it starts to tremble - stone grinding against stone.
-fv_soulcube_sfx_wake_tremble:
+fv_endsoul_sfx_wake_tremble:
   Skills:
   - sound{s=block.deepslate.break;v=1.2;p=0.6} @self
   - sound{s=block.deepslate.break;v=1.2;p=0.75;delay=5} @self
@@ -71,16 +44,14 @@ fv_soulcube_sfx_wake_tremble:
   - sound{s=ambient.soul_sand_valley.additions;v=1.2;p=0.9;delay=8} @self
   - particles{particle=white_ash;amount=30;hs=1.2;vs=0.4;speed=0.02;y=0.3} @self
 
-# 51: it lifts off the ground and starts to speak.
-fv_soulcube_sfx_wake_lift:
+fv_endsoul_sfx_wake_lift:
   Skills:
   - sound{s=entity.evoker.prepare_summon;v=1.5;p=0.7} @self
   - sound{s=block.respawn_anchor.charge;v=1.5;p=0.6} @self
   - sound{s=entity.breeze.inhale;v=1.2;p=0.6} @self
   - particles{particle=reverse_portal;amount=50;hs=1.4;vs=0.6;speed=0.1;y=1} @self
 
-# 81: the frame strains against the light.
-fv_soulcube_sfx_wake_strain:
+fv_endsoul_sfx_wake_strain:
   Skills:
   - sound{s=block.grindstone.use;v=1.5;p=0.5} @self
   - sound{s=block.chain.break;v=1.2;p=0.5} @self
@@ -88,22 +59,19 @@ fv_soulcube_sfx_wake_strain:
   - sound{s=block.amethyst_block.resonate;v=1.2;p=0.5} @self
   - sound{s=entity.ghast.hurt;v=1;p=0.8;delay=10} @self
 
-# 117: violent shaking.
-fv_soulcube_sfx_wake_shake:
+fv_endsoul_sfx_wake_shake:
   Skills:
   - sound{s=entity.warden.emerge;v=1.5;p=1.6} @self
   - sound{s=block.deepslate.break;v=1.5;p=0.5} @self
   - sound{s=block.glass.break;v=1;p=0.5} @self
   - particles{particle=white_ash;amount=40;hs=1;vs=1;speed=0.05;y=2} @self
 
-# 119: the eye opens.
-fv_soulcube_sfx_wake_eye:
+fv_endsoul_sfx_wake_eye:
   Skills:
   - sound{s=block.sculk_shrieker.shriek;v=2;p=1.3} @self
   - sound{s=entity.ghast.scream;v=2;p=1.1} @self
 
-# 123: the frame bursts open.
-fv_soulcube_sfx_wake_frame:
+fv_endsoul_sfx_wake_frame:
   Skills:
   - sound{s=entity.generic.explode;v=1.5;p=1.6} @self
   - sound{s=block.amethyst_cluster.break;v=2;p=0.7} @self
@@ -112,37 +80,30 @@ fv_soulcube_sfx_wake_frame:
   - particles{particle=explosion;amount=2;hs=0.3;vs=0.3;speed=0;y=2.4} @self
   - particles{particle=end_rod;amount=60;hs=0.4;vs=0.4;speed=0.35;y=2.4} @self
 
-# 123: ... and shoves everybody back. No damage - it is not fighting yet.
-fv_soulcube_wake_shockwave:
+fv_endsoul_wake_shockwave:
   Skills:
   - sound{s=entity.breeze.wind_burst;v=1.5;p=0.7} @self
-  - skill{s=fv_soulcube_wake_push} @PlayersInRadius{r=4.5}
+  - skill{s=fv_endsoul_wake_push} @PlayersInRadius{r=4.5}
   - particlering{particle=dust;color=#9FFCFF;size=1.6;radius=1;points=16;amount=1;hs=0;vs=0;speed=0;y=0.15} @SelfLocation
   - particlering{particle=dust;color=#9FFCFF;size=1.5;radius=2;points=26;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=1} @SelfLocation
   - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=3;points=36;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=2} @SelfLocation
   - particlering{particle=dust;color=#9FFCFF;size=1.3;radius=4;points=46;amount=1;hs=0;vs=0;speed=0;y=0.15;delay=3} @SelfLocation
   - particlering{particle=gust;radius=3;points=10;amount=1;hs=0;vs=0;speed=0;y=0.3;delay=2} @SelfLocation
 
-fv_soulcube_wake_push:
+fv_endsoul_wake_push:
   TargetConditions:
   - gamemode{m=SURVIVAL,ADVENTURE} true
   Skills:
   - throw{velocity=8;velocityY=3}
 
-
-# ============================================================================
-#  TAKING HITS
-# ============================================================================
-# Normal hit - glass chimes and a thin cry.
-fv_soulcube_sfx_hurt:
+fv_endsoul_sfx_hurt:
   Skills:
   - sound{s=block.amethyst_block.hit;v=1;p=0.8} @self
   - sound{s=block.glass.hit;v=1;p=0.6} @self
   - sound{s=entity.vex.hurt;v=0.5;p=0.7} @self
   - particles{particle=dust;color=#9FFCFF;size=0.8;amount=5;hs=0.3;vs=0.3;speed=0;y=0.5} @self
 
-# Hit while dazed (x1.35) - it cracks.
-fv_soulcube_sfx_hurt_big:
+fv_endsoul_sfx_hurt_big:
   Skills:
   - sound{s=block.amethyst_cluster.break;v=1.2;p=0.8} @self
   - sound{s=block.deepslate.break;v=1;p=0.8} @self
@@ -150,54 +111,42 @@ fv_soulcube_sfx_hurt_big:
   - particles{particle=crit;amount=10;hs=0.3;vs=0.3;speed=0.2;y=0.5} @self
   - particles{particle=dust;color=#FFFFFF;size=1;amount=8;hs=0.35;vs=0.35;speed=0;y=0.5} @self
 
-# Hit while the beam is live (x0.5) - a dull clank off the hardened shell.
-fv_soulcube_sfx_armored:
+fv_endsoul_sfx_armored:
   Skills:
   - sound{s=entity.zombie.attack_iron_door;v=0.5;p=1.6} @self
   - sound{s=block.amethyst_block.hit;v=1;p=0.5} @self
   - particles{particle=electric_spark;amount=8;hs=0.3;vs=0.3;speed=0.1;y=0.5} @self
 
-# Hit while out of reach - nothing lands.
-fv_soulcube_sfx_immune:
+fv_endsoul_sfx_immune:
   Skills:
   - sound{s=item.shield.block;v=0.6;p=1.4} @self
   - sound{s=block.amethyst_block.chime;v=1;p=1.6} @self
 
-# A player hit by the landing (runs on the player).
-fv_soulcube_sfx_body_hit:
+fv_endsoul_sfx_body_hit:
   Skills:
   - sound{s=entity.player.attack.strong;v=1;p=0.6}
   - sound{s=block.deepslate.break;v=1;p=1.2}
   - particles{particle=crit;amount=8;hs=0.3;vs=0.4;speed=0.2;y=1}
 
-
-# ============================================================================
-#  FIGHT FLOW AND PHASES
-# ============================================================================
-# Phase 3: straight into the next attack.
-fv_soulcube_sfx_combo:
+fv_endsoul_sfx_combo:
   Skills:
   - sound{s=entity.vex.ambient;v=1.2;p=1.2} @self
   - sound{s=entity.warden.sonic_charge;v=0.6;p=2} @self
   - sound{s=entity.vex.charge;v=1;p=0.8} @self
 
-# Blinks back to its block (dragged too far away).
-fv_soulcube_sfx_blink:
+fv_endsoul_sfx_blink:
   Skills:
   - sound{s=entity.enderman.teleport;v=1.2;p=0.7} @self
   - sound{s=entity.illusioner.mirror_move;v=1;p=0.8} @self
   - particles{particle=reverse_portal;amount=40;hs=0.5;vs=0.6;speed=0.1;y=0.6} @self
 
-# Everyone left - it gives up and sinks back into its block.
-fv_soulcube_sfx_reset:
+fv_endsoul_sfx_reset:
   Skills:
   - sound{s=ambient.soul_sand_valley.additions;v=1.2;p=0.7} @self
   - sound{s=block.beacon.deactivate;v=1.2;p=0.6} @self
   - particles{particle=reverse_portal;amount=60;hs=0.6;vs=0.6;speed=0.08;y=0.6} @self
 
-# Health crossed 66% / 33%: the shell cracks at once (the roar follows when
-# the current attack is over).
-fv_soulcube_sfx_phase_crack:
+fv_endsoul_sfx_phase_crack:
   Skills:
   - sound{s=block.amethyst_cluster.break;v=1.5;p=0.5} @self
   - sound{s=block.glass.break;v=1.5;p=0.5} @self
@@ -206,8 +155,7 @@ fv_soulcube_sfx_phase_crack:
   - particles{particle=dust;color=#FFFFFF;size=1.2;amount=20;hs=0.4;vs=0.4;speed=0;y=0.5} @self
   - particles{particle=white_ash;amount=30;hs=0.5;vs=0.5;speed=0.05;y=0.5} @self
 
-# The phase roar.
-fv_soulcube_sfx_phase_roar:
+fv_endsoul_sfx_phase_roar:
   Skills:
   - sound{s=entity.ghast.scream;v=2.5;p=0.7} @self
   - sound{s=block.sculk_shrieker.shriek;v=2;p=0.9} @self
@@ -215,8 +163,7 @@ fv_soulcube_sfx_phase_roar:
   - sound{s=entity.ender_dragon.growl;v=1.5;p=1.6} @self
   - particles{particle=sculk_soul;amount=20;hs=0.5;vs=0.5;speed=0.06;y=0.6} @self
 
-# Expanding shockwave of the roar (6 blocks).
-fv_soulcube_vfx_shockwave:
+fv_endsoul_vfx_shockwave:
   Skills:
   - sound{s=entity.warden.sonic_boom;v=1.5;p=1.2} @self
   - sound{s=entity.breeze.wind_burst;v=1.5;p=0.6} @self
@@ -227,12 +174,7 @@ fv_soulcube_vfx_shockwave:
   - particlering{particle=dust;color=#9FFCFF;size=1.3;radius=6;points=64;amount=1;hs=0;vs=0;speed=0;y=0.3;delay=3} @SelfLocation
   - particlering{particle=gust;radius=4;points=12;amount=1;hs=0;vs=0;speed=0;y=0.5;delay=2} @SelfLocation
 
-
-# ============================================================================
-#  LASER
-# ============================================================================
-# Start of attack1: the eye gathers light (about 2.5 s before the beam).
-fv_soulcube_sfx_laser_charge:
+fv_endsoul_sfx_laser_charge:
   Skills:
   - sound{s=block.conduit.activate;v=1.4;p=1.2} @self
   - sound{s=entity.guardian.attack;v=1.5;p=0.8} @self
@@ -241,130 +183,109 @@ fv_soulcube_sfx_laser_charge:
   - particles{particle=reverse_portal;amount=30;hs=0.8;vs=0.5;speed=0.06;y=0.5;delay=15} @self
   - particles{particle=reverse_portal;amount=30;hs=0.8;vs=0.5;speed=0.06;y=0.5;delay=30} @self
 
-# The ping: the aim is locked, 8 ticks until it fires / flicks.
-fv_soulcube_sfx_laser_lock:
+fv_endsoul_sfx_laser_lock:
   Skills:
   - sound{s=block.note_block.bell;v=1.5;p=2} @self
   - sound{s=block.amethyst_block.chime;v=1.5;p=1.8} @self
 
-# The beam ignites - the soul screams through it.
-fv_soulcube_sfx_laser_fire:
+fv_endsoul_sfx_laser_fire:
   Skills:
   - sound{s=entity.warden.sonic_boom;v=1.5;p=0.8} @self
   - sound{s=block.beacon.activate;v=1.5;p=1.4} @self
   - sound{s=entity.ghast.scream;v=2;p=1.3} @self
   - particles{particle=end_rod;amount=20;hs=0.2;vs=0.2;speed=0.2;y=0.5} @self
 
-# Every tick while the beam is live; the cooldown lets each hum play out.
-fv_soulcube_sfx_laser_hum:
+fv_endsoul_sfx_laser_hum:
   Cooldown: 1.5
   Skills:
   - sound{s=block.conduit.ambient;v=1.5;p=1.4} @self
   - sound{s=block.beacon.ambient;v=1.5;p=1.5} @self
 
-fv_soulcube_sfx_laser_end:
+fv_endsoul_sfx_laser_end:
   Skills:
   - sound{s=block.beacon.deactivate;v=1.5;p=1.2} @self
   - sound{s=block.respawn_anchor.deplete;v=1.2;p=1.4} @self
   - sound{s=entity.vex.hurt;v=1;p=0.5} @self
 
-# A player standing in the beam (runs on the player).
-fv_soulcube_sfx_laser_hit:
+fv_endsoul_sfx_laser_hit:
   Skills:
   - sound{s=entity.player.hurt_on_fire;v=1;p=1.2}
   - sound{s=block.fire.extinguish;v=0.8;p=1.4}
   - particles{particle=electric_spark;amount=12;hs=0.3;vs=0.5;speed=0.2;y=1}
   - particles{particle=dust;color=#BFFFFF;size=1.1;amount=8;hs=0.3;vs=0.5;speed=0;y=1}
 
-# STRAIGHT: the fast flick onto you.
-fv_soulcube_sfx_flick:
+fv_endsoul_sfx_flick:
   Skills:
   - sound{s=entity.player.attack.sweep;v=1;p=1.6} @self
   - sound{s=block.amethyst_block.resonate;v=1;p=2} @self
 
-# High double click: the sweep is about to reverse.
-fv_soulcube_sfx_warn_flip:
+fv_endsoul_sfx_warn_flip:
   Skills:
   - sound{s=block.note_block.hat;v=1.5;p=2} @self
   - sound{s=block.stone_button.click_on;v=1.2;p=2} @self
   - sound{s=block.note_block.hat;v=1.5;p=2;delay=3} @self
   - sound{s=block.stone_button.click_on;v=1.2;p=2;delay=3} @self
 
-# Rising chime: the sweep is about to change speed.
-fv_soulcube_sfx_warn_speed:
+fv_endsoul_sfx_warn_speed:
   Skills:
   - sound{s=block.note_block.chime;v=1.5;p=1} @self
   - sound{s=block.note_block.chime;v=1.5;p=1.4;delay=2} @self
   - sound{s=block.note_block.chime;v=1.5;p=1.9;delay=4} @self
 
-# HUNTER: it turns faster.
-fv_soulcube_sfx_hunt_up:
+fv_endsoul_sfx_hunt_up:
   Skills:
   - sound{s=block.beacon.power_select;v=1;p=1.8} @self
   - sound{s=entity.vex.charge;v=0.8;p=1.4} @self
 
-# The beam itself, drawn every 2nd tick: a glittering line along the beam's
-# exact reach (10.4 blocks) and sparks where it ends.
-fv_soulcube_vfx_beam:
+fv_endsoul_vfx_beam:
   Cooldown: 0.1
   Skills:
   - particleline{particle=dust;color=#BFFFFF;size=0.9;amount=1;distanceBetween=0.8;startYOffset=0.5;targetYOffset=0.5;fromOrigin=false} @Forward{f=10.4;lockpitch=true;uel=false}
   - particles{particle=electric_spark;amount=3;hs=0.15;vs=0.15;speed=0.15;y=0.5} @Forward{f=10.4;lockpitch=true;uel=false}
 
-# JUMP ROPE / CHAOS: a red ring on the floor at the beam's reach, pulsing
-# until the beam fires (the boss is down on the floor from tick 8 on).
-fv_soulcube_vfx_low_beam_warning:
+fv_endsoul_vfx_low_beam_warning:
   Skills:
-  - skill{s=fv_soulcube_vfx_low_ring;delay=9} @self
-  - skill{s=fv_soulcube_vfx_low_ring;delay=19} @self
-  - skill{s=fv_soulcube_vfx_low_ring;delay=29} @self
-  - skill{s=fv_soulcube_vfx_low_ring;delay=39} @self
+  - skill{s=fv_endsoul_vfx_low_ring;delay=9} @self
+  - skill{s=fv_endsoul_vfx_low_ring;delay=19} @self
+  - skill{s=fv_endsoul_vfx_low_ring;delay=29} @self
+  - skill{s=fv_endsoul_vfx_low_ring;delay=39} @self
 
-fv_soulcube_vfx_low_ring:
+fv_endsoul_vfx_low_ring:
   Conditions:
-  - variableequals{var=caster.fv_soulcube_state;value=FIGHT} true
+  - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
   Skills:
   - particlering{particle=dust;color=#FF3B3B;size=1.4;radius=10.4;points=72;amount=1;hs=0;vs=0;speed=0;y=0.2} @SelfLocation
   - particlering{particle=dust;color=#FF3B3B;size=1.1;radius=5.2;points=36;amount=1;hs=0;vs=0;speed=0;y=0.2} @SelfLocation
   - sound{s=block.note_block.basedrum;v=1.5;p=0.6} @self
 
-
-# ============================================================================
-#  DOWN BEAM  (attack2)
-# ============================================================================
-# The cube rises 4 blocks and turns its eye to the floor.
-fv_soulcube_sfx_downbeam_rise:
+fv_endsoul_sfx_downbeam_rise:
   Skills:
   - sound{s=entity.breeze.inhale;v=1.5;p=0.6} @self
   - sound{s=block.respawn_anchor.charge;v=1.5;p=0.8} @self
   - sound{s=entity.illusioner.prepare_mirror;v=1.2;p=0.7} @self
   - particles{particle=gust;amount=3;hs=0.8;vs=0.1;speed=0;y=0.2} @self
 
-# Hovering up high, the beam charges.
-fv_soulcube_sfx_downbeam_charge:
+fv_endsoul_sfx_downbeam_charge:
   Skills:
   - sound{s=entity.warden.sonic_charge;v=1.5;p=0.8} @self
   - sound{s=block.conduit.activate;v=1.2;p=0.8} @self
 
-# The spot it is about to burn: a red ring the size of the impact ring,
-# pulsing where the impact ring will appear until the beam fires.
-fv_soulcube_vfx_downbeam_mark:
+fv_endsoul_vfx_downbeam_mark:
   Skills:
-  - skill{s=fv_soulcube_vfx_downbeam_mark_pulse}
-  - skill{s=fv_soulcube_vfx_downbeam_mark_pulse;delay=10}
-  - skill{s=fv_soulcube_vfx_downbeam_mark_pulse;delay=20}
-  - skill{s=fv_soulcube_vfx_downbeam_mark_pulse;delay=30}
+  - skill{s=fv_endsoul_vfx_downbeam_mark_pulse}
+  - skill{s=fv_endsoul_vfx_downbeam_mark_pulse;delay=10}
+  - skill{s=fv_endsoul_vfx_downbeam_mark_pulse;delay=20}
+  - skill{s=fv_endsoul_vfx_downbeam_mark_pulse;delay=30}
 
-fv_soulcube_vfx_downbeam_mark_pulse:
+fv_endsoul_vfx_downbeam_mark_pulse:
   Conditions:
-  - variableequals{var=caster.fv_soulcube_state;value=FIGHT} true
+  - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
   Skills:
   - particlering{particle=dust;color=#FF3B3B;size=1.2;radius=0.65;points=14;amount=1;hs=0;vs=0;speed=0;y=0.05} @SelfLocation
   - particles{particle=dust;color=#FF3B3B;size=1;amount=6;hs=0.15;vs=0.9;speed=0;y=1} @self
   - sound{s=block.note_block.basedrum;v=1;p=0.8} @self
 
-# The beam fires: the soul shrieks through it.
-fv_soulcube_sfx_downbeam_ignite:
+fv_endsoul_sfx_downbeam_ignite:
   Skills:
   - sound{s=entity.firework_rocket.launch;v=1.5;p=0.6} @self
   - sound{s=entity.generic.explode;v=1;p=1.4} @self
@@ -373,40 +294,37 @@ fv_soulcube_sfx_downbeam_ignite:
   - particles{particle=explosion;amount=1;hs=0;vs=0;speed=0;y=0} @self
   - particles{particle=end_rod;amount=10;hs=0.2;vs=0.2;speed=0.12;y=3.9} @self
 
-# Roar of the beam, once a second while it burns.
-fv_soulcube_sfx_downbeam_roar:
+fv_endsoul_sfx_downbeam_roar:
   Cooldown: 1
   Skills:
   - sound{s=entity.blaze.burn;v=1.5;p=0.6} @self
   - sound{s=block.beacon.ambient;v=1.5;p=0.8} @self
   - sound{s=block.conduit.ambient;v=1.2;p=1.1} @self
 
-# Where the beam ends, in the impact ring: soul fire and sparks splashing out.
-fv_soulcube_vfx_downbeam:
+fv_endsoul_vfx_downbeam:
   Cooldown: 0.1
   Skills:
   - particles{particle=soul_fire_flame;amount=3;hs=0.25;vs=0.02;speed=0.03;y=0.05} @self
   - particles{particle=dust;color=#BFFFFF;size=1.1;amount=2;hs=0.3;vs=0.05;speed=0;y=0.05} @self
   - particles{particle=electric_spark;amount=1;hs=0.2;vs=0.2;speed=0.2;y=0} @self
 
-fv_soulcube_sfx_downbeam_off:
+fv_endsoul_sfx_downbeam_off:
   Skills:
   - sound{s=block.fire.extinguish;v=1.5;p=0.7} @self
   - sound{s=block.beacon.deactivate;v=1.5;p=0.8} @self
 
-fv_soulcube_sfx_downbeam_descend:
+fv_endsoul_sfx_downbeam_descend:
   Skills:
   - sound{s=entity.phantom.swoop;v=1.5;p=0.6} @self
 
-fv_soulcube_sfx_downbeam_land:
+fv_endsoul_sfx_downbeam_land:
   Skills:
   - sound{s=item.mace.smash_ground_heavy;v=1.5;p=0.8} @self
   - sound{s=entity.generic.explode;v=1.2;p=0.8} @self
   - sound{s=block.anvil.land;v=1;p=0.5} @self
   - sound{s=block.deepslate.break;v=1.5;p=0.6} @self
 
-# Crashed and dazed: ringing glass, a tired cry.
-fv_soulcube_sfx_dazed:
+fv_endsoul_sfx_dazed:
   Skills:
   - sound{s=block.bell.resonate;v=0.8;p=1.6} @self
   - sound{s=entity.allay.death;v=1;p=0.6} @self
@@ -414,81 +332,67 @@ fv_soulcube_sfx_dazed:
   - particlering{particle=crit;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4;delay=10} @SelfLocation
   - particlering{particle=crit;radius=0.8;points=8;amount=1;hs=0;vs=0;speed=0;y=1.4;delay=20} @SelfLocation
 
-# The impact ring's walls pulse: the ring flares.
-fv_soulcube_sfx_pulse:
+fv_endsoul_sfx_pulse:
   Skills:
   - sound{s=entity.breeze.wind_burst;v=1.2;p=0.9} @self
   - sound{s=block.respawn_anchor.deplete;v=1;p=1.6} @self
 
-fv_soulcube_vfx_pulse:
+fv_endsoul_vfx_pulse:
   Skills:
   - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=0.8;points=14;amount=1;hs=0;vs=0;speed=0;y=0.05} @SelfLocation
   - particlering{particle=dust;color=#9FFCFF;size=1.2;radius=1.2;points=20;amount=1;hs=0;vs=0;speed=0;y=0.05;delay=1} @SelfLocation
 
-# Landing (the boss is back at 16 px, 1 block up): the blast hits the floor.
-fv_soulcube_vfx_land:
+fv_endsoul_vfx_land:
   Skills:
   - particles{particle=explosion;amount=2;hs=0.6;vs=0.1;speed=0;y=-0.7} @self
   - particlering{particle=cloud;radius=1.5;points=16;amount=1;hs=0;vs=0;speed=0.05;y=-0.8} @SelfLocation
   - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=2.5;points=32;amount=1;hs=0;vs=0;speed=0;y=-0.85;delay=1} @SelfLocation
 
-
-# ============================================================================
-#  SHOOTING
-# ============================================================================
-# A shooting attack begins: a sharp inhale, light drawn into the eye.
-fv_soulcube_sfx_shoot_charge:
+fv_endsoul_sfx_shoot_charge:
   Skills:
   - sound{s=entity.vex.charge;v=1;p=1.2} @self
   - sound{s=entity.evoker.prepare_attack;v=1;p=1.4} @self
   - sound{s=block.beacon.power_select;v=0.8;p=1.4} @self
 
-fv_soulcube_vfx_shoot_charge:
+fv_endsoul_vfx_shoot_charge:
   Skills:
   - particles{particle=reverse_portal;amount=24;hs=0.5;vs=0.4;speed=0.05;y=0.5} @self
   - particles{particle=enchant;amount=20;hs=0.6;vs=0.5;speed=0.5;y=0.5} @self
 
-# Every shot. The cooldown keeps fast volleys from drowning everything else.
-fv_soulcube_sfx_shoot:
+fv_endsoul_sfx_shoot:
   Cooldown: 0.1
   Skills:
   - sound{s=entity.shulker.shoot;v=1;p=1.4} @self
   - sound{s=block.amethyst_block.break;v=0.5;p=1.8} @self
 
-# The heavy shots (AIMED and each FAN volley).
-fv_soulcube_sfx_shoot_big:
+fv_endsoul_sfx_shoot_big:
   Skills:
   - sound{s=entity.wither.shoot;v=1;p=1.6} @self
   - sound{s=entity.shulker.shoot;v=1;p=0.8} @self
 
-# AIMED: the lock-on ping.
-fv_soulcube_sfx_shoot_lock:
+fv_endsoul_sfx_shoot_lock:
   Skills:
   - sound{s=block.note_block.pling;v=1.5;p=2} @self
   - sound{s=block.amethyst_block.chime;v=1.5;p=2} @self
 
-# AIMED: a thin red sight line shows where the shot will go - it does not
-# turn any more once this appears.
-fv_soulcube_vfx_shoot_lock:
+fv_endsoul_vfx_shoot_lock:
   Skills:
   - particles{particle=end_rod;amount=6;hs=0.1;vs=0.1;speed=0.05;y=0.5} @self
-  - skill{s=fv_soulcube_vfx_sight} @self
-  - skill{s=fv_soulcube_vfx_sight;delay=2} @self
-  - skill{s=fv_soulcube_vfx_sight;delay=4} @self
-  - skill{s=fv_soulcube_vfx_sight;delay=6} @self
+  - skill{s=fv_endsoul_vfx_sight} @self
+  - skill{s=fv_endsoul_vfx_sight;delay=2} @self
+  - skill{s=fv_endsoul_vfx_sight;delay=4} @self
+  - skill{s=fv_endsoul_vfx_sight;delay=6} @self
 
-fv_soulcube_vfx_sight:
+fv_endsoul_vfx_sight:
   Skills:
   - particleline{particle=dust;color=#FF3B3B;size=0.7;amount=1;distanceBetween=0.6;startYOffset=0.5;targetYOffset=0.5;fromOrigin=false} @Forward{f=14;lockpitch=true;uel=false}
 
-# BURST: a lower tick marks a shot aimed where you are going.
-fv_soulcube_sfx_shoot_lead:
+fv_endsoul_sfx_shoot_lead:
   Skills:
   - sound{s=block.amethyst_block.hit;v=1.5;p=0.6} @self
   - sound{s=block.note_block.hat;v=1;p=0.7} @self
 
-# RING / SPIRAL wind-up: light gathers around the cube.
-fv_soulcube_vfx_ring_warning:
+fv_endsoul_vfx_ring_warning:
   Skills:
   - sound{s=entity.evoker.prepare_summon;v=1.2;p=1.6} @self
   - sound{s=block.beacon.power_select;v=1;p=1.2} @self
@@ -496,34 +400,25 @@ fv_soulcube_vfx_ring_warning:
   - particlering{particle=dust;color=#9FFCFF;size=1.2;radius=1.3;points=16;amount=1;hs=0;vs=0;speed=0;y=0.5;delay=5} @SelfLocation
   - particlering{particle=dust;color=#9FFCFF;size=1.2;radius=1;points=12;amount=1;hs=0;vs=0;speed=0;y=0.5;delay=10} @SelfLocation
 
-# A player hit by a shot (runs on the player).
-fv_soulcube_sfx_proj_hit:
+fv_endsoul_sfx_proj_hit:
   Skills:
   - sound{s=entity.shulker_bullet.hit;v=1;p=0.8}
   - sound{s=block.amethyst_block.break;v=1;p=1.4}
 
-# Where a shot ends. The cooldown stops a ring of 40 shots from playing 40
-# bursts at once.
-fv_soulcube_sfx_proj_burst:
+fv_endsoul_sfx_proj_burst:
   Cooldown: 0.15
   Skills:
   - sound{s=block.amethyst_cluster.break;v=0.8;p=1.2}
   - sound{s=block.glass.break;v=0.5;p=1.6}
 
-
-# ============================================================================
-#  DEATH  (plays on the fv_soulcube_deathfx carrier; the cube floats about
-#          3.4 blocks up during the "death" animation)
-# ============================================================================
-fv_soulcube_sfx_death_scream:
+fv_endsoul_sfx_death_scream:
   Skills:
   - sound{s=entity.ghast.death;v=3;p=0.7} @self
   - sound{s=block.sculk_shrieker.shriek;v=2.5;p=0.7} @self
   - sound{s=entity.allay.death;v=2;p=0.5} @self
   - particles{particle=sculk_soul;amount=16;hs=0.5;vs=0.5;speed=0.05;y=1.5} @self
 
-# 7: the light rays spin out - a choir of every voice it ever trapped.
-fv_soulcube_sfx_death_rays:
+fv_endsoul_sfx_death_rays:
   Skills:
   - sound{s=entity.wither.spawn;v=1.5;p=1.6} @self
   - sound{s=block.beacon.activate;v=2;p=0.5} @self
@@ -533,28 +428,24 @@ fv_soulcube_sfx_death_rays:
   - particles{particle=end_rod;amount=30;hs=0.4;vs=0.4;speed=0.3;y=3.4;delay=20} @self
   - particles{particle=end_rod;amount=30;hs=0.4;vs=0.4;speed=0.3;y=3.4;delay=30} @self
 
-# 49: the rays collapse back into the cube.
-fv_soulcube_sfx_death_implode:
+fv_endsoul_sfx_death_implode:
   Skills:
   - sound{s=block.respawn_anchor.deplete;v=2;p=0.5} @self
   - sound{s=block.beacon.deactivate;v=2;p=0.6} @self
   - sound{s=entity.breeze.inhale;v=2;p=0.5} @self
   - particles{particle=reverse_portal;amount=80;hs=1.5;vs=1.5;speed=0.15;y=3.4} @self
 
-# 58: the frame closes, the eye shuts.
-fv_soulcube_sfx_death_close:
+fv_endsoul_sfx_death_close:
   Skills:
   - sound{s=block.iron_door.close;v=1.5;p=0.6} @self
   - sound{s=block.amethyst_block.resonate;v=1.5;p=0.5} @self
 
-# 62 / 72: silence, and a heartbeat.
-fv_soulcube_sfx_death_heartbeat:
+fv_endsoul_sfx_death_heartbeat:
   Skills:
   - sound{s=entity.warden.heartbeat;v=2;p=0.9} @self
   - sound{s=entity.warden.heartbeat;v=2;p=0.6} @self
 
-# 82: the block shatters.
-fv_soulcube_sfx_death_shatter:
+fv_endsoul_sfx_death_shatter:
   Skills:
   - sound{s=block.glass.break;v=2.5;p=0.6} @self
   - sound{s=block.amethyst_cluster.break;v=2.5;p=0.5} @self
@@ -567,8 +458,7 @@ fv_soulcube_sfx_death_shatter:
   - particles{particle=dust;color=#9FFCFF;size=1.2;amount=60;hs=1.6;vs=1.6;speed=0;y=3.4} @self
   - particles{particle=end_rod;amount=40;hs=0.3;vs=0.3;speed=0.4;y=3.4} @self
 
-# 94 / 134: the freed souls drift away.
-fv_soulcube_sfx_death_souls:
+fv_endsoul_sfx_death_souls:
   Skills:
   - sound{s=ambient.soul_sand_valley.additions;v=2;p=1} @self
   - sound{s=particle.soul_escape;v=2;p=0.6} @self

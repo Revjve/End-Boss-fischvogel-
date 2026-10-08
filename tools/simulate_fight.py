@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fight simulator for FischVogel's End Boss.
+Fight simulator for Soul of the End.
 
 Runs the real MythicMobs files of the pack through a small interpreter of
 the mechanics they use (tick by tick, with delays, timers, signals,
@@ -14,7 +14,7 @@ invariants is checked:
   * the same attack TYPE is never picked twice in a row
   * every attack ends with its tick loops stopped (beam, down beam, shots)
   * the model always has a body animation playing (no rest-pose frame)
-  * the boss' height in pixels (fv_soulcube_hpx) always matches its real height
+  * the boss' height in pixels (fv_endsoul_hpx) always matches its real height
   * no variable is ever read before it was set
   * phases 2 / 3 start at 66% / 33% health, each roar plays once
   * death hands the model to the effect carrier, which lives through the
@@ -141,7 +141,7 @@ class Sim:
 
     # ---- loading ----
     def _load(self, plugins):
-        mm = os.path.join(plugins, 'MythicMobs', 'packs', 'fv_soulcube')
+        mm = os.path.join(plugins, 'MythicMobs', 'packs', 'fv_endsoul')
         self.skills, self.mobs, self.parsed = {}, {}, {}
         for root, _, files in os.walk(mm):
             for f in files:
@@ -589,7 +589,7 @@ class Sim:
             if not live:
                 self.error(f'{e} model {e.model} has NO animation playing (rest pose shows)')
                 continue
-            if e.model != 'fv_soulcube':
+            if e.model != 'fv_endsoul':
                 continue
             # ModelEngine plays its own default states unless they are re-pointed
             if not getattr(e, 'defaults', {}).get('IDLE') or not e.defaults.get('WALK'):
@@ -675,37 +675,37 @@ class Sim:
     # ---- hooks: bookkeeping for the invariants ----
     def hook(self, name, meta, extra=None):
         c = meta.caster
-        if name == 'fv_soulcube_pick':
+        if name == 'fv_endsoul_pick':
             self.active_attacks += 1
             if self.active_attacks > 1:
                 self.error('a second attack chain started while one is running', meta)
-            for v in ('fv_soulcube_beam_n', 'fv_soulcube_db_n', 'fv_soulcube_shots'):
+            for v in ('fv_endsoul_beam_n', 'fv_endsoul_db_n', 'fv_endsoul_shots'):
                 if (c.var(v) or 0) > 0:
                     self.error(f'attack picked while {v}={c.var(v)}', meta)
-        elif name == 'fv_soulcube_after_attack':
+        elif name == 'fv_endsoul_after_attack':
             self.active_attacks -= 1
             if self.active_attacks < 0:
                 self.error('after_attack without a running attack', meta)
                 self.active_attacks = 0
-            for v in ('fv_soulcube_beam_n', 'fv_soulcube_db_n', 'fv_soulcube_shots'):
+            for v in ('fv_endsoul_beam_n', 'fv_endsoul_db_n', 'fv_endsoul_shots'):
                 if (c.var(v) or 0) > 0:
                     self.error(f'attack ended with {v}={c.var(v)} still running', meta)
-            if c.var('fv_soulcube_hpx_target') not in (20,):
+            if c.var('fv_endsoul_hpx_target') not in (20,):
                 self.error(f'attack ended without heading back to hover height '
-                           f'(target {c.var("fv_soulcube_hpx_target")})', meta)
-        elif name == 'fv_soulcube_watchdog':
+                           f'(target {c.var("fv_endsoul_hpx_target")})', meta)
+        elif name == 'fv_endsoul_watchdog':
             self.stats['watchdog'] += 1
             self.error('watchdog had to restart the fight loop', meta)
             self.active_attacks = 0
-        elif name == 'fv_soulcube_phase_break':
+        elif name == 'fv_endsoul_phase_break':
             self.stats['phase_breaks'] += 1
-        elif name in ('fv_soulcube_laser_begin', 'fv_soulcube_downbeam', 'fv_soulcube_shoot_begin'):
-            typ = {'fv_soulcube_laser_begin': 'LASER', 'fv_soulcube_downbeam': 'DOWNBEAM',
-                   'fv_soulcube_shoot_begin': 'SHOOT'}[name]
+        elif name in ('fv_endsoul_laser_begin', 'fv_endsoul_downbeam', 'fv_endsoul_shoot_begin'):
+            typ = {'fv_endsoul_laser_begin': 'LASER', 'fv_endsoul_downbeam': 'DOWNBEAM',
+                   'fv_endsoul_shoot_begin': 'SHOOT'}[name]
             pat = meta.chain[-2] if len(meta.chain) > 1 else '?'
             if self.stats['attacks'] and self.stats['attacks'][-1][0] == typ:
                 self.error(f'same attack type twice in a row: {typ}', meta)
-            self.stats['attacks'].append((typ, pat, c.var('fv_soulcube_phase')))
+            self.stats['attacks'].append((typ, pat, c.var('fv_endsoul_phase')))
 
     # ---- players ----
     def make_players(self):
@@ -739,13 +739,13 @@ class Sim:
                     p.jump_t = 12
             if boss is None or boss.removed:
                 continue
-            mode, state = boss.var('fv_soulcube_mode'), boss.var('fv_soulcube_state')
+            mode, state = boss.var('fv_endsoul_mode'), boss.var('fv_endsoul_state')
             dx, dz = p.x - boss.x, p.z - boss.z
             d = math.hypot(dx, dz) or 0.01
             want = 2.2 if (state == 'FIGHT' and mode in ('OPEN', 'STAGGER')) else 7.0
             # player1 is careless during the down beam and walks right under
             # it, so its damage path gets exercised too
-            if p.name == 'player1' and boss.var('fv_soulcube_lasttype') == 'DOWNBEAM' and mode == 'IMMUNE':
+            if p.name == 'player1' and boss.var('fv_endsoul_lasttype') == 'DOWNBEAM' and mode == 'IMMUNE':
                 want = 0.0
             if self.rng.random() < 0.01:
                 p.dirsign *= -1
@@ -780,11 +780,7 @@ class Sim:
     # ---- main loop ----
     def run(self, max_ticks=24000):
         self.home = Loc(0.5, FLOOR, 0.5, self.rng.uniform(-180, 180))
-        block = self.spawn('fv_soulcube_block', self.home.copy())
-        # shorter respawn for the test
-        self.skills['fv_soulcube_block_settings']['Skills'][0] = \
-            'setvariable{var=caster.fv_soulcube_respawn;type=INTEGER;value=8;save=true}'
-        self.parsed['fv_soulcube_block_settings'] = [parse_line(l) for l in self.skills['fv_soulcube_block_settings']['Skills']]
+        block = self.spawn('fv_endsoul_block', self.home.copy())
         self.make_players()
         click_at = 40 + self.rng.randint(0, 60)
         leave_at = None
@@ -819,18 +815,18 @@ class Sim:
             if self.tick == click_at:
                 pl = self.players()[0]
                 self.fire(block, 'oninteract', trigger=pl, event={'damage': 0, 'cancelled': False})
-            bosses = [e for e in self.ents if e.mtype == 'fv_soulcube' and not e.removed]
+            bosses = [e for e in self.ents if e.mtype == 'fv_endsoul' and not e.removed]
             boss = bosses[0] if bosses else None
             if len(bosses) > 1:
                 self.error('more than one boss alive')
             if boss is not None and boss.alive:
                 # phase bookkeeping
-                ph = boss.var('fv_soulcube_phase')
+                ph = boss.var('fv_endsoul_phase')
                 if ph and ph not in phase_at_hp:
                     phase_at_hp[ph] = boss.hp / boss.mhp
                 # height invariant
-                hpx = boss.var('fv_soulcube_hpx')
-                if hpx is not None and boss.var('fv_soulcube_state') == 'FIGHT':
+                hpx = boss.var('fv_endsoul_hpx')
+                if hpx is not None and boss.var('fv_endsoul_state') == 'FIGHT':
                     if not (0 <= hpx <= 30):
                         self.error(f'hpx out of range: {hpx}')
                     real = (boss.y - FLOOR) * 16
@@ -844,7 +840,7 @@ class Sim:
                     last = self.stats['attacks'][-1] if self.stats['attacks'] else None
                     near = min((math.hypot(p.x - self.home.x, p.z - self.home.z) for p in self.players()), default=-1)
                     self.error(f'boss strayed more than 24 blocks from its block during {last} '
-                               f'(db_n {boss.var("fv_soulcube_db_n")}, nearest player {near:.1f} from home)')
+                               f'(db_n {boss.var("fv_endsoul_db_n")}, nearest player {near:.1f} from home)')
             self.move_players(boss)
             if leave_at is not None and self.tick == leave_at:
                 for p in self.players():
@@ -858,17 +854,21 @@ class Sim:
             self.coverage()
             # the block must stay hidden while its boss is up
             if boss is not None and boss.alive and not boss.removed and \
-                    boss.var('fv_soulcube_state') in ('WAKING', 'FIGHT') and \
-                    block.var('fv_soulcube_block') != 'AWAKE' and not self.stats.get('reformed_early'):
+                    boss.var('fv_endsoul_state') in ('WAKING', 'FIGHT') and \
+                    block.var('fv_endsoul_block') != 'AWAKE' and not self.stats.get('reformed_early'):
                 self.stats['reformed_early'] = True
-                self.error(f'block is {block.var("fv_soulcube_block")} while its boss is still fighting')
+                self.error(f'block is {block.var("fv_endsoul_block")} while its boss is still fighting')
             # end conditions
             if boss is not None and not boss.alive and died_at is None:
                 died_at = self.tick
-            if block.var('fv_soulcube_block') == 'READY' and self.tick > click_at + 10:
-                if died_at is not None or leave_at is not None or self.scenario == 'unload':
+            if died_at is not None and block.removed and \
+                    not any(e.mtype in ('fv_endsoul', 'fv_endsoul_deathfx') and not e.removed for e in self.ents):
+                restored = True
+                break
+            if block.var('fv_endsoul_block') == 'READY' and self.tick > click_at + 10:
+                if leave_at is not None or self.scenario == 'unload':
                     restored = True
-                    if not any(e.mtype == 'fv_soulcube' and not e.removed for e in self.ents):
+                    if not any(e.mtype == 'fv_endsoul' and not e.removed for e in self.ents):
                         break
             self.tick += 1
         # ---- end-of-fight checks ----
@@ -884,10 +884,12 @@ class Sim:
             if self.stats['phase_breaks'] not in (1, 2):
                 self.error(f'{self.stats["phase_breaks"]} phase roars')
         if not restored:
-            self.error(f'block did not re-form (state {block.var("fv_soulcube_block")})')
-        if block.model is None or not block.anims:
+            self.error(f'block did not end up right (state {block.var("fv_endsoul_block")})')
+        if self.scenario == 'kill' and not block.removed:
+            self.error('boss killed but its block is still there')
+        if not block.removed and (block.model is None or not block.anims):
             self.error('block has no model / animation at the end')
-        if any(e.mtype in ('fv_soulcube_bullet', 'fv_soulcube_deathfx') and not e.removed for e in self.ents) \
+        if any(e.mtype in ('fv_endsoul_bullet', 'fv_endsoul_deathfx') and not e.removed for e in self.ents) \
                 and self.tick < max_ticks - 1:
             pass
         self.stats['ticks'] = self.tick

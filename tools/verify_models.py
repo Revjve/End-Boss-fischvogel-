@@ -243,11 +243,11 @@ def geometry(model):
 def main(conv_dir):
     ok = True
     orig = json.load(open(os.path.join(SRC, 'endboss (original).bbmodel')))
-    new5 = json.load(open(os.path.join(conv_dir, 'fv_soulcube (Blockbench 5).bbmodel')))
-    legacy = json.load(open(os.path.join(conv_dir, 'fv_soulcube.bbmodel')))
+    new5 = json.load(open(os.path.join(conv_dir, 'fv_endsoul (Blockbench 5).bbmodel')))
+    legacy = json.load(open(os.path.join(conv_dir, 'fv_endsoul.bbmodel')))
     porig = json.load(open(os.path.join(SRC, 'projectile (original).bbmodel')))
-    pnew5 = json.load(open(os.path.join(conv_dir, 'fv_soulcube_projectile (Blockbench 5).bbmodel')))
-    plegacy = json.load(open(os.path.join(conv_dir, 'fv_soulcube_projectile.bbmodel')))
+    pnew5 = json.load(open(os.path.join(conv_dir, 'fv_endsoul_projectile (Blockbench 5).bbmodel')))
+    plegacy = json.load(open(os.path.join(conv_dir, 'fv_endsoul_projectile.bbmodel')))
 
     # D - geometry untouched
     for a, b, label in ((orig, new5, 'endboss'), (porig, pnew5, 'projectile')):

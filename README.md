@@ -1,20 +1,20 @@
-# Soul Cube - FischVogel's End Boss
+# Soul of the End - Soul of the End
 
 A MythicMobs + ModelEngine + Nexo boss: a soul trapped in a block.
-Spawn `fv_soulcube_block` (the block); a left or right click wakes it into `fv_soulcube` (the boss).
+Spawn `fv_endsoul_block` (the block); a left or right click wakes it into `fv_endsoul` (the boss).
 
-**Download:** [`Fischvogel's End Boss.zip`](Fischvogel's%20End%20Boss.zip) - drag the contents of its
+**Download:** [`Soul of the End.zip`](Soul%20of%20the%20End.zip) - drag the contents of its
 `plugins` folder into the server's `plugins` folder. Everything else is in the
-[Installation Guide](Fischvogel's%20End%20Boss/Installation%20Guide.txt).
+[Installation Guide](Soul%20of%20the%20End/Installation%20Guide.txt).
 
 ## Layout
 
 | Path | What it is |
 |---|---|
-| `Fischvogel's End Boss/` | Exactly what goes into the zip (the hand-over pack) - the source of truth. Nothing from `tools/` or `docs/` ships. |
-| `Fischvogel's End Boss/plugins/MythicMobs/packs/fv_soulcube/` | Mobs and skills: `core` (block, wake-up, loop, phases, damage rules, height, death), `laser`, `downbeam`, `shooting`, `fx` (every sound / particle cue). |
-| `Fischvogel's End Boss/plugins/ModelEngine/blueprints/` | The two blueprints, generated from the originals by `tools/convert_models.py`. |
-| `Fischvogel's End Boss/Source Files/` | The converted models in Blockbench 5 format, for editing. |
+| `Soul of the End/` | Exactly what goes into the zip (the hand-over pack) - the source of truth. Nothing from `tools/` or `docs/` ships. |
+| `Soul of the End/plugins/MythicMobs/packs/fv_endsoul/` | Mobs and skills: `core` (block, wake-up, loop, phases, damage rules, height, death), `laser`, `downbeam`, `shooting`, `fx` (every sound / particle cue). |
+| `Soul of the End/plugins/ModelEngine/blueprints/` | The two blueprints, generated from the originals by `tools/convert_models.py`. |
+| `Soul of the End/Source Files/` | The converted models in Blockbench 5 format, for editing. |
 | `tools/originals/` | The `.bbmodel` files as originally delivered - the converter's input. |
 | `tools/` | Build, conversion, static checker and fight simulator. |
 

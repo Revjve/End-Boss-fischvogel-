@@ -1,6 +1,7 @@
 Hey, thank you very much for purchasing.
+Made by revjve.
 
-SOUL CUBE - a soul trapped inside a block.
+SOUL OF THE END - a soul trapped inside a block.
 MythicMobs + ModelEngine + Nexo boss.
 
 
@@ -31,25 +32,25 @@ automatically - just make sure your players accept the pack. Every sound is
 a vanilla Minecraft sound, so there are no sound files to install.
 
 The pack only adds its own files:
-  plugins/ModelEngine/blueprints/fv_soulcube.bbmodel  (the boss model)
-  plugins/ModelEngine/blueprints/fv_soulcube_projectile.bbmodel
-  plugins/MythicMobs/packs/fv_soulcube/  (mobs and skills)
+  plugins/ModelEngine/blueprints/fv_endsoul.bbmodel  (the boss model)
+  plugins/ModelEngine/blueprints/fv_endsoul_projectile.bbmodel
+  plugins/MythicMobs/packs/fv_endsoul/  (mobs and skills)
 
 
 --------------------------------------------------------------------------
 THE MOBS - WHICH ONE DO I SPAWN?
 --------------------------------------------------------------------------
 
-  fv_soulcube_block   THE BLOCK. This is the one you spawn. It sits in your
+  fv_endsoul_block   THE BLOCK. This is the one you spawn. It sits in your
                       arena looking like a normal block and cannot be hurt.
                       When a player LEFT or RIGHT clicks it, it wakes up
                       and turns into the boss right where it stands.
 
-  fv_soulcube         THE BOSS ("Soul Cube", with boss bar). Never spawn it
+  fv_endsoul         THE BOSS ("Soul of the End", with boss bar). Never spawn it
                       by hand - the block summons it and keeps track of it.
 
-  fv_soulcube_bullet, fv_soulcube_burst, fv_soulcube_deathfx,
-  fv_soulcube_fx_base
+  fv_endsoul_bullet, fv_endsoul_burst, fv_endsoul_deathfx,
+  fv_endsoul_fx_base
                       Invisible effect helpers (projectile, explosion, death
                       animation). Used by the skills - never spawn them.
 
@@ -60,25 +61,25 @@ PLACING THE BOSS
 
 Stand in the middle of your arena, on the floor, and spawn the block once:
 
-    /mm mobs spawn fv_soulcube_block
+    /mm mobs spawn fv_endsoul_block
 
 For a perfect fit on the block grid, spawn it from the console at the
 centre of a block (X and Z + 0.5, Y = the TOP of the floor block, e.g. 64
 for a floor block at Y 63):
 
-    mm mobs spawn fv_soulcube_block 1 world,100.5,64,200.5
+    mm mobs spawn fv_endsoul_block 1 world,100.5,64,200.5
 
 That is all. The block is persistent: it survives restarts, remembers
-whether a fight is running, and re-forms by itself after the boss is
-killed. Every height in the fight is measured from the block, so it has to
+and whether a fight is running. When the boss is killed it is gone for
+good (the block goes with it) - spawn a new block for another fight. Every height in the fight is measured from the block, so it has to
 sit ON the floor, not inside it.
 
 The arena: an open, flat floor with at least 20 blocks of room around the
 block. The boss never moves further than 18 blocks from the block (change
-it in fv_soulcube_boss_settings); it moves by teleporting, so pillars inside
+it in fv_endsoul_boss_settings); it moves by teleporting, so pillars inside
 that radius are passed straight through.
 
-To remove it:  /mm mobs kill fv_soulcube_block  (and /mm mobs kill fv_soulcube
+To remove it:  /mm mobs kill fv_endsoul_block  (and /mm mobs kill fv_endsoul
 if a fight is running).
 
 
@@ -163,8 +164,7 @@ DEATH
   shatters. The souls drift away. 1500 xp.
 
 AFTERWARDS
-  The block re-forms after 5 minutes (fv_soulcube_block_settings; -1 = the
-  boss can only be killed once). If everybody leaves (nobody within 40
+  Once killed, the boss stays dead - there is no respawn. If everybody leaves (nobody within 40
   blocks for 15 seconds) the boss gives up and turns back into the block.
   After a restart or a chunk unload during a fight, the block simply
   re-forms.
@@ -175,28 +175,28 @@ AFTERWARDS
 TUNING
 --------------------------------------------------------------------------
 
-Everything worth balancing is listed in the "TUNING CHEAT SHEET" at the top
-of plugins/MythicMobs/packs/fv_soulcube/skills/fv_soulcube_core.yml.
+The balance values live in
+plugins/MythicMobs/packs/fv_endsoul/skills/fv_endsoul_core.yml.
 
 The most common changes:
-  - boss health ............. Health: in mobs/fv_soulcube_mobs.yml (750 suits
+  - boss health ............. Health: in mobs/fv_endsoul_mobs.yml (750 suits
                               1-3 players; add ~250 per extra player)
-  - respawn time ............ fv_soulcube_block_settings (seconds, -1 = once)
-  - arena radius ............ fv_soulcube_boss_settings
+  - arena radius ............ fv_endsoul_boss_settings
   - damage numbers .......... the damage{amount=..} lines (listed in the
                               cheat sheet)
   - idle time, openings, how
-    many shots, gaps ........ the PHASE TABLES (fv_soulcube_phase_1/2/3)
+    many shots, gaps ........ the PHASE TABLES (fv_endsoul_phase_1/2/3)
   - which patterns a phase
-    may use ................. fv_soulcube_type_* in fv_soulcube_core.yml
-  - projectile speeds ....... v= in the fv_soulcube_fire_* skills
+    may use ................. fv_endsoul_type_* in fv_endsoul_core.yml
+  - projectile speeds ....... v= in the fv_endsoul_fire_* skills
                               (shooting file)
-  - sounds .................. skills/fv_soulcube_fx.yml, one skill per moment
-                              of the fight (fv_soulcube_sfx_...)
+  - sounds .................. skills/fv_endsoul_fx.yml, one skill per moment
+                              of the fight (fv_endsoul_sfx_...)
 
 The animation speeds (speed=1.0/1.1/1.2 on the state{} lines in
-fv_soulcube_anim_*) drive the tick numbers in the phase tables. If you change
-a speed, redo the division written next to the table.
+fv_endsoul_anim_*) drive the tick numbers in fv_endsoul_phase_1/2/3: each
+is the animation's own key moment divided by that phase's speed. If you
+change a speed, redo that division.
 
 The boss bar is BLUE on purpose: no vanilla boss uses that colour, so a
 custom boss bar texture can replace it without touching the Ender Dragon,
@@ -226,7 +226,7 @@ The block / boss is invisible
   in plugins/ModelEngine/blueprints. Players must accept the Nexo pack.
 
 Projectiles or the explosion are invisible
-  Set "Marker: false" in fv_soulcube_fx_base (mobs file) - a few ModelEngine
+  Set "Marker: false" in fv_endsoul_fx_base (mobs file) - a few ModelEngine
   builds will not render models on marker armour stands.
 
 The boss sits too low, or the low laser sweep never hits
@@ -245,7 +245,7 @@ The boss vanished / the block came back on its own
   Nobody was within 40 blocks for 15 seconds, the chunk unloaded, or the
   server restarted - in all three cases the fight resets on purpose.
 
-Errors in the console mentioning fv_soulcube_...
+Errors in the console mentioning fv_endsoul_...
   Please send me the lines; each skill is named after what it does.
 
 

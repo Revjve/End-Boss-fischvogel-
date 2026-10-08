@@ -1,0 +1,165 @@
+# Made by revjve
+
+fv_endsoul_downbeam:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_lasttype;type=STRING;value=DOWNBEAM}
+  - setvariable{var=caster.fv_endsoul_mode;type=STRING;value=OPEN}
+  - setvariable{var=caster.fv_endsoul_alive;type=INTEGER;value=1;duration=440}
+  - setvariable{var=caster.fv_endsoul_db_n;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_endsoul_db_home;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_endsoul_db_maxturn;type=FLOAT;value=6}
+  - setvariable{var=caster.fv_endsoul_db_maxturn;type=FLOAT;value=8} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - setvariable{var=caster.fv_endsoul_db_maxturn;type=FLOAT;value=10} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+  - skill{s=fv_endsoul_anim_attack2} @self
+  - skill{s=fv_endsoul_sfx_downbeam_rise} @self
+  - skill{s=fv_endsoul_height_to_beam} @self
+  - setvariable{var=skill.wait;type=INTEGER;value="max(1,(<caster.var.fv_endsoul_t_a2_ign>)-8)"}
+  - delay 8
+  - setvariable{var=caster.fv_endsoul_mode;type=STRING;value=IMMUNE}
+  - skill{s=fv_endsoul_downbeam_telegraph} @self
+  - delay{ticks=<skill.var.wait>}
+  - skill{s=fv_endsoul_sfx_downbeam_ignite} @self
+  - setvariable{var=caster.fv_endsoul_db_n;type=INTEGER;value=<caster.var.fv_endsoul_t_a2_beam>}
+  - skill{s=fv_endsoul_downbeam_tick} @self
+  - skill{s=fv_endsoul_downbeam_pulses} @self
+  - delay{ticks=<caster.var.fv_endsoul_t_a2_beam>}
+  - setvariable{var=caster.fv_endsoul_db_n;type=INTEGER;value=0}
+  - skill{s=fv_endsoul_sfx_downbeam_off} @self
+  - delay{ticks=<caster.var.fv_endsoul_t_a2_hover>}
+  - skill{s=fv_endsoul_height_to_landed} @self
+  - skill{s=fv_endsoul_sfx_downbeam_descend} @self
+  - delay{ticks=<caster.var.fv_endsoul_t_a2_desc>}
+  - skill{s=fv_endsoul_downbeam_land} @self
+  - skill{s=fv_endsoul_downbeam_dazed} @self
+
+fv_endsoul_downbeam_telegraph:
+  Skills:
+  - skill{s=fv_endsoul_sfx_downbeam_charge} @self
+  - skill{s=fv_endsoul_vfx_downbeam_mark} @self
+
+fv_endsoul_downbeam_tick:
+  Skills:
+  - variableadd{var=caster.fv_endsoul_db_n;amount=-1}
+  - setvariable{var=skill.d;type=FLOAT;value="sqrt(((<caster.l.x.double>)-(<caster.var.fv_endsoul_home_x>))^2+((<caster.l.z.double>)-(<caster.var.fv_endsoul_home_z>))^2)"}
+  - setvariable{var=skill.far;type=FLOAT;value="(<skill.var.d>)>(<caster.var.fv_endsoul_arena_r>)"}
+  - setvariable{var=skill.back;type=FLOAT;value="(<skill.var.d>)<(<caster.var.fv_endsoul_arena_r>)-3"}
+  - setvariable{var=caster.fv_endsoul_db_home;type=INTEGER;value=1} ?variableinrange{var=skill.far;value=0.5to2}
+  - setvariable{var=caster.fv_endsoul_db_home;type=INTEGER;value=0} ?variableinrange{var=skill.back;value=0.5to2}
+  - skill{s=fv_endsoul_downbeam_steer} @self ?variableequals{var=caster.fv_endsoul_db_home;value=0}
+  - skill{s=fv_endsoul_downbeam_leash} @self ?variableequals{var=caster.fv_endsoul_db_home;value=1}
+  - skill{s=fv_endsoul_downbeam_drift} @self ?variableinrange{var=caster.fv_endsoul_db_dist;value=0.6to99999} ?variableinrange{var=caster.fv_endsoul_db_turn;value=-90to90}
+  - skill{s=fv_endsoul_downbeam_check} @PlayersInRadius{r=6}
+  - skill{s=fv_endsoul_vfx_downbeam} @self
+  - skill{s=fv_endsoul_sfx_downbeam_roar} @self
+  - skill{s=fv_endsoul_downbeam_tick;delay=1} @self ?variableinrange{var=caster.fv_endsoul_db_n;value=1to99999} ?variableequals{var=caster.fv_endsoul_state;value=FIGHT}
+
+fv_endsoul_downbeam_steer:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_pth;type=FLOAT;value=<caster.l.yaw>}
+  - setvariable{var=caster.fv_endsoul_phd;type=FLOAT;value=99}
+  - skill{s=fv_endsoul_probe_back} @NearestPlayer{r=48}
+  - setvariable{var=caster.fv_endsoul_db_turn;type=FLOAT;value="(((<caster.var.fv_endsoul_pth>)-(<caster.l.yaw>))%360+540)%360-180"}
+  - setvariable{var=caster.fv_endsoul_db_dist;type=FLOAT;value=<caster.var.fv_endsoul_phd>}
+  - setvariable{var=skill.step;type=FLOAT;value="signum(<caster.var.fv_endsoul_db_turn>)*min(abs(<caster.var.fv_endsoul_db_turn>),<caster.var.fv_endsoul_db_maxturn>)"}
+  - setrotation{relative=true;yaw=10} @self ?variableinrange{var=skill.step;value=9.5to10.5}
+  - setrotation{relative=true;yaw=9} @self ?variableinrange{var=skill.step;value=8.5to9.5}
+  - setrotation{relative=true;yaw=8} @self ?variableinrange{var=skill.step;value=7.5to8.5}
+  - setrotation{relative=true;yaw=7} @self ?variableinrange{var=skill.step;value=6.5to7.5}
+  - setrotation{relative=true;yaw=6} @self ?variableinrange{var=skill.step;value=5.5to6.5}
+  - setrotation{relative=true;yaw=5} @self ?variableinrange{var=skill.step;value=4.5to5.5}
+  - setrotation{relative=true;yaw=4} @self ?variableinrange{var=skill.step;value=3.5to4.5}
+  - setrotation{relative=true;yaw=3} @self ?variableinrange{var=skill.step;value=2.5to3.5}
+  - setrotation{relative=true;yaw=2} @self ?variableinrange{var=skill.step;value=1.5to2.5}
+  - setrotation{relative=true;yaw=1} @self ?variableinrange{var=skill.step;value=0.5to1.5}
+  - setrotation{relative=true;yaw=-1} @self ?variableinrange{var=skill.step;value=-1.5to-0.5}
+  - setrotation{relative=true;yaw=-2} @self ?variableinrange{var=skill.step;value=-2.5to-1.5}
+  - setrotation{relative=true;yaw=-3} @self ?variableinrange{var=skill.step;value=-3.5to-2.5}
+  - setrotation{relative=true;yaw=-4} @self ?variableinrange{var=skill.step;value=-4.5to-3.5}
+  - setrotation{relative=true;yaw=-5} @self ?variableinrange{var=skill.step;value=-5.5to-4.5}
+  - setrotation{relative=true;yaw=-6} @self ?variableinrange{var=skill.step;value=-6.5to-5.5}
+  - setrotation{relative=true;yaw=-7} @self ?variableinrange{var=skill.step;value=-7.5to-6.5}
+  - setrotation{relative=true;yaw=-8} @self ?variableinrange{var=skill.step;value=-8.5to-7.5}
+  - setrotation{relative=true;yaw=-9} @self ?variableinrange{var=skill.step;value=-9.5to-8.5}
+  - setrotation{relative=true;yaw=-10} @self ?variableinrange{var=skill.step;value=-10.5to-9.5}
+
+fv_endsoul_downbeam_leash:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_db_turn;type=FLOAT;value=0}
+  - setvariable{var=caster.fv_endsoul_db_dist;type=FLOAT;value=99}
+  - setvariable{var=skill.home;type=FLOAT;value="todegree(atan2(0-((<caster.var.fv_endsoul_home_x>)-(<caster.l.x.double>)),(<caster.var.fv_endsoul_home_z>)-(<caster.l.z.double>)))"}
+  - setvariable{var=skill.turn;type=FLOAT;value="(((<skill.var.home>)-(<caster.l.yaw>))%360+540)%360-180"}
+  - setrotation{relative=true;yaw=20} @self ?variableinrange{var=skill.turn;value=10to180}
+  - setrotation{relative=true;yaw=-20} @self ?variableinrange{var=skill.turn;value=-180to-10}
+
+fv_endsoul_downbeam_drift:
+  Skills:
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.11;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_phase;value=1}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.14;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.17;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+
+fv_endsoul_downbeam_pulses:
+  Skills:
+  - delay{ticks=<caster.var.fv_endsoul_t_a2_p1>}
+  - skill{s=fv_endsoul_downbeam_pulse} @self
+  - delay{ticks=<caster.var.fv_endsoul_t_a2_p2>}
+  - skill{s=fv_endsoul_downbeam_pulse} @self
+  - delay{ticks=<caster.var.fv_endsoul_t_a2_p3>}
+  - skill{s=fv_endsoul_downbeam_pulse} @self
+
+fv_endsoul_downbeam_pulse:
+  Conditions:
+  - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
+  Skills:
+  - skill{s=fv_endsoul_sfx_pulse} @self
+  - skill{s=fv_endsoul_vfx_pulse} @self
+
+fv_endsoul_downbeam_land:
+  Skills:
+  - skill{s=fv_endsoul_sfx_downbeam_land} @self
+  - skill{s=fv_endsoul_vfx_land} @self
+  - skill{s=fv_endsoul_land_check} @PlayersInRadius{r=3.2}
+
+fv_endsoul_downbeam_dazed:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_mode;type=STRING;value=STAGGER}
+  - skill{s=fv_endsoul_anim_dazed} @self
+  - skill{s=fv_endsoul_sfx_dazed} @self
+  - delay{ticks=<caster.var.fv_endsoul_t_stagger>}
+  - setvariable{var=caster.fv_endsoul_mode;type=STRING;value=OPEN}
+  - skill{s=fv_endsoul_play_idle} @self
+  - skill{s=fv_endsoul_height_to_idle} @self
+  - skill{s=fv_endsoul_after_attack} @self
+
+fv_endsoul_downbeam_check:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  - hasaura{auraName=fv_endsoul_if_laser} false
+  Skills:
+  - skill{s=fv_endsoul_probe}
+  - skill{s=fv_endsoul_downbeam_hit}
+
+fv_endsoul_downbeam_hit:
+  TargetConditions:
+  - hasaura{auraName=fv_endsoul_if_laser} false
+  - variableinrange{var=target.fv_endsoul_hd;value=0to0.65} true
+  - variableinrange{var=target.fv_endsoul_dy;value=-1.5to3.6} true
+  Skills:
+  - damage{amount=14;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - aura{auraName=fv_endsoul_if_laser;duration=10;maxStacks=1;refreshDuration=true}
+  - skill{s=fv_endsoul_sfx_laser_hit}
+
+fv_endsoul_land_check:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  Skills:
+  - skill{s=fv_endsoul_probe}
+  - skill{s=fv_endsoul_land_hit}
+
+fv_endsoul_land_hit:
+  TargetConditions:
+  - variableinrange{var=target.fv_endsoul_hd;value=0to2.5} true
+  - variableinrange{var=target.fv_endsoul_dy;value=-1.5to0.8} true
+  Skills:
+  - damage{amount=6;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - throw{velocity=7;velocityY=3}
+  - skill{s=fv_endsoul_sfx_body_hit}

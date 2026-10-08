@@ -1,0 +1,146 @@
+# Made by revjve
+
+fv_endsoul_block:
+  Type: SLIME
+  Display: ''
+  Health: 100
+  Damage: 0
+  Armor: 0
+  Options:
+    Size: 2
+    PreventSlimeSplit: true
+    Invisible: true
+    NoAI: true
+    NoGravity: true
+    Silent: true
+    Collidable: false
+    KnockbackResistance: 1
+    Despawn: false
+    Persistent: true
+    AlwaysShowName: false
+    ShowHealth: false
+    PreventOtherDrops: true
+    PreventRandomEquipment: true
+    PreventItemPickup: true
+    PreventRenaming: true
+    PreventLeashing: true
+  AIGoalSelectors:
+  - clear
+  AITargetSelectors:
+  - clear
+  Skills:
+  - skill{s=fv_endsoul_block_spawn} @self ~onSpawn
+  - skill{s=fv_endsoul_block_load} @self ~onLoad
+  - skill{s=fv_endsoul_block_hit;sync=true} @self ~onDamaged
+  - skill{s=fv_endsoul_block_click;sync=true} @self ~onInteract
+  - skill{s=fv_endsoul_block_second} @self ~onTimer:20
+
+fv_endsoul:
+  Type: SLIME
+  Display: '<gradient:#9ffcff:#ffffff>Soul of the End</gradient>'
+  Health: 750
+  Damage: 0
+  Armor: 0
+  BossBar:
+    Enabled: true
+    Title: '<gradient:#9ffcff:#ffffff>Soul of the End</gradient>'
+    Range: 48
+    Color: BLUE
+    Style: SEGMENTED_10
+    CreateFog: false
+    DarkenSky: true
+    PlayMusic: false
+  Options:
+    Size: 2
+    PreventSlimeSplit: true
+    Invisible: true
+    NoAI: true
+    NoGravity: true
+    Silent: true
+    Collidable: false
+    KnockbackResistance: 1
+    Despawn: CHUNK
+    Persistent: false
+    AlwaysShowName: false
+    ShowHealth: false
+    PreventOtherDrops: true
+    PreventRandomEquipment: true
+    PreventItemPickup: true
+    PreventRenaming: true
+    PreventLeashing: true
+  DamageModifiers:
+  - FALL 0
+  - SUFFOCATION 0
+  - DROWNING 0
+  - FIRE 0
+  - FIRE_TICK 0
+  - LAVA 0
+  - POISON 0
+  - WITHER 0.5
+  - BLOCK_EXPLOSION 0.5
+  - ENTITY_EXPLOSION 0.5
+  AIGoalSelectors:
+  - clear
+  AITargetSelectors:
+  - clear
+  Drops:
+  - exp 1500
+  Skills:
+  - skill{s=fv_endsoul_boss_spawn} @self ~onSpawn
+  - skill{s=fv_endsoul_on_damaged;sync=true} @self ~onDamaged
+  - skill{s=fv_endsoul_on_interact;sync=true} @self ~onInteract
+  - skill{s=fv_endsoul_watch} @self ~onTimer:2
+  - skill{s=fv_endsoul_boss_second} @self ~onTimer:20
+  - skill{s=fv_endsoul_on_death} @self ~onDeath
+
+fv_endsoul_fx_base:
+  Type: ARMOR_STAND
+  Display: ''
+  Health: 1
+  Damage: 0
+  Options:
+    Despawn: CHUNK
+    Invisible: true
+    Marker: true
+    Small: false
+    HasArms: false
+    HasBasePlate: false
+    NoAI: true
+    NoGravity: true
+    Collidable: false
+    Invincible: true
+    Silent: true
+    Persistent: false
+    AlwaysShowName: false
+    ShowHealth: false
+    PreventOtherDrops: true
+    PreventRandomEquipment: true
+    PreventItemPickup: true
+    PreventRenaming: true
+    PreventLeashing: true
+  Skills:
+  - remove{delay=300} @self ~onSpawn
+
+fv_endsoul_bullet:
+  Template: fv_endsoul_fx_base
+  Skills:
+  - model{mid=fv_endsoul_projectile;usm=true;hitbox=false;showshadow=false;radius=64;initrender=false} @self ~onSpawn
+  - bodyrotation{mid=fv_endsoul_projectile;playermode=true;stable=0;rdelay=0;rduration=0} @self ~onSpawn
+  - brightness{mid=fv_endsoul_projectile;b=15;s=15} @self ~onSpawn
+  - state{mid=fv_endsoul_projectile;s=idle;p=10;li=0;lo=0;force=true} @self ~onSpawn
+  - renderinit{mid=fv_endsoul_projectile} @self ~onSpawn
+
+fv_endsoul_burst:
+  Template: fv_endsoul_fx_base
+  Skills:
+  - model{mid=fv_endsoul_projectile;usm=true;hitbox=false;showshadow=false;radius=64;initrender=false} @self ~onSpawn
+  - defaultstate{mid=fv_endsoul_projectile;type=IDLE;state=blank;li=0;lo=0} @self ~onSpawn
+  - brightness{mid=fv_endsoul_projectile;b=15;s=15} @self ~onSpawn
+  - state{mid=fv_endsoul_projectile;s=explosion;p=10;li=0;lo=0;force=true} @self ~onSpawn
+  - renderinit{mid=fv_endsoul_projectile} @self ~onSpawn
+  - remove{delay=14} @self ~onSpawn
+
+fv_endsoul_deathfx:
+  Template: fv_endsoul_fx_base
+  Skills:
+  - skill{s=fv_endsoul_death_start} @self ~onSpawn

@@ -1,0 +1,349 @@
+# Made by revjve
+
+fv_endsoul_shoot_begin:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_lasttype;type=STRING;value=SHOOT}
+  - setvariable{var=caster.fv_endsoul_mode;type=STRING;value=OPEN}
+  - setvariable{var=caster.fv_endsoul_alive;type=INTEGER;value=1;duration=440}
+  - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=0}
+  - skill{s=fv_endsoul_height_to_aim} @self
+  - skill{s=fv_endsoul_sfx_shoot_charge} @self
+  - skill{s=fv_endsoul_vfx_shoot_charge} @self
+
+fv_endsoul_shoot_end:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=0}
+  - delay{ticks=<caster.var.fv_endsoul_t_sh_settle>}
+  - skill{s=fv_endsoul_play_idle} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT}
+  - skill{s=fv_endsoul_height_to_idle} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT}
+  - skill{s=fv_endsoul_after_attack} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT}
+
+fv_endsoul_s_kick:
+  Skills:
+  - skill{s=fv_endsoul_anim_shoot} @self
+  - skill{s=fv_endsoul_sfx_shoot} @self
+
+fv_endsoul_shoot_aimed:
+  Skills:
+  - skill{s=fv_endsoul_shoot_begin} @self
+  - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=<caster.var.fv_endsoul_n_aimed>}
+  - skill{s=fv_endsoul_s_aimed_track} @self
+
+fv_endsoul_s_aimed_track:
+  Conditions:
+  - variableinrange{var=caster.fv_endsoul_shots;value=1to999} true
+  - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
+  Skills:
+  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=<caster.var.fv_endsoul_t_aimed_gap>}
+  - skill{s=fv_endsoul_l_aim_tick} @self
+  - delay{ticks=<caster.var.fv_endsoul_t_aimed_gap>}
+  - skill{s=fv_endsoul_s_aimed_lock} @self
+
+fv_endsoul_s_aimed_lock:
+  Conditions:
+  - variableinrange{var=caster.fv_endsoul_shots;value=1to999} true
+  - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
+  Skills:
+  - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
+  - skill{s=fv_endsoul_sfx_shoot_lock} @self
+  - skill{s=fv_endsoul_vfx_shoot_lock} @self
+  - delay{ticks=<caster.var.fv_endsoul_t_aimed_lock>}
+  - skill{s=fv_endsoul_s_aimed_fire} @self
+
+fv_endsoul_s_aimed_fire:
+  Conditions:
+  - variableinrange{var=caster.fv_endsoul_shots;value=1to999} true
+  - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
+  Skills:
+  - variableadd{var=caster.fv_endsoul_shots;amount=-1}
+  - setvariable{var=skill.left;type=INTEGER;value=<caster.var.fv_endsoul_shots>}
+  - skill{s=fv_endsoul_s_kick} @self
+  - skill{s=fv_endsoul_sfx_shoot_big} @self
+  - skill{s=fv_endsoul_fire_aimed} @Forward{f=16;lockpitch=true;uel=false}
+  - skill{s=fv_endsoul_s_aimed_track} @self ?variableinrange{var=skill.left;value=1to999}
+  - skill{s=fv_endsoul_shoot_end} @self ?variableinrange{var=skill.left;value=-999to0}
+
+fv_endsoul_shoot_burst:
+  Skills:
+  - skill{s=fv_endsoul_shoot_begin} @self
+  - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=<caster.var.fv_endsoul_n_burst>}
+  - setvariable{var=caster.fv_endsoul_shot_k;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=16}
+  - skill{s=fv_endsoul_l_aim_tick} @self
+  - delay 16
+  - skill{s=fv_endsoul_s_track_init} @self
+  - skill{s=fv_endsoul_s_burst_shot} @self
+
+fv_endsoul_s_burst_shot:
+  Conditions:
+  - variableinrange{var=caster.fv_endsoul_shots;value=1to999} true
+  - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
+  Skills:
+  - variableadd{var=caster.fv_endsoul_shots;amount=-1}
+  - variableadd{var=caster.fv_endsoul_shot_k;amount=1}
+  - setvariable{var=skill.left;type=INTEGER;value=<caster.var.fv_endsoul_shots>}
+  - setvariable{var=skill.lead;type=FLOAT;value="((<caster.var.fv_endsoul_phase>)==2)*(((<caster.var.fv_endsoul_shot_k>)%3)==0)+((<caster.var.fv_endsoul_phase>)==3)*(((<caster.var.fv_endsoul_shot_k>)%2)==0)"}
+  - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
+  - skill{s=fv_endsoul_s_track} @self
+  - skill{s=fv_endsoul_s_lead_turn} @self ?variableinrange{var=skill.lead;value=0.5to2}
+  - skill{s=fv_endsoul_s_kick} @self
+  - skill{s=fv_endsoul_sfx_shoot_lead} @self ?variableinrange{var=skill.lead;value=0.5to2}
+  - skill{s=fv_endsoul_fire_burst} @Forward{f=16;lockpitch=true;uel=false}
+  - skill{s=fv_endsoul_s_burst_next} @self ?variableinrange{var=skill.left;value=1to999}
+  - skill{s=fv_endsoul_shoot_end} @self ?variableinrange{var=skill.left;value=-999to0}
+
+fv_endsoul_s_burst_next:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=<caster.var.fv_endsoul_t_burst_gap>}
+  - skill{s=fv_endsoul_l_aim_tick} @self
+  - delay{ticks=<caster.var.fv_endsoul_t_burst_gap>}
+  - skill{s=fv_endsoul_s_burst_shot} @self
+
+fv_endsoul_s_track_init:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_pth;type=FLOAT;value=<caster.l.yaw>}
+  - setvariable{var=caster.fv_endsoul_phd;type=FLOAT;value=0}
+  - skill{s=fv_endsoul_probe_back} @NearestPlayer{r=48}
+  - setvariable{var=caster.fv_endsoul_th_prev;type=FLOAT;value=<caster.var.fv_endsoul_pth>}
+
+fv_endsoul_s_track:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_pth;type=FLOAT;value=<caster.var.fv_endsoul_th_prev>}
+  - setvariable{var=caster.fv_endsoul_phd;type=FLOAT;value=0}
+  - skill{s=fv_endsoul_probe_back} @NearestPlayer{r=48}
+  - setvariable{var=skill.dth;type=FLOAT;value="(((<caster.var.fv_endsoul_pth>)-(<caster.var.fv_endsoul_th_prev>))%360+540)%360-180"}
+  - setvariable{var=caster.fv_endsoul_th_prev;type=FLOAT;value=<caster.var.fv_endsoul_pth>}
+  - setvariable{var=caster.fv_endsoul_lead;type=FLOAT;value="(<skill.var.dth>)/(<caster.var.fv_endsoul_t_burst_gap>)*(<caster.var.fv_endsoul_phd>)/(<caster.var.fv_endsoul_v_burst>)"}
+
+fv_endsoul_s_lead_turn:
+  Skills:
+  - setrotation{relative=true;yaw=20} @self ?variableinrange{var=caster.fv_endsoul_lead;value=15to40}
+  - setrotation{relative=true;yaw=10} @self ?variableinrange{var=caster.fv_endsoul_lead;value=5to14.999}
+  - setrotation{relative=true;yaw=-10} @self ?variableinrange{var=caster.fv_endsoul_lead;value=-14.999to-5}
+  - setrotation{relative=true;yaw=-20} @self ?variableinrange{var=caster.fv_endsoul_lead;value=-40to-15}
+
+fv_endsoul_shoot_ring:
+  Skills:
+  - skill{s=fv_endsoul_shoot_begin} @self
+  - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=<caster.var.fv_endsoul_n_ring>}
+  - setvariable{var=caster.fv_endsoul_ring_rev;type=INTEGER;value=<caster.var.fv_endsoul_n_ring>}
+  - setvariable{var=caster.fv_endsoul_ring_rev;type=INTEGER;value="floor(<caster.var.fv_endsoul_n_ring>/2)"} ?variableinrange{var=caster.fv_endsoul_phase;value=2to3}
+  - setvariable{var=caster.fv_endsoul_ring_k;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_endsoul_ring_cd;type=INTEGER;value=1}
+  - randomskill{skills=fv_endsoul_ring_dir_left,fv_endsoul_ring_dir_right} @self
+  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=16}
+  - skill{s=fv_endsoul_l_aim_tick} @self
+  - skill{s=fv_endsoul_vfx_ring_warning} @self
+  - delay 16
+  - skill{s=fv_endsoul_s_ring_tick} @self
+
+fv_endsoul_ring_dir_left:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_ring_dir;type=INTEGER;value=1}
+fv_endsoul_ring_dir_right:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_ring_dir;type=INTEGER;value=-1}
+
+fv_endsoul_s_ring_tick:
+  Conditions:
+  - variableinrange{var=caster.fv_endsoul_shots;value=1to999} true
+  - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
+  Skills:
+  - skill{s=fv_endsoul_s_ring_turn} @self
+  - variableadd{var=caster.fv_endsoul_ring_cd;amount=-1}
+  - setvariable{var=skill.cd;type=INTEGER;value=<caster.var.fv_endsoul_ring_cd>}
+  - skill{s=fv_endsoul_s_ring_fire} @self ?variableinrange{var=skill.cd;value=-99to0}
+  - skill{s=fv_endsoul_s_ring_tick;delay=1} @self
+
+fv_endsoul_s_ring_turn:
+  Skills:
+  - setvariable{var=skill.d;type=INTEGER;value=<caster.var.fv_endsoul_ring_dir>}
+  - setrotation{relative=true;yaw=15} @self ?variableequals{var=caster.fv_endsoul_phase;value=1} ?variableequals{var=skill.d;value=1}
+  - setrotation{relative=true;yaw=-15} @self ?variableequals{var=caster.fv_endsoul_phase;value=1} ?variableequals{var=skill.d;value=-1}
+  - setrotation{relative=true;yaw=11.25} @self ?variableequals{var=caster.fv_endsoul_phase;value=2} ?variableequals{var=skill.d;value=1}
+  - setrotation{relative=true;yaw=-11.25} @self ?variableequals{var=caster.fv_endsoul_phase;value=2} ?variableequals{var=skill.d;value=-1}
+  - setrotation{relative=true;yaw=9} @self ?variableequals{var=caster.fv_endsoul_phase;value=3} ?variableequals{var=skill.d;value=1}
+  - setrotation{relative=true;yaw=-9} @self ?variableequals{var=caster.fv_endsoul_phase;value=3} ?variableequals{var=skill.d;value=-1}
+
+fv_endsoul_s_ring_fire:
+  Skills:
+  - variableadd{var=caster.fv_endsoul_shots;amount=-1}
+  - variableadd{var=caster.fv_endsoul_ring_k;amount=1}
+  - setvariable{var=caster.fv_endsoul_ring_cd;type=INTEGER;value=2}
+  - setvariable{var=skill.left;type=INTEGER;value=<caster.var.fv_endsoul_shots>}
+  - setvariable{var=skill.newring;type=FLOAT;value="((<caster.var.fv_endsoul_ring_k>)==(<caster.var.fv_endsoul_ring_rev>))*((<caster.var.fv_endsoul_shots>)>0)"}
+  - skill{s=fv_endsoul_s_kick} @self
+  - skill{s=fv_endsoul_fire_ring} @Forward{f=16;lockpitch=true;uel=false}
+  - skill{s=fv_endsoul_s_ring_next} @self ?variableinrange{var=skill.newring;value=0.5to2}
+  - skill{s=fv_endsoul_shoot_end} @self ?variableinrange{var=skill.left;value=-999to0}
+
+fv_endsoul_s_ring_next:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_ring_k;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_endsoul_ring_cd;type=INTEGER;value=3}
+  - skill{s=fv_endsoul_s_ring_reverse} @self ?variableequals{var=caster.fv_endsoul_phase;value=3}
+
+fv_endsoul_s_ring_reverse:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_ring_dir;type=INTEGER;value="0-(<caster.var.fv_endsoul_ring_dir>)"}
+  - skill{s=fv_endsoul_sfx_warn_flip} @self
+
+fv_endsoul_shoot_fan:
+  Skills:
+  - skill{s=fv_endsoul_shoot_begin} @self
+  - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=<caster.var.fv_endsoul_n_fan>}
+  - setvariable{var=caster.fv_endsoul_shot_k;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=16}
+  - skill{s=fv_endsoul_l_aim_tick} @self
+  - delay 16
+  - skill{s=fv_endsoul_s_fan_volley} @self
+
+fv_endsoul_s_fan_volley:
+  Conditions:
+  - variableinrange{var=caster.fv_endsoul_shots;value=1to999} true
+  - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
+  Skills:
+  - variableadd{var=caster.fv_endsoul_shots;amount=-1}
+  - variableadd{var=caster.fv_endsoul_shot_k;amount=1}
+  - setvariable{var=skill.left;type=INTEGER;value=<caster.var.fv_endsoul_shots>}
+  - setvariable{var=skill.odd;type=FLOAT;value="((<caster.var.fv_endsoul_shot_k>)%2)==1"}
+  - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
+  - skill{s=fv_endsoul_s_kick} @self
+  - skill{s=fv_endsoul_sfx_shoot_big} @self
+  - skill{s=fv_endsoul_s_fan_a} @self ?variableinrange{var=skill.odd;value=0.5to2}
+  - skill{s=fv_endsoul_s_fan_b} @self ?variableinrange{var=skill.odd;value=-1to0.5}
+  - skill{s=fv_endsoul_s_fan_next} @self ?variableinrange{var=skill.left;value=1to999}
+  - skill{s=fv_endsoul_shoot_end} @self ?variableinrange{var=skill.left;value=-999to0}
+
+fv_endsoul_s_fan_a:
+  Skills:
+  - setrotation{relative=true;yaw=-40} @self
+  - skill{s=fv_endsoul_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_endsoul_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_endsoul_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_endsoul_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_endsoul_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=-40} @self
+
+fv_endsoul_s_fan_b:
+  Skills:
+  - setrotation{relative=true;yaw=-30} @self
+  - skill{s=fv_endsoul_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_endsoul_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_endsoul_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=20} @self
+  - skill{s=fv_endsoul_fire_fan} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=-30} @self
+
+fv_endsoul_s_fan_next:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=<caster.var.fv_endsoul_t_fan_gap>}
+  - skill{s=fv_endsoul_l_aim_tick} @self
+  - delay{ticks=<caster.var.fv_endsoul_t_fan_gap>}
+  - skill{s=fv_endsoul_s_fan_volley} @self
+
+fv_endsoul_shoot_spiral:
+  Skills:
+  - skill{s=fv_endsoul_shoot_begin} @self
+  - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=<caster.var.fv_endsoul_n_spiral>}
+  - setvariable{var=caster.fv_endsoul_spiral_half;type=INTEGER;value="floor(<caster.var.fv_endsoul_n_spiral>/2)"}
+  - setvariable{var=caster.fv_endsoul_spiral_k;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_endsoul_ring_cd;type=INTEGER;value=1}
+  - randomskill{skills=fv_endsoul_ring_dir_left,fv_endsoul_ring_dir_right} @self
+  - rotatetowards{maxyaw=180} @NearestPlayer{r=48}
+  - setrotation{relative=true;yaw=-90} @self ?variableequals{var=caster.fv_endsoul_ring_dir;value=1}
+  - setrotation{relative=true;yaw=90} @self ?variableequals{var=caster.fv_endsoul_ring_dir;value=-1}
+  - skill{s=fv_endsoul_vfx_ring_warning} @self
+  - delay 16
+  - skill{s=fv_endsoul_s_spiral_tick} @self
+
+fv_endsoul_s_spiral_tick:
+  Conditions:
+  - variableinrange{var=caster.fv_endsoul_shots;value=1to999} true
+  - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
+  Skills:
+  - setrotation{relative=true;yaw=3} @self ?variableequals{var=caster.fv_endsoul_ring_dir;value=1}
+  - setrotation{relative=true;yaw=-3} @self ?variableequals{var=caster.fv_endsoul_ring_dir;value=-1}
+  - variableadd{var=caster.fv_endsoul_ring_cd;amount=-1}
+  - setvariable{var=skill.cd;type=INTEGER;value=<caster.var.fv_endsoul_ring_cd>}
+  - skill{s=fv_endsoul_s_spiral_slot} @self ?variableinrange{var=skill.cd;value=-99to0}
+  - skill{s=fv_endsoul_s_spiral_tick;delay=1} @self
+
+fv_endsoul_s_spiral_slot:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_ring_cd;type=INTEGER;value=2}
+  - variableadd{var=caster.fv_endsoul_spiral_k;amount=1}
+  - setvariable{var=skill.gap;type=FLOAT;value="(((<caster.var.fv_endsoul_spiral_k>)%6)==5)+(((<caster.var.fv_endsoul_spiral_k>)%6)==0)"}
+  - skill{s=fv_endsoul_s_spiral_fire} @self ?variableinrange{var=skill.gap;value=-1to0.5}
+
+fv_endsoul_s_spiral_fire:
+  Skills:
+  - variableadd{var=caster.fv_endsoul_shots;amount=-1}
+  - setvariable{var=skill.left;type=INTEGER;value=<caster.var.fv_endsoul_shots>}
+  - skill{s=fv_endsoul_s_kick} @self
+  - skill{s=fv_endsoul_fire_ring} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=180} @self
+  - skill{s=fv_endsoul_fire_ring} @Forward{f=16;lockpitch=true;uel=false}
+  - setrotation{relative=true;yaw=180} @self
+  - setvariable{var=skill.warn;type=FLOAT;value="(<caster.var.fv_endsoul_shots>)==((<caster.var.fv_endsoul_spiral_half>)+3)"}
+  - setvariable{var=skill.flip;type=FLOAT;value="(<caster.var.fv_endsoul_shots>)==(<caster.var.fv_endsoul_spiral_half>)"}
+  - skill{s=fv_endsoul_sfx_warn_flip} @self ?variableinrange{var=skill.warn;value=0.5to2}
+  - setvariable{var=caster.fv_endsoul_ring_dir;type=INTEGER;value="0-(<caster.var.fv_endsoul_ring_dir>)"} ?variableinrange{var=skill.flip;value=0.5to2}
+  - skill{s=fv_endsoul_shoot_end} @self ?variableinrange{var=skill.left;value=-999to0}
+
+fv_endsoul_fire_aimed:
+  Skills:
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=22;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=24;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=26;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+
+fv_endsoul_fire_burst:
+  Skills:
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=14;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=15;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=16;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+
+fv_endsoul_fire_ring:
+  Skills:
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=10;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=11;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=12;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+
+fv_endsoul_fire_fan:
+  Skills:
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=12;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=13;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=14;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+
+fv_endsoul_proj_tick:
+  Skills:
+  - particles{particle=dust;color=#9FFCFF;size=0.9;amount=1;hs=0.06;vs=0.06;speed=0} @origin
+
+fv_endsoul_proj_hit:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  Skills:
+  - damage{amount=7;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - aura{auraName=fv_endsoul_if_proj;duration=10;maxStacks=1;refreshDuration=true}
+  - skill{s=fv_endsoul_sfx_proj_hit}
+
+fv_endsoul_proj_end:
+  Skills:
+  - summon{type=fv_endsoul_burst;amount=1;radius=0} @origin
+  - skill{s=fv_endsoul_sfx_proj_burst} @origin
+  - particles{particle=dust;color=#BFFFFF;size=1.1;amount=6;hs=0.35;vs=0.35;speed=0} @origin
+  - skill{s=fv_endsoul_proj_splash} @PlayersNearOrigin{r=1.6}
+
+fv_endsoul_proj_splash:
+  TargetConditions:
+  - gamemode{m=SURVIVAL,ADVENTURE} true
+  - hasaura{auraName=fv_endsoul_if_proj} false
+  Skills:
+  - damage{amount=3;ignoreArmor=false;ii=true;pi=true;pkb=true}
+  - aura{auraName=fv_endsoul_if_proj;duration=10;maxStacks=1;refreshDuration=true}

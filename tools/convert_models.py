@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Prepare Fischvogel's End Boss blueprints for ModelEngine.
+Prepare Soul of the End blueprints for ModelEngine.
 
 FUNCTIONAL changes only - geometry, textures, UVs and the designed motion are
 left exactly as authored. What this script does, per model:
@@ -49,8 +49,8 @@ left exactly as authored. What this script does, per model:
   would reshape curves. Transitions are timed from MythicMobs instead.
 
 Usage:  python3 convert_models.py <out_dir>
-Writes: fv_soulcube.bbmodel, fv_soulcube_projectile.bbmodel            (legacy, for ModelEngine)
-        fv_soulcube (Blockbench 5).bbmodel, ... (Blockbench 5)      (same edits, editable)
+Writes: fv_endsoul.bbmodel, fv_endsoul_projectile.bbmodel            (legacy, for ModelEngine)
+        fv_endsoul (Blockbench 5).bbmodel, ... (Blockbench 5)      (same edits, editable)
 """
 import copy
 import hashlib
@@ -579,7 +579,7 @@ def main(out_dir):
     log = []
 
     boss = json.load(open(os.path.join(SRC, 'endboss (original).bbmodel'), encoding='utf-8'))
-    boss['name'] = 'fv_soulcube'
+    boss['name'] = 'fv_endsoul'
     log.append('endboss: cleaned %d numeric strings' % clean_numbers(boss))
     bake_random(boss, log)
     fix_idle_eyes(boss, log)
@@ -589,7 +589,7 @@ def main(out_dir):
     set_override(boss, log)
 
     proj = json.load(open(os.path.join(SRC, 'projectile (original).bbmodel'), encoding='utf-8'))
-    proj['name'] = 'fv_soulcube_projectile'
+    proj['name'] = 'fv_endsoul_projectile'
     log.append('projectile: cleaned %d numeric strings' % clean_numbers(proj))
     add_blank(proj, log)
     set_override(proj, log)
@@ -601,10 +601,10 @@ def main(out_dir):
                     if has_expression(kf):
                         raise SystemExit('expression survived in %s/%s' % (anim['name'], an['name']))
 
-    dump(boss, os.path.join(out_dir, 'fv_soulcube (Blockbench 5).bbmodel'))
-    dump(proj, os.path.join(out_dir, 'fv_soulcube_projectile (Blockbench 5).bbmodel'))
-    dump(to_legacy(boss), os.path.join(out_dir, 'fv_soulcube.bbmodel'))
-    dump(to_legacy(proj), os.path.join(out_dir, 'fv_soulcube_projectile.bbmodel'))
+    dump(boss, os.path.join(out_dir, 'fv_endsoul (Blockbench 5).bbmodel'))
+    dump(proj, os.path.join(out_dir, 'fv_endsoul_projectile (Blockbench 5).bbmodel'))
+    dump(to_legacy(boss), os.path.join(out_dir, 'fv_endsoul.bbmodel'))
+    dump(to_legacy(proj), os.path.join(out_dir, 'fv_endsoul_projectile.bbmodel'))
     print('\n'.join(log))
 
 
