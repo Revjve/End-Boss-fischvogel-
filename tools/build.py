@@ -7,7 +7,7 @@ Builds "Soul of the End.zip" from the folder of the same name.
   1. converts the original .bbmodel files (Source Files) for ModelEngine and
      verifies the result (convert_models.py / verify_models.py):
        plugins/ModelEngine/blueprints/fv_endsoul*.bbmodel  (legacy 4.10)
-       Source Files/fv_endsoul* (Blockbench 5).bbmodel     (editable)
+       Source Files/fv_endsoul*.bbmodel                    (Blockbench 5, editable)
   2. runs the static checker against the vanilla data in tools/vanilla_data
   3. --sim N: plays N simulated fights per scenario (simulate_fight.py)
   4. writes the zip: one top folder, directory entries, CRLF guide, fixed
@@ -43,8 +43,11 @@ def main():
         os.makedirs(bp, exist_ok=True)
         for f in ('fv_endsoul.bbmodel', 'fv_endsoul_projectile.bbmodel'):
             shutil.copyfile(os.path.join(tmp, f), os.path.join(bp, f))
-        for f in ('fv_endsoul (Blockbench 5).bbmodel', 'fv_endsoul_projectile (Blockbench 5).bbmodel'):
-            shutil.copyfile(os.path.join(tmp, f), os.path.join(PACK, 'Source Files', f))
+        src = os.path.join(PACK, 'Source Files')
+        for f in os.listdir(src):
+            os.remove(os.path.join(src, f))
+        for m in ('fv_endsoul', 'fv_endsoul_projectile'):
+            shutil.copyfile(os.path.join(tmp, m + ' (Blockbench 5).bbmodel'), os.path.join(src, m + '.bbmodel'))
     # 2. checks
     run(os.path.join(HERE, 'check_pack.py'), PLUGINS, os.path.join(HERE, 'vanilla_data'))
     # 3. simulation

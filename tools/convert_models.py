@@ -34,6 +34,9 @@ left exactly as authored. What this script does, per model:
        attack1/attack2/shooting (corner pieces at 5 px + 8 px, double root
        motion, ...). In Blockbench the flag only matters when two animations
        are previewed together; a single animation looks exactly the same.
+    5b. Adds the hitbox cube revjve drew (tools/originals/hitbox (revjve).json):
+       a 16x16x16 invisible cube named "hitbox" at the outliner root, which
+       ModelEngine reads as the model's hitbox. Nothing visible changes.
     6. Writes the file in Blockbench's legacy 4.10 project format, using the
        exact transformation of Blockbench's own "File > Export Legacy Project"
        (groups inlined into the outliner, position-X and rotation-X/Y keyframe
@@ -527,6 +530,13 @@ def invert_molang(v):
     return res
 
 
+def add_hitbox(model, log):
+    h = json.load(open(os.path.join(SRC, 'hitbox (revjve).json'), encoding='utf-8'))
+    model['elements'].append(h)
+    model['outliner'].append(h['uuid'])
+    log.append('endboss: added hitbox cube %s..%s' % (h['from'], h['to']))
+
+
 def to_legacy(model):
     m = copy.deepcopy(model)
     m['meta']['format_version'] = '4.10'
@@ -587,6 +597,7 @@ def main(out_dir):
     add_dormant(boss, log)
     add_blank(boss, log)
     set_override(boss, log)
+    add_hitbox(boss, log)
 
     proj = json.load(open(os.path.join(SRC, 'projectile (original).bbmodel'), encoding='utf-8'))
     proj['name'] = 'fv_endsoul_projectile'

@@ -14,7 +14,7 @@ Spawn `fv_endsoul_block` (the block); a left or right click wakes it into `fv_en
 | `Soul of the End/` | Exactly what goes into the zip (the hand-over pack) - the source of truth. Nothing from `tools/` or `docs/` ships. |
 | `Soul of the End/plugins/MythicMobs/packs/fv_endsoul/` | Mobs and skills: `core` (block, wake-up, loop, phases, damage rules, height, death), `laser`, `downbeam`, `shooting`, `fx` (every sound / particle cue). |
 | `Soul of the End/plugins/ModelEngine/blueprints/` | The two blueprints, generated from the originals by `tools/convert_models.py`. |
-| `Soul of the End/Source Files/` | The converted models in Blockbench 5 format, for editing. |
+| `Soul of the End/Source Files/` | The converted models in Blockbench 5 format, for editing (same file names as the blueprints). |
 | `tools/originals/` | The `.bbmodel` files as originally delivered - the converter's input. |
 | `tools/` | Build, conversion, static checker and fight simulator. |
 

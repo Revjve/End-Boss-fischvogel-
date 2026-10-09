@@ -1,0 +1,83 @@
+{
+ "name": "hitbox",
+ "box_uv": true,
+ "render_order": "default",
+ "locked": false,
+ "export": true,
+ "scope": 0,
+ "allow_mirror_modeling": true,
+ "from": [
+  -8,
+  0,
+  -8
+ ],
+ "to": [
+  8,
+  16,
+  8
+ ],
+ "autouv": 1,
+ "color": 0,
+ "visibility": false,
+ "origin": [
+  0,
+  0,
+  0
+ ],
+ "uv_offset": [
+  -21,
+  -14
+ ],
+ "faces": {
+  "north": {
+   "uv": [
+    -5,
+    2,
+    11,
+    18
+   ]
+  },
+  "east": {
+   "uv": [
+    -21,
+    2,
+    -5,
+    18
+   ]
+  },
+  "south": {
+   "uv": [
+    27,
+    2,
+    43,
+    18
+   ]
+  },
+  "west": {
+   "uv": [
+    11,
+    2,
+    27,
+    18
+   ]
+  },
+  "up": {
+   "uv": [
+    11,
+    2,
+    -5,
+    -14
+   ]
+  },
+  "down": {
+   "uv": [
+    27,
+    -14,
+    11,
+    2
+   ]
+  }
+ },
+ "type": "cube",
+ "uuid": "1905bed7-0edb-8ffe-b90e-fb3d318e7a0a"
+}

@@ -249,8 +249,14 @@ def main(conv_dir):
     pnew5 = json.load(open(os.path.join(conv_dir, 'fv_endsoul_projectile (Blockbench 5).bbmodel')))
     plegacy = json.load(open(os.path.join(conv_dir, 'fv_endsoul_projectile.bbmodel')))
 
-    # D - geometry untouched
-    for a, b, label in ((orig, new5, 'endboss'), (porig, pnew5, 'projectile')):
+    # D - geometry untouched (the boss only gains revjve's invisible hitbox cube)
+    orig_h = copy.deepcopy(orig)
+    hit = json.load(open(os.path.join(SRC, 'hitbox (revjve).json')))
+    orig_h['elements'].append(hit)
+    if hit.get('visibility') is not False or hit['name'] != 'hitbox' or hit['uuid'] not in new5['outliner']:
+        print('FAIL D: hitbox cube must be invisible, named hitbox and at the outliner root')
+        ok = False
+    for a, b, label in ((orig_h, new5, 'endboss'), (porig, pnew5, 'projectile')):
         if geometry(a) != geometry(b):
             print('FAIL D: geometry/texture differs in', label)
             ok = False

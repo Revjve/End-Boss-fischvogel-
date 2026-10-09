@@ -1,18 +1,17 @@
-Hey, thank you very much for purchasing.
-Made by revjve.
+Made by fischvogel (code by revjve)
 
-SOUL OF THE END - a soul trapped inside a block.
-MythicMobs + ModelEngine + Nexo boss.
+SOUL OF THE END
+MythicMobs + ModelEngine boss.
 
 
 --------------------------------------------------------------------------
 REQUIREMENTS
 --------------------------------------------------------------------------
 
-  - Paper / Purpur 1.21.1 or newer
-  - MythicMobs 5.x
-  - ModelEngine R4
-  - Nexo (sends the resource pack with the models to your players)
+  - Paper 26.2 or newer
+  - MythicMobs 5.13
+  - ModelEngine 4
+  - Nexo (Optional, just to send resource pack)
 
 
 --------------------------------------------------------------------------
@@ -20,257 +19,51 @@ INSTALLING
 --------------------------------------------------------------------------
 
 1. Drop the contents of the "plugins" folder into your server's plugins
-   folder, keeping the exact structure it comes in.
+   folder.
 2. Restart the server, then run:
 
        /meg reload
        /mm reload
-       /nexo reload all
+       /nexo reload
 
-Nexo builds the resource pack and merges ModelEngine's models into it
-automatically - just make sure your players accept the pack. Every sound is
-a vanilla Minecraft sound, so there are no sound files to install.
-
-The pack only adds its own files:
-  plugins/ModelEngine/blueprints/fv_endsoul.bbmodel  (the boss model)
-  plugins/ModelEngine/blueprints/fv_endsoul_projectile.bbmodel
-  plugins/MythicMobs/packs/fv_endsoul/  (mobs and skills)
 
 
 --------------------------------------------------------------------------
 THE MOBS - WHICH ONE DO I SPAWN?
 --------------------------------------------------------------------------
 
-  fv_endsoul_block   THE BLOCK. This is the one you spawn. It sits in your
+  fv_endsoul_block:  THE BLOCK. This is the one you spawn. It sits in your
                       arena looking like a normal block and cannot be hurt.
                       When a player LEFT or RIGHT clicks it, it wakes up
-                      and turns into the boss right where it stands.
+                      and turns into the boss.
 
-  fv_endsoul         THE BOSS ("Soul of the End", with boss bar). Never spawn it
-                      by hand - the block summons it and keeps track of it.
+  fv_endsoul:        THE BOSS (Soul of the End).
 
-  fv_endsoul_bullet, fv_endsoul_burst, fv_endsoul_deathfx,
-  fv_endsoul_fx_base
-                      Invisible effect helpers (projectile, explosion, death
-                      animation). Used by the skills - never spawn them.
+  fv_endsoul_bullet, fv_endsoul_burst, fv_endsoul_deathfx, and fv_endsoul_fx_base:
+  Invisible effect helpers (projectile, explosion, death animation). Used by the skills - never spawn them.
 
 
 --------------------------------------------------------------------------
 PLACING THE BOSS
 --------------------------------------------------------------------------
 
-Stand in the middle of your arena and spawn the block once:
+Stand in the middle of your arena, on the floor, and spawn the block once:
 
     /mm mobs spawn fv_endsoul_block
 
-The block drops onto the floor below the spot you spawn it at and centres
-itself on that block (it appears half a second later), so it does not
-matter if you were flying or standing half in the ground. Every height in the fight is measured from that floor.
+For a perfect fit on the block grid, spawn it from the console at the
+centre of a block (X and Z + 0.5, Y = the TOP of the floor block, e.g. 64
+for a floor block at Y 63):
 
-That is all. The block is persistent: it survives restarts and remembers
-whether a fight is running. When the boss is killed it is gone for good
-(the block goes with it) - spawn a new block for another fight.
+    mm mobs spawn fv_endsoul_block 1 world,100.5,64,200.5
+
 
 The arena: an open, flat floor with at least 20 blocks of room around the
 block. The boss never moves further than 18 blocks from the block (change
-it in fv_endsoul_boss_settings); it glides by teleporting, so pillars
-inside that radius are passed straight through.
+it in fv_endsoul_boss_settings)
 
 To remove it:  /mm mobs kill fv_endsoul_block  (and /mm mobs kill fv_endsoul
 if a fight is running).
-
-
---------------------------------------------------------------------------
-THE FIGHT
---------------------------------------------------------------------------
-
-THE BLOCK
-  It sits on the ground like a normal block and cannot be hurt. Up close you
-  hear a heartbeat inside it, sometimes a whisper, and now and then it opens
-  its eye and looks at you. Left OR right click it to wake it up.
-
-WAKING UP (on_spawn, 7 seconds)
-  The block turns into the boss in the same spot: light bursts out, it
-  trembles, lifts off and keeps rising about two blocks into the air, the
-  frame strains and bursts open - the screens of everyone within 24 blocks
-  shake - and a shockwave shoves everybody back. Then it swoops down to eye
-  level. It cannot be damaged during the whole animation.
-
-THE LOOP
-  It floats at eye level and keeps its eye on the closest player - and
-  between attacks it is hard to catch. When you come within ~6 blocks it
-  glides away from you faster than you can sprint; get right on top of it
-  and it blinks 4 blocks away (every 3 seconds at most). Further away it
-  circles you slowly. Near the edge of its area it slides sideways instead
-  of backing out, and if it strays too far it turns and floats back. The
-  real openings are its attacks (lasers, shooting, the down beam) and the
-  daze after the down beam. Then it picks an attack -
-  never the same KIND (laser / down beam / shooting) twice in a row - and a
-  random pattern of that kind.
-
-  HIT REACTION: a hit while it is open (floating, moving, winding up an
-  attack, shooting) deals 75% extra damage and knocks it back - hits while
-  it reels deal 25% extra. The attack it was doing is cancelled,
-  it plays its hurt animation, can do nothing for about 2.5 seconds, idles
-  for a second and then backs away from you. It cannot be knocked back
-  again until ~8 seconds after the hit (phase 2 / 3: ~9 / ~10), so you get
-  one big interrupt at a time.
-
-  Damage depends on what it is doing:
-    floating, moving, winding up, shooting ... full damage (x1.75 for the hit
-                                                that causes a hit reaction)
-    reeling from a hit reaction .............. x1.25 damage
-    laser beam or down beam live ............. half damage (its shell
-                                                hardens, no hit reaction)
-    landed and dazed after the down beam ..... x1.35 damage - the big opening
-    screaming at a phase change .............. no damage (2 seconds)
-
-  PHASE 2 at 66% health, PHASE 3 at 33%. When the current attack is done it
-  screams and a shockwave throws everyone back. Every phase makes it faster:
-  shorter idle, faster animations (110% / 120%), more and faster shots,
-  quicker turns, shorter openings, and new patterns unlock. In phase 3 a
-  shooting attack can chain straight into the next attack.
-
-ATTACK 1 - LASER (attack1)
-  It always pings ~0.4 s before the beam ignites. The beam reaches 10 blocks
-  and hits hard (14).
-  STRAIGHT   tracks you while charging, then the beam creeps after you at
-             chest height - step sideways. Phase 2+: it pings again and
-             FLICKS onto where you stand.
-  JUMP ROPE  sinks low and sweeps 360 degrees - JUMP just as it reaches
-             you: the top half of a jump clears it. The spin starts slow,
-             speeds up and slows down again towards the end. A cyan ring
-             on the floor shows the beam's reach. Phase 3: it reverses once
-             halfway (high double click warns you).
-  HUNTER     (phase 2+) follows you, turning faster every quarter of the
-             beam. Circle it tightly or get out of its reach.
-  CHAOS      (phase 2+) low sweep that randomly reverses (high double
-             click) or changes speed (rising chime). Both are announced.
-             Like the jump rope it starts slow and winds down at the end.
-
-ATTACK 2 - DOWN BEAM (attack2)
-  The cube rises, turns its eye to the floor and charges - a cyan ring
-  marks the spot under it - then the beam fires straight down to the
-  floor. Now it
-  DASHES: it turns towards the closest player and draws a thin cyan line
-  on the floor where it is going to charge. The line turns WHITE with a
-  bell when the aim is locked - from then on it will not turn any more.
-  A moment later it shoots along that line very fast (about 10 blocks in
-  half a second) - jump or step to the SIDE. Three dashes per down beam;
-  every phase locks on quicker. Standing under the beam burns like the
-  laser (14). Its shell is hardened while the beam is on (half damage).
-  Then it comes back down (a small shockwave when it lands) and hovers
-  low, dazed: the big damage window.
-
-ATTACK 3 - SHOOTING (shooting + the projectile model)
-  Shots fly straight and level and burst where they end (direct hit 7,
-  burst splash 3).
-  AIMED      (phase 1-2) tracks you, PING + a thin cyan sight line, then a
-             very fast shot.
-  BURST      (phase 2+) a stream of shots aimed at you; every 3rd (phase 3:
-             every 2nd) is aimed where you are GOING - change direction.
-  RING       spins and sprays shots all around. Phase 2+: a second ring
-             fires through the gaps of the first (phase 3: spinning back).
-  FAN        (phase 2+) 5 shots wide, then 4 between them - step into gaps.
-  SPIRAL     (phase 3) two streams sweep around it like clock hands, with
-             gaps; it reverses halfway. Run around it close, or slip
-             through a gap.
-
-DEATH
-  It lifts, the light rays spin out with a choir of every voice it held, it
-  collapses, closes its eye, two heartbeats of silence - and the block
-  shatters. The souls drift away. 1500 xp.
-
-AFTERWARDS
-  Once killed, the boss stays dead - there is no respawn. If everybody leaves (nobody within 40
-  blocks for 15 seconds) the boss gives up and turns back into the block.
-  After a restart or a chunk unload during a fight, the block simply
-  re-forms.
-
-
-
---------------------------------------------------------------------------
-TUNING
---------------------------------------------------------------------------
-
-The balance values live in
-plugins/MythicMobs/packs/fv_endsoul/skills/fv_endsoul_core.yml.
-
-The most common changes:
-  - boss health ............. Health: in mobs/fv_endsoul_mobs.yml (750 suits
-                              1-3 players; add ~250 per extra player)
-  - arena radius ............ fv_endsoul_boss_settings
-  - damage numbers .......... the damage{amount=..} lines (listed in the
-                              cheat sheet)
-  - idle time, openings, how
-    many shots, gaps ........ the PHASE TABLES (fv_endsoul_phase_1/2/3)
-  - which patterns a phase
-    may use ................. fv_endsoul_type_* in fv_endsoul_core.yml
-  - projectile speeds ....... v= in the fv_endsoul_fire_* skills
-                              (shooting file)
-  - sounds .................. skills/fv_endsoul_fx.yml, one skill per moment
-                              of the fight (fv_endsoul_sfx_...)
-
-The animation speeds (speed=1.0/1.1/1.2 on the state{} lines in
-fv_endsoul_anim_*) drive the tick numbers in fv_endsoul_phase_1/2/3: each
-is the animation's own key moment divided by that phase's speed. If you
-change a speed, redo that division.
-
-The boss bar is BLUE on purpose: no vanilla boss uses that colour, so a
-custom boss bar texture can replace it without touching the Ender Dragon,
-Wither or raid bars.
-
-
---------------------------------------------------------------------------
-EDITING THE MODELS
---------------------------------------------------------------------------
-
-"Source Files" holds both models as Blockbench 5 projects. Edit them there,
-then use "File > Export Legacy Project" and save over the matching file in
-plugins/ModelEngine/blueprints, and run /meg reload. The blueprints use
-Blockbench's legacy project format, which every ModelEngine build reads.
-
-The skills rely on these animations by name: dormant, on_spawn, eyes,
-idle, attack1, attack2, shooting, damage, death, blank (boss) and idle,
-explosion, blank (projectile).
-
-
---------------------------------------------------------------------------
-IF SOMETHING LOOKS WRONG
---------------------------------------------------------------------------
-
-The block / boss is invisible
-  Check that /meg reload printed no errors and that both .bbmodel files are
-  in plugins/ModelEngine/blueprints. Players must accept the Nexo pack.
-
-Projectiles or the explosion are invisible
-  Set "Marker: false" in fv_endsoul_fx_base (mobs file) - a few ModelEngine
-  builds will not render models on marker armour stands.
-
-The block is stuck in the ground / bosses keep appearing
-  Blocks spawned with an older version can sit inside the floor. Clear
-  everything and spawn the block again (see PLACING THE BOSS):
-
-      /mm mobs kill fv_endsoul_block
-      /mm mobs kill fv_endsoul
-
-  Only players wake the block now, and it never wakes while a boss is
-  alive within 48 blocks.
-
-Its attacks do not hurt me
-  Creative and Spectator players are ignored by every attack - fight it in
-  Survival or Adventure.
-
-The boss does nothing after waking up
-  Your difficulty is Peaceful (slimes are removed), or the chunk is not
-  loaded. The fight needs Easy or higher.
-
-The boss vanished / the block came back on its own
-  Nobody was within 40 blocks for 15 seconds, the chunk unloaded, or the
-  server restarted - in all three cases the fight resets on purpose.
-
-Errors in the console mentioning fv_endsoul_...
-  Please send me the lines; each skill is named after what it does.
 
 
 If you have any questions, please reach out to me on my Discord server:

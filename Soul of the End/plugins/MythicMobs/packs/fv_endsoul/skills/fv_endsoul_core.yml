@@ -154,7 +154,7 @@ fv_endsoul_snap_floor:
 
 fv_endsoul_block_model:
   Skills:
-  - model{mid=fv_endsoul;usm=true;hitbox=false;lockpitch=true;damagetint=false;showshadow=false;radius=64;initrender=false} @self
+  - model{mid=fv_endsoul;usm=true;hitbox=true;lockpitch=true;damagetint=false;showshadow=false;radius=64;initrender=false} @self
   - defaultstate{mid=fv_endsoul;type=IDLE;state=dormant;li=0;lo=0} @self
   - defaultstate{mid=fv_endsoul;type=WALK;state=dormant;li=0;lo=0} @self
   - bodyrotation{mid=fv_endsoul;playermode=false;mh=0;mb=0;stable=0;rdelay=0;rduration=0} @self
@@ -280,7 +280,7 @@ fv_endsoul_boss_spawn:
   - setvariable{var=caster.fv_endsoul_home_z;type=FLOAT;value=<caster.l.z.double>}
   - skill{s=fv_endsoul_phase_1} @self
   - skill{s=fv_endsoul_boss_settings} @self
-  - model{mid=fv_endsoul;usm=true;hitbox=false;lockpitch=true;damagetint=true;showshadow=true;radius=64;initrender=false} @self
+  - model{mid=fv_endsoul;usm=true;hitbox=true;lockpitch=true;damagetint=true;showshadow=true;radius=64;initrender=false} @self
   - defaultstate{mid=fv_endsoul;type=IDLE;state=blank;li=0;lo=0} @self
   - defaultstate{mid=fv_endsoul;type=WALK;state=blank;li=0;lo=0} @self
   - defaultstate{mid=fv_endsoul;type=DEATH;state=blank;li=0;lo=0} @self
