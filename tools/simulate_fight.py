@@ -138,7 +138,9 @@ class Sim:
         # undocumented details, decided per fight: the sign of @Forward{rot}
         # and whether blockcentered also moves y to the middle of the block
         self.rot_sign = self.rng.choice([-1, 1])
-        self.center_y = self.rng.choice([False, True])
+        # what @FloorOfTargets returns: the solid block's corner, its centre,
+        # the searched point itself (inside the block) or the top of it
+        self.fot_mode = self.rng.choice(['corner', 'center', 'clone', 'top'])
         self.queue, self.seq = [], 0
         self.ents, self.projs = [], []
         self.errors, self.log = [], []
@@ -304,6 +306,17 @@ class Sim:
             except (TypeError, ValueError):
                 self.error(f'variableinrange on non-number {args["var"]}={v!r}', meta)
                 return False
+        if name == 'mobsinradius':
+            r = float(args.get('radius', args.get('r', 5)))
+            types = (args.get('types') or args.get('type') or args.get('t')).split(',')
+            lo, hi = re.match(r'^(-?[0-9.]+)to(-?[0-9.]+)$', args.get('amount', '1to999999')).groups()
+            n = sum(1 for e in self.ents if not e.removed and e.alive and not e.player and e is not ent
+                    and e.mtype in types and self.dist(ent, e) <= r)
+            return float(lo) <= n <= float(hi)
+        if name == 'blocktype':
+            # flat world: everything below FLOOR is solid, everything above is air
+            air = math.floor(ent.y + 1e-9) >= FLOOR
+            return air if 'AIR' in (args.get('t') or args.get('types') or '').upper().split(',') else not air
         if name == 'playerwithin':
             d = float(args['d'])
             return any(self.dist(ent, p) <= d for p in self.players())
@@ -371,12 +384,14 @@ class Sim:
             for t in meta.targets:
                 l = t.loc if isinstance(t, Ent) else t
                 for k in range(int(a.get('tries', 3))):
-                    by = math.floor(l.y) - k
-                    if by < FLOOR:          # flat world: solid below FLOOR
+                    y = l.y - k
+                    if math.floor(y) < FLOOR:          # flat world: solid below FLOOR
+                        by = math.floor(y)
                         cx = a.get('blockcentered') == 'true'
-                        out.append(Loc(math.floor(l.x) + 0.5 if cx else math.floor(l.x),
-                                       by + (0.5 if cx and self.center_y else 0),
-                                       math.floor(l.z) + 0.5 if cx else math.floor(l.z), l.yaw))
+                        x = math.floor(l.x) + 0.5 if cx else (l.x if self.fot_mode == 'clone' else math.floor(l.x))
+                        z = math.floor(l.z) + 0.5 if cx else (l.z if self.fot_mode == 'clone' else math.floor(l.z))
+                        y = {'corner': by, 'center': by + 0.5, 'clone': y, 'top': by + 1}[self.fot_mode]
+                        out.append(Loc(x, y, z, l.yaw))
                         break
             return out
         if name == 'playersnearorigin':
@@ -826,9 +841,7 @@ class Sim:
         sl.x, sl.z = self.rng.uniform(0.01, 0.99), self.rng.uniform(0.01, 0.99)
         sl.y = FLOOR + self.rng.choice([0.0, 0.0, -0.3, self.rng.uniform(0.2, 9)])
         block = self.spawn('fv_endsoul_block', sl)
-        if abs(block.y - FLOOR) > 1e-9 or abs(block.x - 0.5) > 1e-9 or abs(block.z - 0.5) > 1e-9:
-            self.error(f'block did not land on the floor: {block.x:.2f} {block.y:.2f} {block.z:.2f} '
-                       f'(spawned at {sl.y - FLOOR:+.2f})')
+        snap_checked = False
         self.make_players()
         click_at = 40 + self.rng.randint(0, 60)
         leave_at = None
@@ -859,6 +872,24 @@ class Sim:
                             self.exec_line(p, Meta(e, [e], chain=[f'{e.mtype}~timer']), e.mtype)
             # projectiles
             self.step_projectiles()
+            # the block snaps onto the floor within a few ticks of spawning
+            if self.tick == 15 and not snap_checked:
+                snap_checked = True
+                if abs(block.y - FLOOR) > 1 / 100 or math.floor(block.x) != 0 or math.floor(block.z) != 0:
+                    self.error(f'block did not land on the floor: {block.x:.2f} {block.y:.3f} {block.z:.2f} '
+                               f'(spawned {sl.y - FLOOR:+.2f}, floor lookup "{self.fot_mode}")')
+            # suffocation / fire / mobs hurting the block or the boss must not
+            # wake it or cause a hit reaction
+            if self.tick % 23 == 0:
+                for e in self.ents:
+                    if e.mtype in ('fv_endsoul_block', 'fv_endsoul') and not e.removed and e.alive:
+                        f0 = self.stats.get('flinches', 0)
+                        bosses0 = sum(1 for x in self.ents if x.mtype == 'fv_endsoul')
+                        self.fire(e, 'ondamaged', trigger=None, event={'damage': 0.0, 'cancelled': False})
+                        if self.stats.get('flinches', 0) != f0:
+                            self.error('environment damage caused a hit reaction')
+                        if sum(1 for x in self.ents if x.mtype == 'fv_endsoul') != bosses0:
+                            self.error('environment damage woke the block')
             # the click
             if self.tick == click_at:
                 pl = self.players()[0]
@@ -877,7 +908,7 @@ class Sim:
                 if hpx is not None and boss.var('fv_endsoul_state') == 'FIGHT':
                     if not (0 <= hpx <= 70):
                         self.error(f'hpx out of range: {hpx}')
-                    real = (boss.y - FLOOR) * 16
+                    real = (boss.y - boss.var('fv_endsoul_home').y) * 16
                     if abs(real - hpx) > 1e-6:
                         self.error(f'height drift: hpx={hpx} but the boss is {real:.3f} px up')
                 # leash

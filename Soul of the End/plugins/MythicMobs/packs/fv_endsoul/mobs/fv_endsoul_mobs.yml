@@ -29,11 +29,11 @@ fv_endsoul_block:
   AITargetSelectors:
   - clear
   Skills:
-  - skill{s=fv_endsoul_block_spawn} @self ~onSpawn
-  - skill{s=fv_endsoul_block_load} @self ~onLoad
+  - skill{s=fv_endsoul_block_spawn;sync=true} @self ~onSpawn
+  - skill{s=fv_endsoul_block_load;sync=true} @self ~onLoad
   - skill{s=fv_endsoul_block_hit;sync=true} @self ~onDamaged
   - skill{s=fv_endsoul_block_click;sync=true} @self ~onInteract
-  - skill{s=fv_endsoul_block_second} @self ~onTimer:20
+  - skill{s=fv_endsoul_block_second;sync=true} @self ~onTimer:20
 
 fv_endsoul:
   Type: SLIME
@@ -86,12 +86,12 @@ fv_endsoul:
   Drops:
   - exp 1500
   Skills:
-  - skill{s=fv_endsoul_boss_spawn} @self ~onSpawn
+  - skill{s=fv_endsoul_boss_spawn;sync=true} @self ~onSpawn
   - skill{s=fv_endsoul_on_damaged;sync=true} @self ~onDamaged
   - skill{s=fv_endsoul_on_interact;sync=true} @self ~onInteract
-  - skill{s=fv_endsoul_watch} @self ~onTimer:1
-  - skill{s=fv_endsoul_boss_second} @self ~onTimer:20
-  - skill{s=fv_endsoul_on_death} @self ~onDeath
+  - skill{s=fv_endsoul_watch;sync=true} @self ~onTimer:1
+  - skill{s=fv_endsoul_boss_second;sync=true} @self ~onTimer:20
+  - skill{s=fv_endsoul_on_death;sync=true} @self ~onDeath
 
 fv_endsoul_fx_base:
   Type: ARMOR_STAND
@@ -143,4 +143,4 @@ fv_endsoul_burst:
 fv_endsoul_deathfx:
   Template: fv_endsoul_fx_base
   Skills:
-  - skill{s=fv_endsoul_death_start} @self ~onSpawn
+  - skill{s=fv_endsoul_death_start;sync=true} @self ~onSpawn

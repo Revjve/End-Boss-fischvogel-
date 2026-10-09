@@ -121,17 +121,36 @@ fv_endsoul_block_spawn:
   # - skill{s=fv_endsoul_block_settings} @self
   - setvariable{var=caster.fv_endsoul_block;type=STRING;value=READY;save=true}
   - setvariable{var=caster.fv_endsoul_hidden;type=INTEGER;value=0;save=true}
-  - skill{s=fv_endsoul_snap_floor} @SelfLocation{y=1}
   - skill{s=fv_endsoul_snap_yaw} @self
-  - skill{s=fv_endsoul_block_model} @self
+  - skill{s=fv_endsoul_snap_floor} @SelfLocation{y=1}
 
 fv_endsoul_snap_floor:
   Skills:
-  - setvariable{var=skill.y0;type=FLOAT;value=<caster.l.y.double>}
   - teleport{unsafe=true;preserveyaw=true} @FloorOfTargets{tries=48;blockcentered=true}
-  - setvariable{var=skill.up;type=FLOAT;value="(floor(<caster.l.y.double>)+1-(<caster.l.y.double>))*(abs((<caster.l.y.double>)-(<skill.var.y0>))>0.01)"}
-  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=1} ?variableinrange{var=skill.up;value=0.75to1.25}
-  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.5} ?variableinrange{var=skill.up;value=0.25to0.75}
+  - delay 2
+  - setvariable{var=skill.k;type=INTEGER;value="floor((floor(<caster.l.y.double>)+1-(<caster.l.y.double>))*64+0.5)"}
+  - setvariable{var=skill.k;type=INTEGER;value=0} ?blocktype{t=AIR,CAVE_AIR,VOID_AIR,SHORT_GRASS,TALL_GRASS,FERN,LARGE_FERN,SNOW}
+  - setvariable{var=skill.b32;type=INTEGER;value="floor((<skill.var.k>)/32)%2"}
+  - setvariable{var=skill.b16;type=INTEGER;value="floor((<skill.var.k>)/16)%2"}
+  - setvariable{var=skill.b8;type=INTEGER;value="floor((<skill.var.k>)/8)%2"}
+  - setvariable{var=skill.b4;type=INTEGER;value="floor((<skill.var.k>)/4)%2"}
+  - setvariable{var=skill.b2;type=INTEGER;value="floor((<skill.var.k>)/2)%2"}
+  - setvariable{var=skill.b1;type=INTEGER;value="(<skill.var.k>)%2"}
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=1} ?variableequals{var=skill.k;value=64}
+  - delay 1
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.5} ?variableequals{var=skill.b32;value=1}
+  - delay 1
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.25} ?variableequals{var=skill.b16;value=1}
+  - delay 1
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.125} ?variableequals{var=skill.b8;value=1}
+  - delay 1
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.0625} ?variableequals{var=skill.b4;value=1}
+  - delay 1
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.03125} ?variableequals{var=skill.b2;value=1}
+  - delay 1
+  - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=0.015625} ?variableequals{var=skill.b1;value=1}
+  - delay 1
+  - skill{s=fv_endsoul_block_model} @self ?variableequals{var=caster.fv_endsoul_block;value=READY}
 
 fv_endsoul_block_model:
   Skills:
@@ -141,6 +160,7 @@ fv_endsoul_block_model:
   - bodyrotation{mid=fv_endsoul;playermode=false;mh=0;mb=0;stable=0;rdelay=0;rduration=0} @self
   - state{mid=fv_endsoul;s=dormant;p=10;li=0;lo=0;force=true} @self
   - renderinit{mid=fv_endsoul} @self
+  - setvariable{var=caster.fv_endsoul_shown;type=INTEGER;value=1}
 
 fv_endsoul_snap_yaw:
   Skills:
@@ -162,16 +182,17 @@ fv_endsoul_block_load:
 fv_endsoul_block_hit:
   Skills:
   - cancelevent
-  - skill{s=fv_endsoul_block_wake} @self
+  - skill{s=fv_endsoul_block_wake} @self ?~entitytype{t=PLAYER}
 
 fv_endsoul_block_click:
   Skills:
   - cancelevent
-  - skill{s=fv_endsoul_block_wake} @self
+  - skill{s=fv_endsoul_block_wake} @self ?~entitytype{t=PLAYER}
 
 fv_endsoul_block_wake:
   Conditions:
   - variableequals{var=caster.fv_endsoul_block;value=READY} true
+  - mobsinradius{types=fv_endsoul;amount=1to999;radius=48} false
   Skills:
   - setvariable{var=caster.fv_endsoul_block;type=STRING;value=AWAKE;save=true}
   - setvariable{var=caster.fv_endsoul_boss_alive;type=INTEGER;value=1;duration=100}
@@ -183,8 +204,8 @@ fv_endsoul_block_wake:
 
 fv_endsoul_block_second:
   Skills:
-  - skill{s=fv_endsoul_block_ambience} @self ?variableequals{var=caster.fv_endsoul_block;value=READY}
-  - skill{s=fv_endsoul_block_restore} @self ?variableequals{var=caster.fv_endsoul_block;value=AWAKE} ?!variableisset{var=caster.fv_endsoul_boss_alive}
+  - skill{s=fv_endsoul_block_ambience} @self ?variableequals{var=caster.fv_endsoul_block;value=READY} ?variableisset{var=caster.fv_endsoul_shown}
+  - skill{s=fv_endsoul_block_restore} @self ?variableequals{var=caster.fv_endsoul_block;value=AWAKE} ?!variableisset{var=caster.fv_endsoul_boss_alive} ?!mobsinradius{types=fv_endsoul;amount=1to999;radius=48}
   # - skill{s=fv_endsoul_block_countdown} @self ?variableequals{var=caster.fv_endsoul_block;value=COOLDOWN}
 
 fv_endsoul_block_on_defeat:
@@ -627,7 +648,7 @@ fv_endsoul_on_damaged:
   - skill{s=fv_endsoul_hit_stagger} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT} ?variableequals{var=caster.fv_endsoul_mode;value=STAGGER}
   - skill{s=fv_endsoul_hit_open} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT} ?variableequals{var=caster.fv_endsoul_mode;value=FLINCH}
   - skill{s=fv_endsoul_hit_open} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT} ?variableequals{var=caster.fv_endsoul_mode;value=OPEN} ?variableisset{var=caster.fv_endsoul_flinch_cd}
-  - skill{s=fv_endsoul_flinch} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT} ?variableequals{var=caster.fv_endsoul_mode;value=OPEN} ?!variableisset{var=caster.fv_endsoul_flinch_cd}
+  - skill{s=fv_endsoul_flinch} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT} ?variableequals{var=caster.fv_endsoul_mode;value=OPEN} ?!variableisset{var=caster.fv_endsoul_flinch_cd} ?~entitytype{t=PLAYER}
   - skill{s=fv_endsoul_check_phase;delay=1} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT}
 
 fv_endsoul_on_interact:

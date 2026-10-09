@@ -64,8 +64,8 @@ Stand in the middle of your arena and spawn the block once:
     /mm mobs spawn fv_endsoul_block
 
 The block drops onto the floor below the spot you spawn it at and centres
-itself on that block, so it does not matter if you were flying or standing
-half in the ground. Every height in the fight is measured from that floor.
+itself on that block (it appears half a second later), so it does not
+matter if you were flying or standing half in the ground. Every height in the fight is measured from that floor.
 
 That is all. The block is persistent: it survives restarts and remembers
 whether a fight is running. When the boss is killed it is gone for good
@@ -241,9 +241,15 @@ Projectiles or the explosion are invisible
   Set "Marker: false" in fv_endsoul_fx_base (mobs file) - a few ModelEngine
   builds will not render models on marker armour stands.
 
-The boss sits too low / too high, or the low laser sweep never hits
-  The block was spawned before this version (older blocks did not drop onto
-  the floor). Kill it and spawn it again (see PLACING THE BOSS).
+The block is stuck in the ground / bosses keep appearing
+  Blocks spawned with an older version can sit inside the floor. Clear
+  everything and spawn the block again (see PLACING THE BOSS):
+
+      /mm mobs kill fv_endsoul_block
+      /mm mobs kill fv_endsoul
+
+  Only players wake the block now, and it never wakes while a boss is
+  alive within 48 blocks.
 
 Its attacks do not hurt me
   Creative and Spectator players are ignored by every attack - fight it in
