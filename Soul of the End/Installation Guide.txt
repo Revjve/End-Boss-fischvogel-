@@ -97,24 +97,29 @@ WAKING UP (on_spawn, 7 seconds)
   level. It cannot be damaged during the whole animation.
 
 THE LOOP
-  It floats at eye level and keeps its eye on the closest player, but it
-  does not sit still: between attacks it glides away from you, circles you
-  sideways, drifts to a spot nearby or closes in when you keep your
-  distance - starting slow, speeding up and easing out. If it strays too
-  far from its block it turns and floats back. Then it picks an attack -
+  It floats at eye level and keeps its eye on the closest player - and
+  between attacks it is hard to catch. When you come within ~6 blocks it
+  glides away from you faster than you can sprint; get right on top of it
+  and it blinks 4 blocks away (every 3 seconds at most). Further away it
+  circles you slowly. Near the edge of its area it slides sideways instead
+  of backing out, and if it strays too far it turns and floats back. The
+  real openings are its attacks (lasers, shooting, the down beam) and the
+  daze after the down beam. Then it picks an attack -
   never the same KIND (laser / down beam / shooting) twice in a row - and a
   random pattern of that kind.
 
   HIT REACTION: a hit while it is open (floating, moving, winding up an
-  attack, shooting) knocks it back - the attack it was doing is cancelled,
+  attack, shooting) deals 75% extra damage and knocks it back - hits while
+  it reels deal 25% extra. The attack it was doing is cancelled,
   it plays its hurt animation, can do nothing for about 2.5 seconds, idles
   for a second and then backs away from you. It cannot be knocked back
   again until ~8 seconds after the hit (phase 2 / 3: ~9 / ~10), so you get
   one big interrupt at a time.
 
   Damage depends on what it is doing:
-    floating, moving, winding up, shooting ... full damage (and the hit
-                                                reaction above)
+    floating, moving, winding up, shooting ... full damage (x1.75 for the hit
+                                                that causes a hit reaction)
+    reeling from a hit reaction .............. x1.25 damage
     laser beam or down beam live ............. half damage (its shell
                                                 hardens, no hit reaction)
     landed and dazed after the down beam ..... x1.35 damage - the big opening
@@ -145,7 +150,8 @@ ATTACK 1 - LASER (attack1)
 
 ATTACK 2 - DOWN BEAM (attack2)
   The cube rises, turns its eye to the floor and charges - a cyan ring
-  marks the spot under it - then the beam fires straight down. Now it
+  marks the spot under it - then the beam fires straight down to the
+  floor. Now it
   DASHES: it turns towards the closest player and draws a thin cyan line
   on the floor where it is going to charge. The line turns WHITE with a
   bell when the aim is locked - from then on it will not turn any more.

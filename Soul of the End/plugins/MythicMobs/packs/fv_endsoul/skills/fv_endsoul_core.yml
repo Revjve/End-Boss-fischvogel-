@@ -32,7 +32,7 @@ fv_endsoul_phase_1:
   - setvariable{var=caster.fv_endsoul_n_fan;type=INTEGER;value=2}
   - setvariable{var=caster.fv_endsoul_t_fan_gap;type=INTEGER;value=16}
   - setvariable{var=caster.fv_endsoul_n_spiral;type=INTEGER;value=20}
-  - setvariable{var=caster.fv_endsoul_mv_max;type=INTEGER;value=3}
+  - setvariable{var=caster.fv_endsoul_mv_max;type=INTEGER;value=4}
   - setvariable{var=caster.fv_endsoul_t_db_lock;type=INTEGER;value=16}
   - setvariable{var=caster.fv_endsoul_t_db_freeze;type=INTEGER;value=8}
   - setvariable{var=caster.fv_endsoul_t_db_rest;type=INTEGER;value=6}
@@ -387,25 +387,11 @@ fv_endsoul_resume:
 
 fv_endsoul_move_pick:
   Skills:
-  - setvariable{var=caster.fv_endsoul_mv_t;type=INTEGER;value=0}
-  - setvariable{var=caster.fv_endsoul_mv_n;type=INTEGER;value="max(0,min((<caster.var.fv_endsoul_wait>)-4,floor(random(16,31))))"}
+  - setvariable{var=caster.fv_endsoul_mv_n;type=INTEGER;value="max(0,(<caster.var.fv_endsoul_wait>)-2)"}
+  - setvariable{var=caster.fv_endsoul_mv_lvl;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_endsoul_mv_tgt;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_endsoul_mv_chk;type=INTEGER;value=0}
   - setvariable{var=caster.fv_endsoul_mv_dir;type=INTEGER;value=999}
-  - setvariable{var=caster.fv_endsoul_pth;type=FLOAT;value=0}
-  - setvariable{var=caster.fv_endsoul_phd;type=FLOAT;value=99}
-  - skill{s=fv_endsoul_probe_back} @NearestPlayer{r=48}
-  - setvariable{var=skill.pd;type=FLOAT;value=<caster.var.fv_endsoul_phd>}
-  - setvariable{var=skill.r;type=FLOAT;value="random(0,1)"}
-  - skill{s=fv_endsoul_mv_back} @self ?variableinrange{var=skill.pd;value=0to4.5} ?variableinrange{var=skill.r;value=0to0.67}
-  - skill{s=fv_endsoul_mv_side} @self ?variableinrange{var=skill.pd;value=0to4.5} ?variableinrange{var=skill.r;value=0.67to1}
-  - skill{s=fv_endsoul_mv_back} @self ?variableinrange{var=skill.pd;value=4.5to10} ?variableinrange{var=skill.r;value=0to0.25}
-  - skill{s=fv_endsoul_mv_side} @self ?variableinrange{var=skill.pd;value=4.5to10} ?variableinrange{var=skill.r;value=0.25to0.8}
-  - skill{s=fv_endsoul_mv_side} @self ?variableinrange{var=skill.pd;value=10to99999} ?variableinrange{var=skill.r;value=0to0.35}
-  - skill{s=fv_endsoul_mv_close} @self ?variableinrange{var=skill.pd;value=10to99999} ?variableinrange{var=skill.r;value=0.35to1}
-  - skill{s=fv_endsoul_mv_back} @self ?variableequals{var=caster.fv_endsoul_mv_force;value=1}
-  - setvariable{var=caster.fv_endsoul_mv_force;type=INTEGER;value=0}
-  - setvariable{var=skill.away;type=FLOAT;value="sqrt(((<caster.l.x.double>)-(<caster.var.fv_endsoul_home_x>))^2+((<caster.l.z.double>)-(<caster.var.fv_endsoul_home_z>))^2)"}
-  - setvariable{var=skill.far;type=FLOAT;value="(<skill.var.away>)>(<caster.var.fv_endsoul_arena_r>)*0.55"}
-  - skill{s=fv_endsoul_mv_far} @self ?variableinrange{var=skill.far;value=0.5to2}
   - skill{s=fv_endsoul_mv_tick} @self
 
 fv_endsoul_mv_back:
@@ -417,13 +403,10 @@ fv_endsoul_mv_side:
   Skills:
   - setvariable{var=caster.fv_endsoul_mv_dir;type=INTEGER;value="90*(2*min(1,floor(random(0,2)))-1)"}
 
-fv_endsoul_mv_close:
-  Skills:
-  - setvariable{var=caster.fv_endsoul_mv_dir;type=INTEGER;value="45*(2*min(1,floor(random(0,2)))-1)"}
-
 fv_endsoul_mv_far:
   Skills:
   - setvariable{var=caster.fv_endsoul_mv_dir;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_endsoul_mv_tgt;type=INTEGER;value=<caster.var.fv_endsoul_mv_max>}
   - setvariable{var=caster.fv_endsoul_busy;type=INTEGER;value=1}
 
 fv_endsoul_mv_tick:
@@ -432,16 +415,68 @@ fv_endsoul_mv_tick:
   - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
   Skills:
   - variableadd{var=caster.fv_endsoul_mv_n;amount=-1}
-  - variableadd{var=caster.fv_endsoul_mv_t;amount=1}
-  - setvariable{var=caster.fv_endsoul_mv_lvl;type=INTEGER;value="min(<caster.var.fv_endsoul_mv_max>,min(1+floor((<caster.var.fv_endsoul_mv_t>)/3),1+floor((<caster.var.fv_endsoul_mv_n>)/3)))"}
+  - variableadd{var=caster.fv_endsoul_mv_chk;amount=-1}
   - setvariable{var=skill.away;type=FLOAT;value="sqrt(((<caster.l.x.double>)-(<caster.var.fv_endsoul_home_x>))^2+((<caster.l.z.double>)-(<caster.var.fv_endsoul_home_z>))^2)"}
-  - setvariable{var=skill.out;type=FLOAT;value="(<skill.var.away>)>(<caster.var.fv_endsoul_arena_r>)-2"}
+  - setvariable{var=skill.out;type=FLOAT;value="(<skill.var.away>)>(<caster.var.fv_endsoul_arena_r>)-1"}
   - skill{s=fv_endsoul_mv_far} @self ?variableinrange{var=skill.out;value=0.5to2}
-  - setvariable{var=caster.fv_endsoul_mv_n;type=INTEGER;value=0} ?variableequals{var=caster.fv_endsoul_mv_dir;value=0} ?variableinrange{var=skill.away;value=0to3}
+  - skill{s=fv_endsoul_mv_home_done} @self ?variableequals{var=caster.fv_endsoul_mv_dir;value=0} ?variableinrange{var=skill.away;value=0to6}
+  - skill{s=fv_endsoul_mv_think} @self ?variableinrange{var=caster.fv_endsoul_mv_chk;value=-99999to0}
+  - setvariable{var=caster.fv_endsoul_mv_lvl;type=INTEGER;value="max(0,min(min(<caster.var.fv_endsoul_mv_max>,1+floor((<caster.var.fv_endsoul_mv_n>)/3)),(<caster.var.fv_endsoul_mv_lvl>)+signum((<caster.var.fv_endsoul_mv_tgt>)-(<caster.var.fv_endsoul_mv_lvl>))))"}
   - skill{s=fv_endsoul_mv_home_turn} @self ?variableequals{var=caster.fv_endsoul_mv_dir;value=0}
   - skill{s=fv_endsoul_mv_step} @self
   - skill{s=fv_endsoul_mv_done} @self ?variableequals{var=caster.fv_endsoul_mv_n;value=0}
   - skill{s=fv_endsoul_mv_tick;delay=1} @self
+
+fv_endsoul_mv_think:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_mv_chk;type=INTEGER;value=4}
+  - setvariable{var=caster.fv_endsoul_pth;type=FLOAT;value=0}
+  - setvariable{var=caster.fv_endsoul_phd;type=FLOAT;value=99}
+  - skill{s=fv_endsoul_probe_back} @NearestPlayer{r=48}
+  - setvariable{var=skill.pd;type=FLOAT;value=<caster.var.fv_endsoul_phd>}
+  - setvariable{var=skill.d;type=INTEGER;value=<caster.var.fv_endsoul_mv_dir>}
+  - setvariable{var=skill.back;type=FLOAT;value="(abs(<skill.var.d>)>134)*((<skill.var.d>)<500)"}
+  - setvariable{var=skill.away;type=FLOAT;value="sqrt(((<caster.l.x.double>)-(<caster.var.fv_endsoul_home_x>))^2+((<caster.l.z.double>)-(<caster.var.fv_endsoul_home_z>))^2)"}
+  - setvariable{var=skill.edge;type=FLOAT;value="(<skill.var.away>)>(<caster.var.fv_endsoul_arena_r>)-5"}
+  - setvariable{var=skill.pd;type=FLOAT;value=0} ?variableequals{var=caster.fv_endsoul_mv_force;value=1}
+  - setvariable{var=caster.fv_endsoul_mv_force;type=INTEGER;value=0}
+  - skill{s=fv_endsoul_mv_near} @self ?variableinrange{var=skill.pd;value=0to6} ?!variableequals{var=skill.d;value=0}
+  - skill{s=fv_endsoul_mv_mid} @self ?variableinrange{var=skill.pd;value=6.01to10} ?!variableequals{var=skill.d;value=0}
+  - skill{s=fv_endsoul_mv_calm} @self ?variableinrange{var=skill.pd;value=10.01to99999} ?!variableequals{var=skill.d;value=0}
+  - skill{s=fv_endsoul_mv_blink} @self ?variableinrange{var=skill.pd;value=0.01to2.5} ?!variableisset{var=caster.fv_endsoul_blink_cd}
+
+fv_endsoul_mv_near:
+  Skills:
+  - skill{s=fv_endsoul_mv_back} @self ?variableinrange{var=skill.back;value=-1to0.5} ?variableinrange{var=skill.edge;value=-1to0.5}
+  - skill{s=fv_endsoul_mv_side} @self ?variableinrange{var=skill.back;value=0.5to2} ?variableinrange{var=skill.edge;value=0.5to2}
+  - skill{s=fv_endsoul_mv_side} @self ?variableequals{var=skill.d;value=999} ?variableinrange{var=skill.edge;value=0.5to2}
+  - setvariable{var=caster.fv_endsoul_mv_tgt;type=INTEGER;value=<caster.var.fv_endsoul_mv_max>}
+
+fv_endsoul_mv_mid:
+  Skills:
+  - skill{s=fv_endsoul_mv_side} @self ?variableequals{var=skill.d;value=999}
+  - skill{s=fv_endsoul_mv_side} @self ?variableinrange{var=skill.back;value=0.5to2} ?variableinrange{var=skill.edge;value=0.5to2}
+  - setvariable{var=caster.fv_endsoul_mv_tgt;type=INTEGER;value=2}
+
+fv_endsoul_mv_calm:
+  Skills:
+  - skill{s=fv_endsoul_mv_side} @self ?variableinrange{var=skill.back;value=0.5to2}
+  - skill{s=fv_endsoul_mv_side} @self ?variableequals{var=skill.d;value=999}
+  - setvariable{var=caster.fv_endsoul_mv_tgt;type=INTEGER;value=1}
+
+fv_endsoul_mv_blink:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_blink_cd;type=INTEGER;value=1;duration=60}
+  - skill{s=fv_endsoul_sfx_blink} @self
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=4;rot=180;lockpitch=true;uel=false} ?variableinrange{var=skill.edge;value=-1to0.5}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=4;rot=90;lockpitch=true;uel=false} ?variableinrange{var=skill.edge;value=0.5to2}
+  - skill{s=fv_endsoul_sfx_blink} @self
+
+fv_endsoul_mv_home_done:
+  Skills:
+  - setvariable{var=caster.fv_endsoul_mv_dir;type=INTEGER;value=999}
+  - setvariable{var=caster.fv_endsoul_mv_chk;type=INTEGER;value=0}
+  - setvariable{var=caster.fv_endsoul_busy;type=INTEGER;value=0}
 
 fv_endsoul_mv_done:
   Skills:
@@ -459,38 +494,30 @@ fv_endsoul_mv_home_turn:
 
 fv_endsoul_mv_step:
   Skills:
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.07;rot=0;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=0} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.14;rot=0;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=0} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.21;rot=0;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=0} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.28;rot=0;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=0} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.07;rot=45;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=45} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.14;rot=45;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=45} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.21;rot=45;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=45} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.28;rot=45;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=45} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.07;rot=-45;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-45} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.14;rot=-45;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-45} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.21;rot=-45;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-45} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.28;rot=-45;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-45} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.07;rot=90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.14;rot=90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.21;rot=90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.28;rot=90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.07;rot=-90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.14;rot=-90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.21;rot=-90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.28;rot=-90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.07;rot=135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.14;rot=135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.21;rot=135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.28;rot=135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.07;rot=-135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.14;rot=-135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.21;rot=-135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.28;rot=-135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.07;rot=180;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=180} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.14;rot=180;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=180} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.21;rot=180;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=180} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.28;rot=180;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=180} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.09;rot=0;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=0} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.18;rot=0;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=0} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.27;rot=0;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=0} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.36;rot=0;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=0} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.09;rot=90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.18;rot=90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.27;rot=90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.36;rot=90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.09;rot=-90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.18;rot=-90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.27;rot=-90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.36;rot=-90;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-90} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.09;rot=135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.18;rot=135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.27;rot=135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.36;rot=135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.09;rot=-135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.18;rot=-135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.27;rot=-135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.36;rot=-135;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=-135} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.09;rot=180;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=180} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=1}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.18;rot=180;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=180} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=2}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.27;rot=180;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=180} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=3}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.36;rot=180;lockpitch=true;uel=false} ?variableequals{var=caster.fv_endsoul_mv_dir;value=180} ?variableequals{var=caster.fv_endsoul_mv_lvl;value=4}
 
 fv_endsoul_pick:
   Conditions:
@@ -646,8 +673,10 @@ fv_endsoul_on_damaged:
   - skill{s=fv_endsoul_hit_armored} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT} ?variableequals{var=caster.fv_endsoul_mode;value=ARMORED}
   - modifydamage{a=1.35;modifier=MULTIPLY} ?variableequals{var=caster.fv_endsoul_mode;value=STAGGER}
   - skill{s=fv_endsoul_hit_stagger} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT} ?variableequals{var=caster.fv_endsoul_mode;value=STAGGER}
+  - modifydamage{a=1.25;modifier=MULTIPLY} ?variableequals{var=caster.fv_endsoul_mode;value=FLINCH}
   - skill{s=fv_endsoul_hit_open} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT} ?variableequals{var=caster.fv_endsoul_mode;value=FLINCH}
   - skill{s=fv_endsoul_hit_open} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT} ?variableequals{var=caster.fv_endsoul_mode;value=OPEN} ?variableisset{var=caster.fv_endsoul_flinch_cd}
+  - modifydamage{a=1.75;modifier=MULTIPLY} ?variableequals{var=caster.fv_endsoul_state;value=FIGHT} ?variableequals{var=caster.fv_endsoul_mode;value=OPEN} ?!variableisset{var=caster.fv_endsoul_flinch_cd} ?~entitytype{t=PLAYER}
   - skill{s=fv_endsoul_flinch} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT} ?variableequals{var=caster.fv_endsoul_mode;value=OPEN} ?!variableisset{var=caster.fv_endsoul_flinch_cd} ?~entitytype{t=PLAYER}
   - skill{s=fv_endsoul_check_phase;delay=1} @self ?variableequals{var=caster.fv_endsoul_state;value=FIGHT}
 
@@ -844,7 +873,7 @@ fv_endsoul_height_to_landed:
 
 fv_endsoul_height_to_beam:
   Skills:
-  - setvariable{var=caster.fv_endsoul_hpx_target;type=INTEGER;value=12}
+  - setvariable{var=caster.fv_endsoul_hpx_target;type=INTEGER;value=3}
   - skill{s=fv_endsoul_height_start} @self
 
 fv_endsoul_height_start:
@@ -934,7 +963,8 @@ fv_endsoul_on_death:
   - setvariable{var=caster.fv_endsoul_state;type=STRING;value=DEAD}
   - variableadd{var=caster.fv_endsoul_epoch;amount=1}
   - skill{s=fv_endsoul_abort} @self
-  - summon{type=fv_endsoul_deathfx;amount=1;radius=0} @SelfLocation
+  - summon{type=fv_endsoul_deathfx;amount=1;radius=0} @SelfLocation ?variableinrange{var=caster.fv_endsoul_hpx;value=8to99999}
+  - summon{type=fv_endsoul_deathfx;amount=1;radius=0} @SelfLocation{y=0.3125} ?variableinrange{var=caster.fv_endsoul_hpx;value=-99999to7}
   - model{mid=fv_endsoul;remove=true} @self
   - skill{s=fv_endsoul_link_defeated} @MobsInRadius{types=fv_endsoul_block;r=48}
 

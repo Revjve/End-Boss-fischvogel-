@@ -23,7 +23,8 @@ Spawn `fv_endsoul_block` (the block); a left or right click wakes it into `fv_en
 ![Side view of every state at its in-game height](docs/in-game-heights.png)
 
 Heights are in model pixels above the floor (16 px = 1 block). The boss floats at eye
-level (24 px) and only drops to 12 px for the jump-rope sweep and the down beam. Every
+level (24 px) and drops to 12 px for the jump-rope sweep and to 3 px for the down beam (its beam then
+ends exactly on the floor). Every
 height was measured against the blueprint (`tools/model_lowest.json`, the lowest point of
 the cube and frame per animation tick) so the frame never sinks into the floor; the fight
 simulator checks this every tick.

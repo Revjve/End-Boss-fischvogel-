@@ -300,7 +300,7 @@ fv_endsoul_vfx_downbeam_mark_pulse:
   Conditions:
   - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
   Skills:
-  - particlering{particle=dust;color=#4FE6FF;size=1.2;radius=0.8;points=16;amount=1;hs=0;vs=0;speed=0;y=-0.7} @SelfLocation
+  - particlering{particle=dust;color=#4FE6FF;size=1.2;radius=0.8;points=16;amount=1;hs=0;vs=0;speed=0;y=-0.15} @SelfLocation
   - particles{particle=dust;color=#4FE6FF;size=1;amount=6;hs=0.15;vs=0.9;speed=0;y=1} @self
   - sound{s=block.note_block.basedrum;v=1;p=0.8} @self
 
@@ -330,12 +330,12 @@ fv_endsoul_vfx_downbeam:
 fv_endsoul_vfx_dash_aim:
   Cooldown: 0.1
   Skills:
-  - particleline{particle=dust;color=#9FFCFF;size=0.8;amount=1;distanceBetween=0.6;startYOffset=-0.7;targetYOffset=-0.7;fromOrigin=false} @Forward{f=10;lockpitch=true;uel=false}
+  - particleline{particle=dust;color=#9FFCFF;size=0.8;amount=1;distanceBetween=0.6;startYOffset=-0.15;targetYOffset=-0.15;fromOrigin=false} @Forward{f=10;lockpitch=true;uel=false}
 
 fv_endsoul_vfx_dash_locked:
   Cooldown: 0.1
   Skills:
-  - particleline{particle=dust;color=#FFFFFF;size=1.2;amount=1;distanceBetween=0.4;startYOffset=-0.7;targetYOffset=-0.7;fromOrigin=false} @Forward{f=10;lockpitch=true;uel=false}
+  - particleline{particle=dust;color=#FFFFFF;size=1.2;amount=1;distanceBetween=0.4;startYOffset=-0.15;targetYOffset=-0.15;fromOrigin=false} @Forward{f=10;lockpitch=true;uel=false}
 
 fv_endsoul_sfx_dash_locked:
   Skills:
@@ -350,8 +350,8 @@ fv_endsoul_sfx_downbeam_dash:
 
 fv_endsoul_vfx_dash_trail:
   Skills:
-  - particles{particle=soul_fire_flame;amount=4;hs=0.35;vs=0.05;speed=0.02;y=-0.65} @self
-  - particles{particle=dust;color=#BFFFFF;size=1.2;amount=3;hs=0.3;vs=0.05;speed=0;y=-0.65} @self
+  - particles{particle=soul_fire_flame;amount=4;hs=0.35;vs=0.05;speed=0.02;y=-0.1} @self
+  - particles{particle=dust;color=#BFFFFF;size=1.2;amount=3;hs=0.3;vs=0.05;speed=0;y=-0.1} @self
 
 fv_endsoul_sfx_flinch:
   Skills:
@@ -397,8 +397,8 @@ fv_endsoul_sfx_pulse:
 
 fv_endsoul_vfx_pulse:
   Skills:
-  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=0.8;points=14;amount=1;hs=0;vs=0;speed=0;y=-0.7} @SelfLocation
-  - particlering{particle=dust;color=#9FFCFF;size=1.2;radius=1.2;points=20;amount=1;hs=0;vs=0;speed=0;y=-0.7;delay=1} @SelfLocation
+  - particlering{particle=dust;color=#9FFCFF;size=1.4;radius=0.8;points=14;amount=1;hs=0;vs=0;speed=0;y=-0.15} @SelfLocation
+  - particlering{particle=dust;color=#9FFCFF;size=1.2;radius=1.2;points=20;amount=1;hs=0;vs=0;speed=0;y=-0.15;delay=1} @SelfLocation
 
 fv_endsoul_vfx_land:
   Skills:
