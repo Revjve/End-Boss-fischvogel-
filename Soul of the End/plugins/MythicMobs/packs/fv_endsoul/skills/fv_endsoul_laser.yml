@@ -36,7 +36,7 @@ fv_endsoul_laser_off:
 fv_endsoul_l_aim_tick:
   Skills:
   - variableadd{var=caster.fv_endsoul_aim_n;amount=-1}
-  - rotatetowards{maxyaw=9} @NearestPlayer{r=48}
+  - rotatetowards{maxyaw=13.0} @NearestPlayer{r=48}
   - skill{s=fv_endsoul_l_aim_tick;delay=1} @self ?variableinrange{var=caster.fv_endsoul_aim_n;value=1to99999} ?variableequals{var=caster.fv_endsoul_state;value=FIGHT}
 
 fv_endsoul_laser_straight:
@@ -74,15 +74,15 @@ fv_endsoul_l_straight_tick:
 
 fv_endsoul_l_creep:
   Skills:
-  - rotatetowards{maxyaw=0.6} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=1}
-  - rotatetowards{maxyaw=0.8} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=2}
-  - rotatetowards{maxyaw=1.0} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+  - rotatetowards{maxyaw=1.0} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=1}
+  - rotatetowards{maxyaw=1.3} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - rotatetowards{maxyaw=1.6} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=3}
 
 fv_endsoul_l_flick:
   Skills:
   - skill{s=fv_endsoul_sfx_flick} @self ?variableequals{var=caster.fv_endsoul_flick_t;value=5}
   - variableadd{var=caster.fv_endsoul_flick_t;amount=-1}
-  - rotatetowards{maxyaw=9} @NearestPlayer{r=48}
+  - rotatetowards{maxyaw=13.0} @NearestPlayer{r=48}
 
 fv_endsoul_laser_jumprope:
   Skills:
@@ -91,9 +91,9 @@ fv_endsoul_laser_jumprope:
   - skill{s=fv_endsoul_height_to_low} @self
   - setvariable{var=caster.fv_endsoul_beam_top;type=FLOAT;value=0.12}
   - setvariable{var=caster.fv_endsoul_spin_mode;type=STRING;value=FLIPONLY}
-  - setvariable{var=caster.fv_endsoul_spin_deg;type=FLOAT;value=8} ?variableequals{var=caster.fv_endsoul_phase;value=1}
-  - setvariable{var=caster.fv_endsoul_spin_deg;type=FLOAT;value=9} ?variableequals{var=caster.fv_endsoul_phase;value=2}
-  - setvariable{var=caster.fv_endsoul_spin_deg;type=FLOAT;value=10} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+  - setvariable{var=caster.fv_endsoul_spin_deg;type=FLOAT;value=10} ?variableequals{var=caster.fv_endsoul_phase;value=1}
+  - setvariable{var=caster.fv_endsoul_spin_deg;type=FLOAT;value=11} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - setvariable{var=caster.fv_endsoul_spin_deg;type=FLOAT;value=13} ?variableequals{var=caster.fv_endsoul_phase;value=3}
   - setvariable{var=caster.fv_endsoul_spin_next;type=INTEGER;value="floor(<caster.var.fv_endsoul_t_a1_dur>/2)"} ?variableequals{var=caster.fv_endsoul_phase;value=3}
   - skill{s=fv_endsoul_spin_start} @self
   - delay{ticks=<caster.var.fv_endsoul_t_a1_lock>}
@@ -183,7 +183,7 @@ fv_endsoul_spin_speed:
   Skills:
   - setvariable{var=skill.old;type=FLOAT;value="abs(<caster.var.fv_endsoul_spin_deg>)"}
   - setvariable{var=skill.m0;type=FLOAT;value="floor(random(<caster.var.fv_endsoul_chaos_lo>,<caster.var.fv_endsoul_chaos_hi>+1))"}
-  - setvariable{var=skill.mag;type=FLOAT;value="(<skill.var.m0>)+((<skill.var.m0>)==(<skill.var.old>))*(((<skill.var.m0>)<8.5)*2-1)"}
+  - setvariable{var=skill.mag;type=FLOAT;value="(<skill.var.m0>)+((<skill.var.m0>)==(<skill.var.old>))*(((<skill.var.m0>)<11)*2-1)"}
   - setvariable{var=caster.fv_endsoul_spin_deg;type=FLOAT;value="signum(<caster.var.fv_endsoul_spin_deg>)*(<skill.var.mag>)"}
 
 fv_endsoul_spin_rotate:
@@ -200,6 +200,9 @@ fv_endsoul_spin_rotate:
   - setrotation{relative=true;yaw=10} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=10}
   - setrotation{relative=true;yaw=11} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=11}
   - setrotation{relative=true;yaw=12} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=12}
+  - setrotation{relative=true;yaw=13} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=13}
+  - setrotation{relative=true;yaw=14} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=14}
+  - setrotation{relative=true;yaw=15} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=15}
   - setrotation{relative=true;yaw=-1} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=-1}
   - setrotation{relative=true;yaw=-2} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=-2}
   - setrotation{relative=true;yaw=-3} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=-3}
@@ -212,6 +215,9 @@ fv_endsoul_spin_rotate:
   - setrotation{relative=true;yaw=-10} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=-10}
   - setrotation{relative=true;yaw=-11} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=-11}
   - setrotation{relative=true;yaw=-12} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=-12}
+  - setrotation{relative=true;yaw=-13} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=-13}
+  - setrotation{relative=true;yaw=-14} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=-14}
+  - setrotation{relative=true;yaw=-15} @self ?variableequals{var=caster.fv_endsoul_spin_now;value=-15}
 
 fv_endsoul_laser_hunter:
   Skills:
@@ -240,14 +246,14 @@ fv_endsoul_l_hunter_tick:
   - setvariable{var=caster.fv_endsoul_hunt_lvl;type=INTEGER;value="min(4,1+floor(<caster.var.fv_endsoul_hunt_t>/<caster.var.fv_endsoul_hunt_q>))"}
   - setvariable{var=skill.up;type=FLOAT;value="((<caster.var.fv_endsoul_hunt_t>)%(<caster.var.fv_endsoul_hunt_q>))==0"}
   - skill{s=fv_endsoul_sfx_hunt_up} @self ?variableinrange{var=skill.up;value=0.5to2}
-  - rotatetowards{maxyaw=1.6} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_endsoul_phase;value=1to2} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=1}
-  - rotatetowards{maxyaw=2.0} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_endsoul_phase;value=1to2} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=2}
-  - rotatetowards{maxyaw=2.4} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_endsoul_phase;value=1to2} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=3}
-  - rotatetowards{maxyaw=2.8} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_endsoul_phase;value=1to2} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=4}
-  - rotatetowards{maxyaw=1.9} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=3} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=1}
-  - rotatetowards{maxyaw=2.4} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=3} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=2}
-  - rotatetowards{maxyaw=2.9} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=3} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=3}
-  - rotatetowards{maxyaw=3.4} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=3} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=4}
+  - rotatetowards{maxyaw=2.2} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_endsoul_phase;value=1to2} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=1}
+  - rotatetowards{maxyaw=2.8} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_endsoul_phase;value=1to2} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=2}
+  - rotatetowards{maxyaw=3.4} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_endsoul_phase;value=1to2} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=3}
+  - rotatetowards{maxyaw=3.9} @NearestPlayer{r=48} ?variableinrange{var=caster.fv_endsoul_phase;value=1to2} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=4}
+  - rotatetowards{maxyaw=2.7} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=3} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=1}
+  - rotatetowards{maxyaw=3.4} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=3} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=2}
+  - rotatetowards{maxyaw=4.1} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=3} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=3}
+  - rotatetowards{maxyaw=4.8} @NearestPlayer{r=48} ?variableequals{var=caster.fv_endsoul_phase;value=3} ?variableequals{var=caster.fv_endsoul_hunt_lvl;value=4}
   - skill{s=fv_endsoul_beam_tick} @self
   - skill{s=fv_endsoul_l_hunter_tick;delay=1} @self ?variableinrange{var=caster.fv_endsoul_beam_n;value=1to99999} ?variableequals{var=caster.fv_endsoul_state;value=FIGHT}
 

@@ -75,9 +75,9 @@ fv_endsoul_shoot_burst:
   - skill{s=fv_endsoul_shoot_begin} @self
   - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=<caster.var.fv_endsoul_n_burst>}
   - setvariable{var=caster.fv_endsoul_shot_k;type=INTEGER;value=0}
-  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=16}
+  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=12}
   - skill{s=fv_endsoul_l_aim_tick} @self
-  - delay 16
+  - delay 12
   - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_track_init} @self
   - skill{s=fv_endsoul_s_burst_shot} @self
@@ -142,10 +142,10 @@ fv_endsoul_shoot_ring:
   - setvariable{var=caster.fv_endsoul_ring_k;type=INTEGER;value=0}
   - setvariable{var=caster.fv_endsoul_ring_cd;type=INTEGER;value=1}
   - randomskill{skills=fv_endsoul_ring_dir_left,fv_endsoul_ring_dir_right} @self
-  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=16}
+  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=12}
   - skill{s=fv_endsoul_l_aim_tick} @self
   - skill{s=fv_endsoul_vfx_ring_warning} @self
-  - delay 16
+  - delay 12
   - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_ring_tick} @self
 
@@ -206,9 +206,9 @@ fv_endsoul_shoot_fan:
   - skill{s=fv_endsoul_shoot_begin} @self
   - setvariable{var=caster.fv_endsoul_shots;type=INTEGER;value=<caster.var.fv_endsoul_n_fan>}
   - setvariable{var=caster.fv_endsoul_shot_k;type=INTEGER;value=0}
-  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=16}
+  - setvariable{var=caster.fv_endsoul_aim_n;type=INTEGER;value=12}
   - skill{s=fv_endsoul_l_aim_tick} @self
-  - delay 16
+  - delay 12
   - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_fan_volley} @self
 
@@ -277,7 +277,7 @@ fv_endsoul_shoot_spiral:
   - setrotation{relative=true;yaw=-90} @self ?variableequals{var=caster.fv_endsoul_ring_dir;value=1}
   - setrotation{relative=true;yaw=90} @self ?variableequals{var=caster.fv_endsoul_ring_dir;value=-1}
   - skill{s=fv_endsoul_vfx_ring_warning} @self
-  - delay 16
+  - delay 12
   - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_s_spiral_tick} @self
 
@@ -317,27 +317,27 @@ fv_endsoul_s_spiral_fire:
 
 fv_endsoul_fire_aimed:
   Skills:
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=22;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=24;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=26;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=28;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=30;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=32;i=1;hR=0.5;vR=0.6;mr=28;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
 
 fv_endsoul_fire_burst:
   Skills:
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=14;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=15;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=16;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=18;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=19;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=20;i=1;hR=0.5;vR=0.6;mr=26;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
 
 fv_endsoul_fire_ring:
   Skills:
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=10;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=11;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=12;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=13;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=14;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=15;i=1;hR=0.5;vR=0.6;mr=24;duration=80;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
 
 fv_endsoul_fire_fan:
   Skills:
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=12;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=13;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
-  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=14;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=15;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=1}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=16;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=2}
+  - projectile{bulletType=MOB;mob=fv_endsoul_bullet;byo=-0.5;onTick=fv_endsoul_proj_tick;onHit=fv_endsoul_proj_hit;onEnd=fv_endsoul_proj_end;v=17;i=1;hR=0.5;vR=0.6;mr=24;duration=60;g=0;syo=0.5;sfo=0.45;tyo=0.5;hp=true;hnp=false;sE=true;sB=true;ham=true} ?variableequals{var=caster.fv_endsoul_phase;value=3}
 
 fv_endsoul_proj_tick:
   Skills:

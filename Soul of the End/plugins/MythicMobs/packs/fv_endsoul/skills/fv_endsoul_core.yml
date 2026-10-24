@@ -18,19 +18,19 @@ fv_endsoul_phase_1:
   - setvariable{var=caster.fv_endsoul_t_a2_desc;type=INTEGER;value=21}
   - setvariable{var=caster.fv_endsoul_t_sh_settle;type=INTEGER;value=44}
   - setvariable{var=caster.fv_endsoul_flick_every;type=INTEGER;value=99999}
-  - setvariable{var=caster.fv_endsoul_chaos_lo;type=INTEGER;value=6}
-  - setvariable{var=caster.fv_endsoul_chaos_hi;type=INTEGER;value=9}
+  - setvariable{var=caster.fv_endsoul_chaos_lo;type=INTEGER;value=8}
+  - setvariable{var=caster.fv_endsoul_chaos_hi;type=INTEGER;value=11}
   - setvariable{var=caster.fv_endsoul_chaos_min;type=INTEGER;value=30}
   - setvariable{var=caster.fv_endsoul_chaos_max;type=INTEGER;value=46}
   - setvariable{var=caster.fv_endsoul_n_aimed;type=INTEGER;value=2}
-  - setvariable{var=caster.fv_endsoul_t_aimed_gap;type=INTEGER;value=18}
-  - setvariable{var=caster.fv_endsoul_t_aimed_lock;type=INTEGER;value=9}
+  - setvariable{var=caster.fv_endsoul_t_aimed_gap;type=INTEGER;value=14}
+  - setvariable{var=caster.fv_endsoul_t_aimed_lock;type=INTEGER;value=7}
   - setvariable{var=caster.fv_endsoul_n_burst;type=INTEGER;value=6}
-  - setvariable{var=caster.fv_endsoul_t_burst_gap;type=INTEGER;value=7}
-  - setvariable{var=caster.fv_endsoul_v_burst;type=FLOAT;value=0.7}
+  - setvariable{var=caster.fv_endsoul_t_burst_gap;type=INTEGER;value=5}
+  - setvariable{var=caster.fv_endsoul_v_burst;type=FLOAT;value=0.9}
   - setvariable{var=caster.fv_endsoul_n_ring;type=INTEGER;value=12}
   - setvariable{var=caster.fv_endsoul_n_fan;type=INTEGER;value=2}
-  - setvariable{var=caster.fv_endsoul_t_fan_gap;type=INTEGER;value=16}
+  - setvariable{var=caster.fv_endsoul_t_fan_gap;type=INTEGER;value=12}
   - setvariable{var=caster.fv_endsoul_n_spiral;type=INTEGER;value=20}
   - setvariable{var=caster.fv_endsoul_mv_max;type=INTEGER;value=4}
   - setvariable{var=caster.fv_endsoul_t_db_lock;type=INTEGER;value=16}
@@ -55,19 +55,19 @@ fv_endsoul_phase_2:
   - setvariable{var=caster.fv_endsoul_t_a2_desc;type=INTEGER;value=19}
   - setvariable{var=caster.fv_endsoul_t_sh_settle;type=INTEGER;value=39}
   - setvariable{var=caster.fv_endsoul_flick_every;type=INTEGER;value=60}
-  - setvariable{var=caster.fv_endsoul_chaos_lo;type=INTEGER;value=6}
-  - setvariable{var=caster.fv_endsoul_chaos_hi;type=INTEGER;value=10}
+  - setvariable{var=caster.fv_endsoul_chaos_lo;type=INTEGER;value=8}
+  - setvariable{var=caster.fv_endsoul_chaos_hi;type=INTEGER;value=12}
   - setvariable{var=caster.fv_endsoul_chaos_min;type=INTEGER;value=22}
   - setvariable{var=caster.fv_endsoul_chaos_max;type=INTEGER;value=40}
   - setvariable{var=caster.fv_endsoul_n_aimed;type=INTEGER;value=3}
-  - setvariable{var=caster.fv_endsoul_t_aimed_gap;type=INTEGER;value=14}
-  - setvariable{var=caster.fv_endsoul_t_aimed_lock;type=INTEGER;value=8}
+  - setvariable{var=caster.fv_endsoul_t_aimed_gap;type=INTEGER;value=11}
+  - setvariable{var=caster.fv_endsoul_t_aimed_lock;type=INTEGER;value=6}
   - setvariable{var=caster.fv_endsoul_n_burst;type=INTEGER;value=8}
-  - setvariable{var=caster.fv_endsoul_t_burst_gap;type=INTEGER;value=5}
-  - setvariable{var=caster.fv_endsoul_v_burst;type=FLOAT;value=0.75}
+  - setvariable{var=caster.fv_endsoul_t_burst_gap;type=INTEGER;value=4}
+  - setvariable{var=caster.fv_endsoul_v_burst;type=FLOAT;value=0.95}
   - setvariable{var=caster.fv_endsoul_n_ring;type=INTEGER;value=32}
   - setvariable{var=caster.fv_endsoul_n_fan;type=INTEGER;value=3}
-  - setvariable{var=caster.fv_endsoul_t_fan_gap;type=INTEGER;value=14}
+  - setvariable{var=caster.fv_endsoul_t_fan_gap;type=INTEGER;value=11}
   - setvariable{var=caster.fv_endsoul_n_spiral;type=INTEGER;value=24}
   - setvariable{var=caster.fv_endsoul_mv_max;type=INTEGER;value=4}
   - setvariable{var=caster.fv_endsoul_t_db_lock;type=INTEGER;value=14}
@@ -92,19 +92,19 @@ fv_endsoul_phase_3:
   - setvariable{var=caster.fv_endsoul_t_a2_desc;type=INTEGER;value=18}
   - setvariable{var=caster.fv_endsoul_t_sh_settle;type=INTEGER;value=35}
   - setvariable{var=caster.fv_endsoul_flick_every;type=INTEGER;value=45}
-  - setvariable{var=caster.fv_endsoul_chaos_lo;type=INTEGER;value=7}
-  - setvariable{var=caster.fv_endsoul_chaos_hi;type=INTEGER;value=12}
+  - setvariable{var=caster.fv_endsoul_chaos_lo;type=INTEGER;value=9}
+  - setvariable{var=caster.fv_endsoul_chaos_hi;type=INTEGER;value=14}
   - setvariable{var=caster.fv_endsoul_chaos_min;type=INTEGER;value=14}
   - setvariable{var=caster.fv_endsoul_chaos_max;type=INTEGER;value=30}
   - setvariable{var=caster.fv_endsoul_n_aimed;type=INTEGER;value=3}
-  - setvariable{var=caster.fv_endsoul_t_aimed_gap;type=INTEGER;value=12}
-  - setvariable{var=caster.fv_endsoul_t_aimed_lock;type=INTEGER;value=7}
+  - setvariable{var=caster.fv_endsoul_t_aimed_gap;type=INTEGER;value=9}
+  - setvariable{var=caster.fv_endsoul_t_aimed_lock;type=INTEGER;value=5}
   - setvariable{var=caster.fv_endsoul_n_burst;type=INTEGER;value=10}
-  - setvariable{var=caster.fv_endsoul_t_burst_gap;type=INTEGER;value=4}
-  - setvariable{var=caster.fv_endsoul_v_burst;type=FLOAT;value=0.8}
+  - setvariable{var=caster.fv_endsoul_t_burst_gap;type=INTEGER;value=3}
+  - setvariable{var=caster.fv_endsoul_v_burst;type=FLOAT;value=1.0}
   - setvariable{var=caster.fv_endsoul_n_ring;type=INTEGER;value=40}
   - setvariable{var=caster.fv_endsoul_n_fan;type=INTEGER;value=4}
-  - setvariable{var=caster.fv_endsoul_t_fan_gap;type=INTEGER;value=12}
+  - setvariable{var=caster.fv_endsoul_t_fan_gap;type=INTEGER;value=10}
   - setvariable{var=caster.fv_endsoul_n_spiral;type=INTEGER;value=30}
   - setvariable{var=caster.fv_endsoul_mv_max;type=INTEGER;value=4}
   - setvariable{var=caster.fv_endsoul_t_db_lock;type=INTEGER;value=12}
@@ -612,7 +612,7 @@ fv_endsoul_watch:
   - variableequals{var=caster.fv_endsoul_state;value=FIGHT} true
   - variableequals{var=caster.fv_endsoul_busy;value=0} true
   Skills:
-  - rotatetowards{maxyaw=6} @NearestPlayer{r=48}
+  - rotatetowards{maxyaw=10} @NearestPlayer{r=48}
 
 fv_endsoul_check_phase:
   Conditions:
