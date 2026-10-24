@@ -220,6 +220,9 @@ class Sim:
         e.alive = False
         e.model = None
         e.anims = {}
+        for ch in list(self.ents):
+            if getattr(ch, 'parent', None) is e:
+                self.remove(ch)
 
     # ---- placeholders and math ----
     def ph(self, text, meta, target):
@@ -571,6 +574,9 @@ class Sim:
             for t in targets:
                 owner = c
                 e = self.spawn(a['type'], t.copy() if isinstance(t, Loc) else t.loc, owner, trigger=c)
+                # summoned mobs are children of the summoner unless sip=false;
+                # assume the worst: MythicMobs removes children with their parent
+                e.parent = c if a.get('sip', a.get('summonerisparent', 'true')) != 'false' else None
                 self.hook('summon:' + a['type'], meta, e)
         elif m == 'remove':
             for t in targets:
@@ -749,6 +755,13 @@ class Sim:
             self.stats['watchdog'] += 1
             self.error('watchdog had to restart the fight loop', meta)
             self.active_attacks = 0
+        elif name == 'fv_endsoul_db_to_dash':
+            c.dash_from = (c.x, c.z)
+        elif name == 'fv_endsoul_db_to_rest' and getattr(c, 'dash_from', None):
+            d = math.hypot(c.x - c.dash_from[0], c.z - c.dash_from[1])
+            inside = any(math.hypot(p.x - self.home.x, p.z - self.home.z) < 18 for p in self.players())
+            if d < 3 and inside:
+                self.error(f'down beam dash stopped after {d:.1f} blocks', meta)
         elif name == 'fv_endsoul_flinch':
             self.stats['flinches'] = self.stats.get('flinches', 0) + 1
             self.active_attacks = 0

@@ -177,6 +177,7 @@ fv_endsoul_block_load:
   - skill{s=fv_endsoul_block_model} @self ?variableequals{var=caster.fv_endsoul_block;value=READY}
   - skill{s=fv_endsoul_block_restore} @self ?variableequals{var=caster.fv_endsoul_block;value=AWAKE}
   - skill{s=fv_endsoul_noop} @self ?variableequals{var=caster.fv_endsoul_block;value=COOLDOWN}
+  - remove @self ?variableequals{var=caster.fv_endsoul_block;value=DEFEATED}
   - skill{s=fv_endsoul_block_restore} @self ?!variableisset{var=caster.fv_endsoul_block}
 
 fv_endsoul_block_hit:
@@ -196,7 +197,7 @@ fv_endsoul_block_wake:
   Skills:
   - setvariable{var=caster.fv_endsoul_block;type=STRING;value=AWAKE;save=true}
   - setvariable{var=caster.fv_endsoul_boss_alive;type=INTEGER;value=1;duration=100}
-  - summon{type=fv_endsoul;amount=1;radius=0;sio=true;sip=true} @SelfLocation
+  - summon{type=fv_endsoul;amount=1;radius=0;sio=false;sip=false} @SelfLocation
   - delay 2
   - model{mid=fv_endsoul;remove=true} @self
   - teleport{unsafe=true;preserveyaw=true} @SelfLocation{y=-3}
@@ -210,7 +211,9 @@ fv_endsoul_block_second:
 
 fv_endsoul_block_on_defeat:
   Skills:
-  # killed for good: the block is removed
+  # killed for good: the block goes once the death animation is over
+  - setvariable{var=caster.fv_endsoul_block;type=STRING;value=DEFEATED;save=true}
+  - delay 200
   - remove @self
   # respawn after a kill (disabled):
   # - skill{s=fv_endsoul_block_settings} @self
@@ -443,7 +446,7 @@ fv_endsoul_mv_think:
   - skill{s=fv_endsoul_mv_near} @self ?variableinrange{var=skill.pd;value=0to6} ?!variableequals{var=skill.d;value=0}
   - skill{s=fv_endsoul_mv_mid} @self ?variableinrange{var=skill.pd;value=6.01to10} ?!variableequals{var=skill.d;value=0}
   - skill{s=fv_endsoul_mv_calm} @self ?variableinrange{var=skill.pd;value=10.01to99999} ?!variableequals{var=skill.d;value=0}
-  - skill{s=fv_endsoul_mv_blink} @self ?variableinrange{var=skill.pd;value=0.01to2.5} ?!variableisset{var=caster.fv_endsoul_blink_cd}
+  - skill{s=fv_endsoul_mv_blink} @self ?variableinrange{var=skill.pd;value=0.01to2.5} ?!variableisset{var=caster.fv_endsoul_blink_cd} ?variableinrange{var=skill.edge;value=-1to0.5}
 
 fv_endsoul_mv_near:
   Skills:
@@ -468,8 +471,7 @@ fv_endsoul_mv_blink:
   Skills:
   - setvariable{var=caster.fv_endsoul_blink_cd;type=INTEGER;value=1;duration=60}
   - skill{s=fv_endsoul_sfx_blink} @self
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=4;rot=180;lockpitch=true;uel=false} ?variableinrange{var=skill.edge;value=-1to0.5}
-  - teleport{unsafe=true;preserveyaw=true} @Forward{f=4;rot=90;lockpitch=true;uel=false} ?variableinrange{var=skill.edge;value=0.5to2}
+  - teleport{unsafe=true;preserveyaw=true} @Forward{f=4;rot=180;lockpitch=true;uel=false}
   - skill{s=fv_endsoul_sfx_blink} @self
 
 fv_endsoul_mv_home_done:
@@ -963,8 +965,8 @@ fv_endsoul_on_death:
   - setvariable{var=caster.fv_endsoul_state;type=STRING;value=DEAD}
   - variableadd{var=caster.fv_endsoul_epoch;amount=1}
   - skill{s=fv_endsoul_abort} @self
-  - summon{type=fv_endsoul_deathfx;amount=1;radius=0} @SelfLocation ?variableinrange{var=caster.fv_endsoul_hpx;value=8to99999}
-  - summon{type=fv_endsoul_deathfx;amount=1;radius=0} @SelfLocation{y=0.3125} ?variableinrange{var=caster.fv_endsoul_hpx;value=-99999to7}
+  - summon{type=fv_endsoul_deathfx;amount=1;radius=0;sio=false;sip=false} @SelfLocation ?variableinrange{var=caster.fv_endsoul_hpx;value=8to99999}
+  - summon{type=fv_endsoul_deathfx;amount=1;radius=0;sio=false;sip=false} @SelfLocation{y=0.3125} ?variableinrange{var=caster.fv_endsoul_hpx;value=-99999to7}
   - model{mid=fv_endsoul;remove=true} @self
   - skill{s=fv_endsoul_link_defeated} @MobsInRadius{types=fv_endsoul_block;r=48}
 

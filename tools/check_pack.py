@@ -217,7 +217,8 @@ EPOCH_PH = '<skill.var.ep>'
 EPOCH_SET = 'setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}'
 EPOCH_GUARD = 'cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}'
 UNGUARDED = {'fv_endsoul_block_wake', 'fv_endsoul_block_peek', 'fv_endsoul_wake_timeline',
-             'fv_endsoul_wake_handover', 'fv_endsoul_death_timeline', 'fv_endsoul_snap_floor'}
+             'fv_endsoul_wake_handover', 'fv_endsoul_death_timeline', 'fv_endsoul_snap_floor',
+             'fv_endsoul_block_on_defeat'}
 
 
 def check_guards(name, where, lines):

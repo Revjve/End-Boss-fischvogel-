@@ -91,6 +91,7 @@ fv_endsoul_db_lock_tick:
 fv_endsoul_db_dash_tick:
   Skills:
   - setvariable{var=skill.k;type=INTEGER;value=<caster.var.fv_endsoul_db_k>}
+  - setvariable{var=skill.a0;type=FLOAT;value="sqrt(((<caster.l.x.double>)-(<caster.var.fv_endsoul_home_x>))^2+((<caster.l.z.double>)-(<caster.var.fv_endsoul_home_z>))^2)"}
   - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.4;lockpitch=true;uel=false} ?variableequals{var=skill.k;value=11}
   - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.75;lockpitch=true;uel=false} ?variableequals{var=skill.k;value=10}
   - teleport{unsafe=true;preserveyaw=true} @Forward{f=1;lockpitch=true;uel=false} ?variableinrange{var=skill.k;value=2to9}
@@ -98,7 +99,7 @@ fv_endsoul_db_dash_tick:
   - teleport{unsafe=true;preserveyaw=true} @Forward{f=0.3;lockpitch=true;uel=false} ?variableequals{var=skill.k;value=0}
   - skill{s=fv_endsoul_vfx_dash_trail} @self
   - setvariable{var=skill.away;type=FLOAT;value="sqrt(((<caster.l.x.double>)-(<caster.var.fv_endsoul_home_x>))^2+((<caster.l.z.double>)-(<caster.var.fv_endsoul_home_z>))^2)"}
-  - setvariable{var=skill.out;type=FLOAT;value="(<skill.var.away>)>(<caster.var.fv_endsoul_arena_r>)"}
+  - setvariable{var=skill.out;type=FLOAT;value="((<skill.var.away>)>(<caster.var.fv_endsoul_arena_r>)+3)*((<skill.var.away>)>(<skill.var.a0>))"}
   - setvariable{var=caster.fv_endsoul_db_k;type=INTEGER;value=0} ?variableinrange{var=skill.out;value=0.5to2}
 
 fv_endsoul_downbeam_pulses:
