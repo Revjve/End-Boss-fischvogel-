@@ -1,10 +1,8 @@
-# Made by revjve
-
 fv_endsoul_downbeam:
   Skills:
   - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
   - setvariable{var=caster.fv_endsoul_lasttype;type=STRING;value=DOWNBEAM}
-  - setvariable{var=caster.fv_endsoul_mode;type=STRING;value=OPEN}
+  - setvariable{var=caster.fv_endsoul_mode;type=STRING;value=IMMUNE}
   - setvariable{var=caster.fv_endsoul_alive;type=INTEGER;value=1;duration=440}
   - setvariable{var=caster.fv_endsoul_db_n;type=INTEGER;value=0}
   - skill{s=fv_endsoul_anim_attack2} @self
@@ -16,7 +14,7 @@ fv_endsoul_downbeam:
   - skill{s=fv_endsoul_downbeam_telegraph} @self
   - delay{ticks=<skill.var.wait>}
   - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
-  - setvariable{var=caster.fv_endsoul_mode;type=STRING;value=ARMORED}
+  - setvariable{var=caster.fv_endsoul_mode;type=STRING;value=IMMUNE}
   - skill{s=fv_endsoul_sfx_downbeam_ignite} @self
   - setvariable{var=caster.fv_endsoul_db_n;type=INTEGER;value=<caster.var.fv_endsoul_t_a2_beam>}
   - skill{s=fv_endsoul_db_to_lock} @self

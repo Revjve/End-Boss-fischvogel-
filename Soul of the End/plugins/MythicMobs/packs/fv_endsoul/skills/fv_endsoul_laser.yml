@@ -1,5 +1,3 @@
-# Made by revjve
-
 fv_endsoul_laser_begin:
   Skills:
   - setvariable{var=caster.fv_endsoul_lasttype;type=STRING;value=LASER}

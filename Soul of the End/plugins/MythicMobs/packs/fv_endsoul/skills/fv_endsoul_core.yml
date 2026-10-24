@@ -1,5 +1,3 @@
-# Made by revjve
-
 fv_endsoul_phase_1:
   Skills:
   - setvariable{var=caster.fv_endsoul_phase;type=INTEGER;value=1}
@@ -111,14 +109,8 @@ fv_endsoul_phase_3:
   - setvariable{var=caster.fv_endsoul_t_db_freeze;type=INTEGER;value=6}
   - setvariable{var=caster.fv_endsoul_t_db_rest;type=INTEGER;value=4}
 
-# respawn time setting (disabled):
-# fv_endsoul_block_settings:
-#   Skills:
-#   - setvariable{var=caster.fv_endsoul_respawn;type=INTEGER;value=300;save=true}
-
 fv_endsoul_block_spawn:
   Skills:
-  # - skill{s=fv_endsoul_block_settings} @self
   - setvariable{var=caster.fv_endsoul_block;type=STRING;value=READY;save=true}
   - setvariable{var=caster.fv_endsoul_hidden;type=INTEGER;value=0;save=true}
   - skill{s=fv_endsoul_snap_yaw} @self
@@ -173,7 +165,6 @@ fv_endsoul_snap_yaw:
 
 fv_endsoul_block_load:
   Skills:
-  # - skill{s=fv_endsoul_block_settings} @self
   - skill{s=fv_endsoul_block_model} @self ?variableequals{var=caster.fv_endsoul_block;value=READY}
   - skill{s=fv_endsoul_block_restore} @self ?variableequals{var=caster.fv_endsoul_block;value=AWAKE}
   - skill{s=fv_endsoul_noop} @self ?variableequals{var=caster.fv_endsoul_block;value=COOLDOWN}
@@ -207,24 +198,12 @@ fv_endsoul_block_second:
   Skills:
   - skill{s=fv_endsoul_block_ambience} @self ?variableequals{var=caster.fv_endsoul_block;value=READY} ?variableisset{var=caster.fv_endsoul_shown}
   - skill{s=fv_endsoul_block_restore} @self ?variableequals{var=caster.fv_endsoul_block;value=AWAKE} ?!variableisset{var=caster.fv_endsoul_boss_alive} ?!mobsinradius{types=fv_endsoul;amount=1to999;radius=48}
-  # - skill{s=fv_endsoul_block_countdown} @self ?variableequals{var=caster.fv_endsoul_block;value=COOLDOWN}
 
 fv_endsoul_block_on_defeat:
   Skills:
-  # killed for good: the block goes once the death animation is over
   - setvariable{var=caster.fv_endsoul_block;type=STRING;value=DEFEATED;save=true}
   - delay 200
   - remove @self
-  # respawn after a kill (disabled):
-  # - skill{s=fv_endsoul_block_settings} @self
-  # - setvariable{var=caster.fv_endsoul_cd;type=INTEGER;value=<caster.var.fv_endsoul_respawn>;save=true}
-  # - setvariable{var=caster.fv_endsoul_block;type=STRING;value=COOLDOWN;save=true}
-
-# respawn countdown (disabled):
-# fv_endsoul_block_countdown:
-#   Skills:
-#   - variableadd{var=caster.fv_endsoul_cd;amount=-1}
-#   - skill{s=fv_endsoul_block_restore} @self ?variableinrange{var=caster.fv_endsoul_cd;value=-99999to0}
 
 fv_endsoul_block_restore:
   Skills:
@@ -591,7 +570,6 @@ fv_endsoul_after_attack:
   - skill{s=fv_endsoul_loop} @self ?variableequals{var=skill.pb;value=0} ?variableequals{var=skill.combo;value=0}
   - randomskill{skills=fv_endsoul_loop,fv_endsoul_combo} @self ?variableequals{var=skill.pb;value=0} ?variableequals{var=skill.combo;value=1}
 
-
 fv_endsoul_combo:
   Skills:
   - setvariable{var=skill.ep;type=INTEGER;value=<caster.var.fv_endsoul_epoch>}
@@ -718,7 +696,7 @@ fv_endsoul_flinch:
   - setvariable{var=caster.fv_endsoul_flinch_cd;type=INTEGER;value=1;duration=190} ?variableequals{var=caster.fv_endsoul_phase;value=2}
   - setvariable{var=caster.fv_endsoul_flinch_cd;type=INTEGER;value=1;duration=210} ?variableequals{var=caster.fv_endsoul_phase;value=3}
   - skill{s=fv_endsoul_stop_body} @self
-  - state{mid=fv_endsoul;s=damage;p=10;li=2;lo=6;force=true} @self
+  - state{mid=fv_endsoul;s=damage;p=10;li=2;lo=4;speed=1.8;force=true} @self
   - skill{s=fv_endsoul_sfx_flinch} @self
   - recoil{r=1;pitch=-1.5to-1.5;yaw=0to0} @trigger
   - recoil{r=1;pitch=1.5to1.5;yaw=0to0;delay=3} @trigger
@@ -726,10 +704,10 @@ fv_endsoul_flinch:
   - setvariable{var=caster.fv_endsoul_kb_n;type=INTEGER;value=6}
   - skill{s=fv_endsoul_kb_tick} @self
   - skill{s=fv_endsoul_height_to_idle} @self
-  - delay 46
+  - delay 26
   - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - skill{s=fv_endsoul_play_idle} @self
-  - delay 20
+  - delay 6
   - cancelskill ?!variableequals{var=caster.fv_endsoul_epoch;value=<skill.var.ep>}
   - setvariable{var=caster.fv_endsoul_mv_force;type=INTEGER;value=1}
   - skill{s=fv_endsoul_resume} @self
@@ -824,7 +802,6 @@ fv_endsoul_alone_check:
   - setvariable{var=caster.fv_endsoul_alone;type=INTEGER;value=0} @self ?playerwithin{d=40}
   - variableadd{var=caster.fv_endsoul_alone;amount=1} @self ?!playerwithin{d=40}
   - skill{s=fv_endsoul_reset} @self ?variableinrange{var=caster.fv_endsoul_alone;value=15to99999}
-
 
 fv_endsoul_reset:
   Skills:

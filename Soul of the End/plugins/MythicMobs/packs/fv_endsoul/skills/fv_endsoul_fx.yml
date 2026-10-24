@@ -1,5 +1,3 @@
-# Made by revjve
-
 fv_endsoul_sfx_block_heartbeat:
   Skills:
   - sound{s=entity.warden.heartbeat;v=0.45;p=0.8} @self
